@@ -2,13 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import { Server } from 'socket.io';
 
-const { NODE_ENV, PORT } = process.env;
+const { PORT, CLIENT_URI } = process.env;
 
 const app = express();
 
 app.use(
     cors({
-        origin: ['https://video-call.dev']
+        origin: [CLIENT_URI as string]
     })
 );
 
@@ -16,10 +16,7 @@ const server = app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 const io = new Server(server, {
     cors: {
-        origin:
-            NODE_ENV === 'production'
-                ? 'https://video-call.netlify.app'
-                : 'https://video-call.dev'
+        origin: CLIENT_URI
     }
 });
 
@@ -138,7 +135,9 @@ io.on('connection', (socket) => {
             senderUserId: string;
             receiverUserId: string;
             offer: RTCSessionDescriptionInit;
-        }) => socket.to(event.roomId).emit('offer', event)
+        }) => {
+            socket.to(event.roomId).emit('offer', event);
+        }
     );
 
     socket.on(
@@ -148,7 +147,9 @@ io.on('connection', (socket) => {
             senderUserId: string;
             receiverUserId: string;
             answer: RTCSessionDescriptionInit;
-        }) => socket.to(event.roomId).emit('answer', event)
+        }) => {
+            socket.to(event.roomId).emit('answer', event);
+        }
     );
 
     socket.on(
@@ -167,8 +168,6 @@ io.on('connection', (socket) => {
     socket.on(
         'toggleMicrophone',
         (event: { roomId: string; senderUserId: string; isMuted: boolean }) => {
-            socket.to(event.roomId).emit('toggleMicrophone', event);
-
             updateUser(event.senderUserId, event.roomId, {
                 isMuted: event.isMuted
             });
