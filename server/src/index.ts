@@ -110,7 +110,7 @@ io.on('connection', (socket) => {
             if (!isUserInRoom(userId, roomId)) {
                 addUser(roomId, user);
 
-                socket.on('disconnect', async () => {
+                socket.on('disconnect', () => {
                     removeUser(userId, roomId);
                 });
             }
