@@ -11,10 +11,6 @@ import { ref } from 'vue';
 export function useRTCSession() {
     const peerConnections = ref<Map<string, RTCPeerConnection>>(new Map());
 
-    function hasConnection(remotePeerId: string) {
-        return !!peerConnections.value.has(remotePeerId);
-    }
-
     function createConnection(remotePeerId: string) {
         const connection = new RTCPeerConnection();
 
@@ -96,34 +92,32 @@ export function useRTCSession() {
             remotePeerId: string,
             answer: RTCSessionDescriptionInit
         ) {
-            const peerConnection = getConnection(remotePeerId);
-
-            await peerConnection.setRemoteDescription(
+            await getConnection(remotePeerId).setRemoteDescription(
                 new RTCSessionDescription(answer)
             );
         },
         bindStreamToConnection,
         bindStreamToAllConnections(stream: MediaStream) {
             if (peerConnections.value.size) {
-                peerConnections.value.forEach((_, remotePeerId) => {
+                for (const remotePeerId of peerConnections.value.keys()) {
                     bindStreamToConnection(remotePeerId, stream);
-                });
+                }
             }
         },
         removeStreamFromConnection,
         removeStreamFromAllConnections() {
             if (peerConnections.value.size) {
-                peerConnections.value.forEach((_, remotePeerId) => {
+                for (const remotePeerId of peerConnections.value.keys()) {
                     removeStreamFromConnection(remotePeerId);
-                });
+                }
             }
         },
-        addIceCandidate(
+        async addIceCandidate(
             remotePeerId: string,
             sdpMLineIndex: number,
             candidate: string
         ) {
-            getConnection(remotePeerId).addIceCandidate(
+            await getConnection(remotePeerId).addIceCandidate(
                 new RTCIceCandidate({
                     sdpMLineIndex,
                     candidate
@@ -133,16 +127,22 @@ export function useRTCSession() {
         setupPeerConnection(
             remotePeerId: string,
             {
+                onIceCandidate,
                 onStreamAvailable,
-                onDisconnection,
-                onIceCandidate
+                onDisconnection
             }: {
+                onIceCandidate: (candidate: RTCIceCandidate) => void;
                 onStreamAvailable: (remoteStream: MediaStream | null) => void;
                 onDisconnection: () => void;
-                onIceCandidate: (candidate: RTCIceCandidate) => void;
             }
         ) {
             const peerConnection = createConnection(remotePeerId);
+
+            peerConnection.onicecandidate = ({ candidate }) => {
+                if (candidate) {
+                    onIceCandidate(candidate);
+                }
+            };
 
             peerConnection.ontrack = ({ streams: [stream = null] }) => {
                 onStreamAvailable(stream);
@@ -157,12 +157,6 @@ export function useRTCSession() {
                     iceConnectionState === 'disconnected'
                 ) {
                     onDisconnection();
-                }
-            };
-
-            peerConnection.onicecandidate = ({ candidate }) => {
-                if (candidate) {
-                    onIceCandidate(candidate);
                 }
             };
         }

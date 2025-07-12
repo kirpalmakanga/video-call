@@ -2,7 +2,7 @@ import { ref, watch } from 'vue';
 
 import { useRTCSession } from './use-rtc-session.js';
 import { useSocket } from './use-socket.js';
-import { mergeByKey, omit } from '../utils/helpers.js';
+import { mergeByKey, omit, update } from '../utils/helpers.js';
 
 export function useRoom(roomId: string) {
     const { emit, listen } = useSocket();
@@ -25,11 +25,7 @@ export function useRoom(roomId: string) {
     const isConnecting = ref<boolean>(false);
 
     function removeUser(userId: string) {
-        const index = users.value.findIndex(({ id }) => id === userId);
-
-        if (index > -1) {
-            users.value.splice(index, 1);
-        }
+        users.value = users.value.filter(({ id }) => id !== userId);
     }
 
     function isLocalUser({ id }: ClientUser) {
@@ -41,12 +37,7 @@ export function useRoom(roomId: string) {
     }
 
     function updateUser(userId: string, data: Partial<ClientUser>) {
-        const index = users.value.findIndex(({ id }) => id === userId);
-        const user = users.value[index];
-
-        if (user) {
-            users.value.splice(index, 1, { ...user, ...data });
-        }
+        users.value = update(users.value, ({ id }) => id === userId, data);
     }
 
     function sendLocalStream(remotePeerId: string) {
@@ -60,15 +51,15 @@ export function useRoom(roomId: string) {
     function joinRoom(user: ClientUser) {
         users.value.push({ ...user, isLocalUser: true });
 
-        emit('join', { roomId, user: omit(user, 'stream') });
+        emit('join', { roomId, user: omit(user, 'stream', 'isLocalUser') });
     }
 
     async function makeCall() {
         const user = getCurrentUser();
 
-        isConnecting.value = true;
-
         if (user) {
+            isConnecting.value = true;
+
             emit('call', {
                 roomId,
                 senderUserId: user.id
@@ -127,76 +118,46 @@ export function useRoom(roomId: string) {
         }
     }
 
-    listen<{ users: ClientUser[] }>(
-        'usersListUpdated',
-        ({ users: updatedUsersList }) => {
-            users.value = mergeByKey(
-                users.value.filter(
-                    (user) =>
-                        isLocalUser(user) ||
-                        updatedUsersList.some(
-                            (updatedUser) => updatedUser.id !== user.id
-                        )
-                ),
-                updatedUsersList.filter((user) => !isLocalUser(user)),
-                'id'
-            );
-        }
-    );
-
-    listen<{ userId: string }>('userDisconnected', ({ userId }) => {
-        removeConnection(userId);
-
-        removeUser(userId);
-    });
-
-    listen<{ roomId: string; senderUserId: string }>(
-        'call',
-        async ({ roomId, senderUserId }) => {
-            const currentUser = getCurrentUser();
-
-            if (currentUser?.stream) {
-                setupPeerConnection(senderUserId, {
-                    onStreamAvailable(stream) {
-                        updateUser(senderUserId, { stream });
-                    },
-                    onDisconnection() {
-                        removeUser(senderUserId);
-                    },
-                    onIceCandidate(candidate) {
-                        sendCandidate(currentUser.id, senderUserId, candidate);
-                    }
-                });
-
-                sendLocalStream(senderUserId);
-
-                emit('offer', {
-                    roomId,
-                    senderUserId: currentUser.id,
-                    receiverUserId: senderUserId,
-                    offer: await createOffer(senderUserId)
-                });
-            }
-        }
-    );
-
-    listen<{
-        roomId: string;
-        senderUserId: string;
-        offer: RTCSessionDescriptionInit;
-    }>('offer', async ({ roomId, senderUserId, offer }) => {
+    listen('call', async ({ roomId, senderUserId }) => {
         const currentUser = getCurrentUser();
 
         if (currentUser?.stream) {
             setupPeerConnection(senderUserId, {
+                onIceCandidate(candidate) {
+                    sendCandidate(currentUser.id, senderUserId, candidate);
+                },
                 onStreamAvailable(stream) {
                     updateUser(senderUserId, { stream });
                 },
                 onDisconnection() {
                     removeUser(senderUserId);
-                },
+                }
+            });
+
+            sendLocalStream(senderUserId);
+
+            emit('offer', {
+                roomId,
+                senderUserId: currentUser.id,
+                receiverUserId: senderUserId,
+                offer: await createOffer(senderUserId)
+            });
+        }
+    });
+
+    listen('offer', async ({ roomId, senderUserId, offer }) => {
+        const currentUser = getCurrentUser();
+
+        if (currentUser?.stream) {
+            setupPeerConnection(senderUserId, {
                 onIceCandidate(candidate) {
                     sendCandidate(currentUser.id, senderUserId, candidate);
+                },
+                onStreamAvailable(stream) {
+                    updateUser(senderUserId, { stream });
+                },
+                onDisconnection() {
+                    removeUser(senderUserId);
                 }
             });
 
@@ -205,7 +166,7 @@ export function useRoom(roomId: string) {
             emit('answer', {
                 roomId,
                 senderUserId: currentUser.id,
-                receiverUser: senderUserId,
+                receiverUserId: senderUserId,
                 answer: await createAnswer(senderUserId, offer)
             });
         }
@@ -213,28 +174,29 @@ export function useRoom(roomId: string) {
         setCallInProgress();
     });
 
-    listen<{ senderUserId: string; answer: RTCSessionDescriptionInit }>(
-        'answer',
-        ({ senderUserId, answer }) => {
-            processAnswer(senderUserId, answer);
+    listen('answer', ({ senderUserId, answer }) => {
+        processAnswer(senderUserId, answer);
 
-            setCallInProgress();
-        }
-    );
+        setCallInProgress();
+    });
 
-    listen<{ remotePeerId: string; sdpMLineIndex: number; candidate: string }>(
-        'iceCandidate',
-        ({ remotePeerId, sdpMLineIndex, candidate }) => {
-            addIceCandidate(remotePeerId, sdpMLineIndex, candidate);
-        }
-    );
+    listen('iceCandidate', ({ remotePeerId, sdpMLineIndex, candidate }) => {
+        addIceCandidate(remotePeerId, sdpMLineIndex, candidate);
+    });
 
-    listen<{ senderUserId: string; isMuted: boolean }>(
-        'toggleMicrophone',
-        ({ senderUserId, isMuted }) => {
-            updateUser(senderUserId, { isMuted });
-        }
-    );
+    listen('usersListUpdated', ({ users: updatedUsersList }) => {
+        users.value = mergeByKey(
+            users.value,
+            updatedUsersList.filter((user) => !isLocalUser(user)),
+            'id'
+        );
+    });
+
+    listen('userDisconnected', ({ userId }) => {
+        removeConnection(userId);
+
+        removeUser(userId);
+    });
 
     watch(
         () => getCurrentUser()?.stream,
