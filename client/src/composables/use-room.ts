@@ -144,7 +144,7 @@ export function useRoom(roomId: string) {
         }
     );
 
-    listen<{ userId: string }>('removedUser', ({ userId }) => {
+    listen<{ userId: string }>('userDisconnected', ({ userId }) => {
         removeConnection(userId);
 
         removeUser(userId);

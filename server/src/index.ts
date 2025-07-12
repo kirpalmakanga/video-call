@@ -102,7 +102,7 @@ io.on('connection', (socket) => {
 
         removeUserFromRoom(userId, roomId);
 
-        socket.to(roomId).emit('removedUser', { userId });
+        socket.to(roomId).emit('userDisconnected', { userId });
     }
 
     socket.on(
