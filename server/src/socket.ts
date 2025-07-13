@@ -101,7 +101,7 @@ export default function startSocketServer(
         }
 
         socket.on(
-            'join',
+            'joinRoom',
             async ({ roomId, user }: { roomId: string; user: User }) => {
                 const { id: userId } = user;
 
@@ -116,14 +116,14 @@ export default function startSocketServer(
         );
 
         socket.on(
-            'leave',
+            'leaveRoom',
             ({ roomId, userId }: { roomId: string; userId: string }) => {
                 removeUser(userId, roomId);
             }
         );
 
         socket.on('call', (event: { roomId: string; senderUserId: string }) => {
-            socket.to(event.roomId).emit('call', event);
+            socket.to(event.roomId).emit('incomingCall', event);
         });
 
         socket.on(
@@ -134,7 +134,7 @@ export default function startSocketServer(
                 receiverUserId: string;
                 offer: RTCSessionDescriptionInit;
             }) => {
-                socket.to(event.roomId).emit('offer', event);
+                socket.to(event.roomId).emit('incomingOffer', event);
             }
         );
 
@@ -146,7 +146,7 @@ export default function startSocketServer(
                 receiverUserId: string;
                 answer: RTCSessionDescriptionInit;
             }) => {
-                socket.to(event.roomId).emit('answer', event);
+                socket.to(event.roomId).emit('incomingAnswer', event);
             }
         );
 
@@ -159,7 +159,7 @@ export default function startSocketServer(
                 sdpMLineIndex: number;
                 candidate: string;
             }) => {
-                socket.to(event.roomId).emit('iceCandidate', event);
+                socket.to(event.roomId).emit('incomingIceCandidate', event);
             }
         );
 

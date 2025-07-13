@@ -1,10 +1,16 @@
-import { ref, watch } from 'vue';
+import { ref, watch, type Ref } from 'vue';
 
-import { useRTCSession } from './use-rtc-session.js';
-import { useSocket } from './use-socket.js';
-import { mergeByKey, omit, update } from '../utils/helpers.js';
+import { useRTCSession } from './use-rtc-session';
+import { useSocket } from './use-socket';
+import { mergeByKey, omit, update } from '../utils/helpers';
 
-export function useRoom(roomId: string) {
+interface RoomConfig {
+    roomId: string;
+    userRef: Ref<ClientUser>;
+    streamRef: Ref<MediaStream | null>;
+}
+
+export function useRoom({ roomId, userRef, streamRef }: RoomConfig) {
     const { emit, listen } = useSocket();
 
     const {
@@ -28,12 +34,8 @@ export function useRoom(roomId: string) {
         users.value = users.value.filter(({ id }) => id !== userId);
     }
 
-    function isLocalUser({ id }: ClientUser) {
-        return users.value[0]?.id === id;
-    }
-
-    function getCurrentUser() {
-        return users.value[0];
+    function isRemoteUser({ id }: ClientUser) {
+        return id !== userRef.value.id;
     }
 
     function updateUser(userId: string, data: Partial<ClientUser>) {
@@ -41,30 +43,24 @@ export function useRoom(roomId: string) {
     }
 
     function sendLocalStream(remotePeerId: string) {
-        const user = getCurrentUser();
-
-        if (user?.stream) {
-            bindStreamToConnection(remotePeerId, user.stream);
+        if (streamRef.value) {
+            bindStreamToConnection(remotePeerId, streamRef.value);
         }
     }
 
-    function joinRoom(user: ClientUser) {
-        users.value.push({ ...user, isLocalUser: true });
-
-        emit('join', { roomId, user: omit(user, 'stream', 'isLocalUser') });
+    function joinRoom() {
+        emit('joinRoom', { roomId, user: omit(userRef.value, 'stream') });
     }
 
-    async function makeCall() {
-        const user = getCurrentUser();
+    async function startCall() {
+        isConnecting.value = true;
 
-        if (user) {
-            isConnecting.value = true;
+        // emit('join', { roomId, user: omit(userRef.value, 'stream') });
 
-            emit('call', {
-                roomId,
-                senderUserId: user.id
-            });
-        }
+        emit('call', {
+            roomId,
+            senderUserId: userRef.value.id
+        });
     }
 
     function setCallInProgress() {
@@ -76,14 +72,10 @@ export function useRoom(roomId: string) {
     }
 
     function stopCall() {
-        const user = getCurrentUser();
-
-        if (user) {
-            emit('leave', {
-                roomId,
-                userId: user.id
-            });
-        }
+        emit('leaveRoom', {
+            roomId,
+            userId: userRef.value.id
+        });
 
         clearConnections();
     }
@@ -102,29 +94,19 @@ export function useRoom(roomId: string) {
         });
     }
 
-    function sendToggleMicrophone() {
-        const currentUser = getCurrentUser();
-
-        if (currentUser) {
-            const isMuted = !currentUser.isMuted;
-
-            emit('toggleMicrophone', {
-                roomId,
-                senderUserId: currentUser.id,
-                isMuted
-            });
-
-            updateUser(currentUser.id, { isMuted });
-        }
+    function sendMicrophoneStatus(isMuted: boolean) {
+        emit('toggleMicrophone', {
+            roomId,
+            senderUserId: userRef.value.id,
+            isMuted
+        });
     }
 
-    listen('call', async ({ roomId, senderUserId }) => {
-        const currentUser = getCurrentUser();
-
-        if (currentUser?.stream) {
+    listen('incomingCall', async ({ roomId, senderUserId }) => {
+        if (streamRef.value) {
             setupPeerConnection(senderUserId, {
                 onIceCandidate(candidate) {
-                    sendCandidate(currentUser.id, senderUserId, candidate);
+                    sendCandidate(userRef.value.id, senderUserId, candidate);
                 },
                 onStreamAvailable(stream) {
                     updateUser(senderUserId, { stream });
@@ -138,20 +120,18 @@ export function useRoom(roomId: string) {
 
             emit('offer', {
                 roomId,
-                senderUserId: currentUser.id,
+                senderUserId: userRef.value.id,
                 receiverUserId: senderUserId,
                 offer: await createOffer(senderUserId)
             });
         }
     });
 
-    listen('offer', async ({ roomId, senderUserId, offer }) => {
-        const currentUser = getCurrentUser();
-
-        if (currentUser?.stream) {
+    listen('incomingOffer', async ({ roomId, senderUserId, offer }) => {
+        if (streamRef.value) {
             setupPeerConnection(senderUserId, {
                 onIceCandidate(candidate) {
-                    sendCandidate(currentUser.id, senderUserId, candidate);
+                    sendCandidate(userRef.value.id, senderUserId, candidate);
                 },
                 onStreamAvailable(stream) {
                     updateUser(senderUserId, { stream });
@@ -165,29 +145,32 @@ export function useRoom(roomId: string) {
 
             emit('answer', {
                 roomId,
-                senderUserId: currentUser.id,
+                senderUserId: userRef.value.id,
                 receiverUserId: senderUserId,
                 answer: await createAnswer(senderUserId, offer)
             });
         }
 
-        setCallInProgress();
+        // setCallInProgress();
     });
 
-    listen('answer', ({ senderUserId, answer }) => {
+    listen('incomingAnswer', ({ senderUserId, answer }) => {
         processAnswer(senderUserId, answer);
 
-        setCallInProgress();
+        // setCallInProgress();
     });
 
-    listen('iceCandidate', ({ remotePeerId, sdpMLineIndex, candidate }) => {
-        addIceCandidate(remotePeerId, sdpMLineIndex, candidate);
-    });
+    listen(
+        'incomingIceCandidate',
+        ({ remotePeerId, sdpMLineIndex, candidate }) => {
+            addIceCandidate(remotePeerId, sdpMLineIndex, candidate);
+        }
+    );
 
     listen('usersListUpdated', ({ users: updatedUsersList }) => {
         users.value = mergeByKey(
             users.value,
-            updatedUsersList.filter((user) => !isLocalUser(user)),
+            updatedUsersList.filter(isRemoteUser),
             'id'
         );
     });
@@ -198,25 +181,22 @@ export function useRoom(roomId: string) {
         removeUser(userId);
     });
 
-    watch(
-        () => getCurrentUser()?.stream,
-        (stream, previousStream) => {
-            if (!isConnected.value) {
-                return;
-            }
-
-            if (previousStream) {
-                removeStreamFromAllConnections();
-            }
-
-            if (stream) {
-                bindStreamToAllConnections(stream);
-            }
+    watch(streamRef, (stream, previousStream) => {
+        if (!isConnected.value) {
+            return;
         }
-    );
+
+        if (previousStream) {
+            removeStreamFromAllConnections();
+        }
+
+        if (stream) {
+            bindStreamToAllConnections(stream);
+        }
+    });
 
     watch(users, () => {
-        if (isConnected.value && users.value.length <= 1) {
+        if (users.value.length === 0) {
             isConnected.value = false;
 
             clearConnections();
@@ -227,11 +207,9 @@ export function useRoom(roomId: string) {
         users,
         isConnected,
         isConnecting,
-        getCurrentUser,
         joinRoom,
-        updateUser,
-        makeCall,
+        startCall,
         stopCall,
-        sendToggleMicrophone
+        sendMicrophoneStatus
     };
 }

@@ -5,6 +5,18 @@ interface CommonEvents {
         roomId: string;
         senderUserId: string;
     };
+}
+
+interface EmittedEventsPayloads extends CommonEvents {
+    joinRoom: { roomId: string; user: User };
+    call: {
+        roomId: string;
+        senderUserId: string;
+    };
+    leaveRoom: {
+        roomId: string;
+        userId: string;
+    };
     offer: {
         roomId: string;
         senderUserId: string;
@@ -16,14 +28,6 @@ interface CommonEvents {
         senderUserId: string;
         receiverUserId: string;
         answer: RTCSessionDescriptionInit;
-    };
-}
-
-interface EmittedEventsPayloads extends CommonEvents {
-    join: { roomId: string; user: User };
-    leave: {
-        roomId: string;
-        userId: string;
     };
     iceCandidate: {
         senderUserId: string;
@@ -40,12 +44,27 @@ interface EmittedEventsPayloads extends CommonEvents {
 }
 
 interface ListenedEventPayloads extends CommonEvents {
-    iceCandidate: {
+    incomingCall: {
+        roomId: string;
+        senderUserId: string;
+    };
+    incomingOffer: {
+        roomId: string;
+        senderUserId: string;
+        receiverUserId: string;
+        offer: RTCSessionDescriptionInit;
+    };
+    incomingAnswer: {
+        roomId: string;
+        senderUserId: string;
+        receiverUserId: string;
+        answer: RTCSessionDescriptionInit;
+    };
+    incomingIceCandidate: {
         remotePeerId: string;
         sdpMLineIndex: number;
         candidate: string;
     };
-    toggleMicrophone: { senderUserId: string; isMuted: boolean };
     usersListUpdated: { users: ClientUser[] };
     userDisconnected: { userId: string };
 }

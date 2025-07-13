@@ -7,10 +7,10 @@ import {
     reactive,
     watch
 } from 'vue';
-import Contain from './base/Contain.vue';
-import Icon from './base/Icon.vue';
-import LoadingIcon from './base/LoadingIcon.vue';
-import { useVolumeLevel } from '../composables/use-volume-level';
+import Contain from '../base/Contain.vue';
+import Icon from '../base/Icon.vue';
+import LoadingIcon from '../base/LoadingIcon.vue';
+import { useVolumeLevel } from '../../composables/use-volume-level';
 
 const props = withDefaults(
     defineProps<{
@@ -37,24 +37,8 @@ const video = ref<HTMLVideoElement>();
 const volume = useVolumeLevel(computed(() => props.stream));
 
 async function setVideoSource(stream: MediaStream | null) {
-    if (!video.value) {
-        return;
-    }
-
-    if (stream) {
+    if (video.value) {
         video.value.srcObject = stream;
-
-        // stream.getAudioTracks().forEach((track) => {
-        //     track.addEventListener('ended', () => {
-        //         console.log('ended');
-        //     });
-        //     track.addEventListener('mute', () => {
-        //         console.log('mute');
-        //     });
-        //     track.addEventListener('unmute', () => {
-        //         console.log('unmute');
-        //     });
-        // });
     }
 }
 
