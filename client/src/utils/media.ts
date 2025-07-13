@@ -1,11 +1,15 @@
 const { mediaDevices } = navigator;
 
-export function getStream(constraints: MediaStreamConstraints) {
+export function createStream(constraints: MediaStreamConstraints) {
     return mediaDevices.getUserMedia(constraints);
 }
 
+export function closeStream(stream: MediaStream) {
+    stream.getTracks().map((track) => track.stop());
+}
+
 export async function getAudioTrack(deviceId: string) {
-    const stream = await getStream({ audio: { deviceId } });
+    const stream = await createStream({ audio: { deviceId } });
 
     const [track] = stream.getAudioTracks();
 
@@ -13,15 +17,11 @@ export async function getAudioTrack(deviceId: string) {
 }
 
 export async function getVideoTrack(deviceId: string) {
-    const stream = await getStream({ video: { deviceId } });
+    const stream = await createStream({ video: { deviceId } });
 
     const [track] = stream.getVideoTracks();
 
     return track;
-}
-
-export function closeStream(stream: MediaStream) {
-    stream.getTracks().map((track) => track.stop());
 }
 
 export async function getAvailableDevices(deviceType: 'audio' | 'video') {
