@@ -118,16 +118,16 @@ async function loadSettings() {
     state.isLoading = false;
 }
 
-watch(
-    () => props.isVisible,
-    (isVisible) => {
-        if (props.isVisible) {
-            loadSettings();
-        } else {
-            removeStream();
-        }
+function onVisibilityChange(isVisible: boolean) {
+    if (props.isVisible) {
+        loadSettings();
+    } else {
+        removeStream();
     }
-);
+}
+
+watch(() => props.isVisible, onVisibilityChange);
+
 onBeforeUnmount(removeStream);
 </script>
 

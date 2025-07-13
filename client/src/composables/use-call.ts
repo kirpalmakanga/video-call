@@ -1,4 +1,3 @@
-import { v4 as uuid } from 'uuid';
 import { useRoom } from './use-room';
 import { useStore } from './use-store';
 import { computed, reactive, toRefs, watch } from 'vue';
@@ -27,7 +26,7 @@ export function useCall() {
         isMicrophoneDisabled: false
     });
 
-    const userId = uuid();
+    const userId = crypto.randomUUID();
 
     const currentUser: ClientUser = {
         id: userId,

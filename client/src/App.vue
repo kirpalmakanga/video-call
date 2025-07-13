@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import Call from './components/Room.vue';
+import { RouterView } from 'vue-router';
 </script>
 
 <template>
-    <Call />
+    <RouterView />
 </template>
