@@ -8,10 +8,11 @@ import ScrollContainer from './base/ScrollContainer.vue';
 import SlidePanel from './base/SlidePanel.vue';
 import AudioPreview from './base/AudioPreview.vue';
 import VideoPreview from './base/VideoPreview.vue';
-import { closeStream, getAvailableDevices, getStream } from '../utils/media';
-import { useStore } from '../composables/use-store';
+import { getAvailableDevices } from '../utils/media';
+import { useSettingsStore } from '../composables/store/use-settings-store';
+import { useMediaStream } from '../composables/use-media-stream';
 
-const { audioDeviceId, videoDeviceId } = useStore();
+const { audioDeviceId, videoDeviceId } = useSettingsStore();
 
 interface Props {
     isVisible: boolean;
@@ -30,14 +31,14 @@ interface State {
     isLoading: boolean;
     videoDevices: Device[];
     audioDevices: Device[];
-    stream: MediaStream | null;
 }
+
+const { enableStream, disableStream } = useMediaStream();
 
 const state = reactive<State>({
     isLoading: false,
     videoDevices: [],
-    audioDevices: [],
-    stream: null
+    audioDevices: []
 });
 
 const videoDeviceSelectItems = computed(() =>
@@ -47,24 +48,6 @@ const videoDeviceSelectItems = computed(() =>
 const audioDeviceSelectItems = computed(() =>
     state.audioDevices.map(({ label, id: value }) => ({ label, value }))
 );
-
-function removeStream() {
-    if (state.stream) {
-        closeStream(state.stream);
-
-        state.stream = null;
-    }
-}
-
-async function openStream() {
-    try {
-        if (!state.stream) {
-            state.stream = await getStream({ audio: true, video: true });
-        }
-    } catch (error) {
-        console.error(error);
-    }
-}
 
 function setDefaultVideoDeviceId() {
     if (videoDeviceId.value) {
@@ -109,7 +92,8 @@ async function loadSettings() {
 
     state.isLoading = true;
 
-    await openStream();
+    await enableStream({ audio: true, video: true });
+
     await fetchDevices();
 
     setDefaultVideoDeviceId();
@@ -119,16 +103,16 @@ async function loadSettings() {
 }
 
 function onVisibilityChange(isVisible: boolean) {
-    if (props.isVisible) {
+    if (isVisible) {
         loadSettings();
     } else {
-        removeStream();
+        disableStream();
     }
 }
 
 watch(() => props.isVisible, onVisibilityChange);
 
-onBeforeUnmount(removeStream);
+onBeforeUnmount(disableStream);
 </script>
 
 <template>

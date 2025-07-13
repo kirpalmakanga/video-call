@@ -1,51 +1,34 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { onBeforeUnmount, useTemplateRef, watch } from 'vue';
 import LoadingIcon from './LoadingIcon.vue';
-import { closeStream, getStream } from '../../utils/media';
+import { useMediaStream } from '../../composables/use-media-stream';
 
-const video = ref<HTMLVideoElement>();
-const isLoading = ref<boolean>(true);
+const video = useTemplateRef<HTMLVideoElement>('video');
 
 const props = defineProps<{ deviceId: string | null }>();
 
-async function setupStream() {
-    const { deviceId } = props;
-
-    isLoading.value = true;
-
-    if (deviceId && video.value) {
-        try {
-            video.value.srcObject = await getStream({ video: { deviceId } });
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    isLoading.value = false;
-}
-
-function clearStream() {
-    if (video.value) {
-        closeStream(video.value.srcObject as MediaStream);
-
-        video.value.srcObject = null;
-    }
-}
+const { stream, isLoadingStream, enableStream, disableStream } =
+    useMediaStream();
 
 watch(
     () => props.deviceId,
     async (deviceId) => {
         if (deviceId) {
-            setupStream();
+            enableStream({ video: { deviceId } });
         } else {
-            clearStream();
+            disableStream();
         }
-    }
+    },
+    { immediate: true }
 );
 
-onMounted(setupStream);
+watch(stream, (stream: MediaStream | null) => {
+    if (video.value) {
+        video.value.srcObject = stream;
+    }
+});
 
-onBeforeUnmount(clearStream);
+onBeforeUnmount(disableStream);
 </script>
 
 <template>
@@ -54,7 +37,7 @@ onBeforeUnmount(clearStream);
 
         <Transition name="fade">
             <div
-                v-if="isLoading"
+                v-if="isLoadingStream"
                 class="absolute inset-0 bg-gray-800 flex items-center justify-center"
             >
                 <LoadingIcon class="w-6 h-6" />

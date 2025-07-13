@@ -1,35 +1,27 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref, shallowRef, watch } from 'vue';
+import { onBeforeUnmount, watch } from 'vue';
 import { useVolumeLevel } from '../../composables/use-volume-level';
-import { getStream, closeStream } from '../../utils/media';
+import { useMediaStream } from '../../composables/use-media-stream';
 
 const props = defineProps<{ deviceId: string | null }>();
 
-const stream = ref<MediaStream | null>(null);
+const { stream, enableStream, disableStream } = useMediaStream();
 
 const volume = useVolumeLevel(stream);
-
-function clearStream() {
-    if (stream.value) {
-        closeStream(stream.value);
-    }
-}
 
 watch(
     () => props.deviceId,
     async (deviceId) => {
-        clearStream();
+        disableStream();
 
         if (deviceId) {
-            stream.value = await getStream({ audio: { deviceId } });
-        } else {
-            stream.value = null;
+            enableStream({ audio: { deviceId } });
         }
     },
     { immediate: true }
 );
 
-onBeforeUnmount(clearStream);
+onBeforeUnmount(disableStream);
 </script>
 
 <template>
