@@ -15,8 +15,8 @@ import { useVolumeLevel } from '../../composables/use-volume-level';
 const props = withDefaults(
     defineProps<{
         name: string;
-        isLocalUser?: boolean;
-        isActiveUser?: boolean;
+        isLocalParticipant?: boolean;
+        isActiveParticipant?: boolean;
         stream: MediaStream | null;
         isMuted: boolean;
     }>(),
@@ -65,55 +65,56 @@ onBeforeUnmount(() => setVideoSource(null));
 </script>
 
 <template>
-    <div
-        class="relative flex flex-grow rounded overflow-hidden"
-        :style="!isActiveUser ? { aspectRatio: state.aspectRatio } : null"
+    <Contain
+        class="flex-grow"
+        :aspect-ratio="state.aspectRatio"
+        :style="
+            !isActiveParticipant ? { aspectRatio: state.aspectRatio } : null
+        "
     >
-        <Contain class="flex-grow" :aspect-ratio="state.aspectRatio">
-            <div class="relative flex w-full h-full rounded overflow-hidden">
-                <video
-                    ref="video"
-                    class="flex-grow"
-                    :muted="isLocalUser || isMuted"
-                    autoplay
-                    @loadeddata="onVideoLoaded"
-                />
+        <div class="relative flex w-full h-full rounded overflow-hidden">
+            <video
+                ref="video"
+                class="flex-grow"
+                autoplay
+                :muted="isLocalParticipant || isActiveParticipant || isMuted"
+                @loadeddata="onVideoLoaded"
+            />
 
-                <div
-                    class="absolute inset-0 transition-opacity"
-                    :class="{ 'ring-4 ring-inset ring-blue-600 ': volume > 20 }"
-                ></div>
+            <div
+                class="absolute inset-0 transition-opacity"
+                :class="{ 'ring-4 ring-inset ring-blue-600 ': volume > 20 }"
+            ></div>
 
-                <span class="absolute left-2 right-2 bottom-2 flex">
-                    <span
-                        class="bg-gray-800 text-gray-100 rounded whitespace-nowrap overflow-hidden text-ellipsis px-2 py-1"
-                    >
-                        {{ name }}
-                    </span>
-                </span>
-
-                <button
-                    class="absolute top-2 right-2 bg-gray-800 text-gray-100 rounded p-1 flex justify-center items-center"
-                    :class="{
-                        'pointer-events-none cursor-default': isLocalUser
-                    }"
-                    @click.stop="emit('toggle-mute')"
+            <span class="absolute left-2 right-2 bottom-2 flex">
+                <span
+                    class="bg-gray-800 text-gray-100 rounded whitespace-nowrap overflow-hidden text-ellipsis px-2 py-1"
                 >
-                    <Icon
-                        class="w-5 h-5"
-                        :name="isMuted ? 'microphone-off' : 'microphone'"
-                    />
-                </button>
-            </div>
-        </Contain>
-
-        <Transition name="fade">
-            <span
-                v-if="state.isLoading"
-                class="absolute inset-0 flex justify-center items-center bg-gray-800 text-gray-100"
-            >
-                <LoadingIcon class="w-6 h-6" />
+                    {{ name }}
+                </span>
             </span>
-        </Transition>
-    </div>
+
+            <button
+                class="absolute top-2 right-2 bg-gray-800 text-gray-100 rounded p-1 flex justify-center items-center"
+                :class="{
+                    'pointer-events-none cursor-default': isLocalParticipant
+                }"
+                @click.stop="emit('toggle-mute')"
+            >
+                <Icon
+                    class="w-5 h-5"
+                    :name="isMuted ? 'microphone-off' : 'microphone'"
+                />
+            </button>
+
+            <Transition name="fade">
+                <span
+                    v-if="state.isLoading"
+                    class="absolute inset-0 flex justify-center items-center bg-gray-800 text-gray-100"
+                >
+                    <LoadingIcon class="w-6 h-6" />
+                </span>
+            </Transition>
+        </div>
+    </Contain>
 </template>

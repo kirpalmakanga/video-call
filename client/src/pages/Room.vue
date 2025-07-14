@@ -24,7 +24,7 @@ type ViewMode = 'sidebar' | 'grid';
 interface State {
     viewMode: ViewMode;
     areSettingsVisible: boolean;
-    activeUserId: string | null;
+    activeParticipantId: string | null;
 }
 
 const userId = crypto.randomUUID();
@@ -47,7 +47,7 @@ const {
     toggleAudio
 } = useMediaStream();
 
-const currentUser = ref<ClientUser>({
+const localParticipant = ref<ClientUser>({
     id: userId,
     name: `user_${userId}`,
     stream: null,
@@ -56,25 +56,26 @@ const currentUser = ref<ClientUser>({
 
 const { users, startCall, stopCall, sendMicrophoneStatus } = useRoom({
     roomId: roomId as string,
-    userRef: currentUser,
+    userRef: localParticipant,
     streamRef: stream
 });
 
 const state = reactive<State>({
     viewMode: 'sidebar',
     areSettingsVisible: false,
-    activeUserId: null
+    activeParticipantId: null
 });
 
-const activeUser = computed(() => {
-    if (state.activeUserId) {
-        return users.value.find(({ id }) => id === state.activeUserId);
-    }
+const allParticipants = computed(() => [
+    localParticipant.value,
+    ...users.value
+]);
 
-    return currentUser.value;
+const activeParticipant = computed(() => {
+    return allParticipants.value.find(
+        ({ id }) => id === state.activeParticipantId
+    );
 });
-
-const allUsers = computed(() => [currentUser.value, ...users.value]);
 
 const areDevicesReady = computed(
     () => audioDeviceId.value && videoDeviceId.value
@@ -92,12 +93,16 @@ function toggleViewMode() {
     state.viewMode = isViewMode('grid') ? 'sidebar' : 'grid';
 }
 
-function isActiveUser(id: string) {
-    return state.activeUserId === id;
+function isLocalParticipant(id: string) {
+    return id === localParticipant.value.id;
 }
 
-function setActiveUser(id: string) {
-    state.activeUserId = id;
+function isActiveParticipant(id: string) {
+    return id === state.activeParticipantId;
+}
+
+function setActiveParticipant(id: string) {
+    state.activeParticipantId = id;
 }
 
 function toggleMuteUser(userId: string) {
@@ -128,7 +133,7 @@ function leaveRoom() {
 }
 
 watch(stream, () => {
-    currentUser.value.stream = stream.value;
+    localParticipant.value.stream = stream.value;
 
     if (stream.value) {
         startCall();
@@ -138,19 +143,12 @@ watch(stream, () => {
 watch(isAudioEnabled, (isEnabled) => sendMicrophoneStatus(!isEnabled));
 
 watch(users, (currentUsers) => {
-    // if (
-    //     currentUsers.some(({ id }) => id === state.activeUserId) ||
-    //     !currentUsers.length
-    // ) {
-    //     return;
-    // }
-
     const lastUser = currentUsers.at(-1);
 
     if (lastUser) {
-        setActiveUser(lastUser.id);
+        setActiveParticipant(lastUser.id);
     } else {
-        setActiveUser(currentUser.value.id);
+        setActiveParticipant(localParticipant.value.id);
     }
 });
 
@@ -168,15 +166,15 @@ onBeforeUnmount(() => {
 <template>
     <section class="flex flex-col flex-grow gap-4 p-4">
         <div class="relative flex flex-grow gap-4">
-            <section
+            <div
                 v-if="isViewMode('sidebar')"
                 class="flex flex-col flex-grow gap-4"
             >
                 <Participant
-                    v-if="activeUser"
-                    v-bind="activeUser"
-                    :is-active-user="true"
-                    @toggle-mute="toggleMuteUser(activeUser.id)"
+                    v-if="activeParticipant"
+                    v-bind="activeParticipant"
+                    :is-active-participant="true"
+                    @toggle-mute="toggleMuteUser(activeParticipant.id)"
                 />
 
                 <Placeholder
@@ -185,36 +183,41 @@ onBeforeUnmount(() => {
                     icon="camera"
                     text="Awaiting participants..."
                 />
-            </section>
+            </div>
 
-            <aside
-                v-if="isViewMode('sidebar') && allUsers.length > 1"
+            <div
+                v-if="isViewMode('sidebar') && allParticipants.length > 1"
                 class="w-64 relative h-full overflow-y-auto"
             >
                 <ul class="flex flex-col gap-4">
-                    <template v-for="{ id, ...user } of allUsers" :key="id">
+                    <template
+                        v-for="{ id, ...user } of allParticipants"
+                        :key="id"
+                    >
                         <li>
                             <Participant
                                 class="block hover:scale-90 hover:active:scale-100 transition-transform shadow"
-                                :class="{ hidden: isActiveUser(id) }"
+                                :class="{ hidden: isActiveParticipant(id) }"
                                 v-bind="user"
+                                :is-local-participant="isLocalParticipant(id)"
                                 @toggle-mute="toggleMuteUser(id)"
-                                @click="setActiveUser(id)"
+                                @click="setActiveParticipant(id)"
                             />
                         </li>
                     </template>
                 </ul>
-            </aside>
+            </div>
 
             <ParticipantGrid
                 v-else-if="isViewMode('grid')"
                 class="grow"
-                :users="allUsers"
+                :users="allParticipants"
             >
                 <template #item="{ id, ...user }">
                     <Participant
                         class="block shadow"
                         v-bind="user"
+                        :is-local-participant="isLocalParticipant(id)"
                         @toggle-mute="toggleMuteUser(id)"
                     />
                 </template>
