@@ -8,8 +8,7 @@ import {
     watch
 } from 'vue';
 import Contain from '../base/Contain.vue';
-import Icon from '../base/Icon.vue';
-import LoadingIcon from '../base/LoadingIcon.vue';
+import Loader from '../base/Loader.vue';
 import { useVolumeLevel } from '../../composables/use-volume-level';
 
 const props = withDefaults(
@@ -87,7 +86,7 @@ onBeforeUnmount(() => setVideoSource(null));
 
             <span class="absolute left-2 right-2 bottom-2 flex">
                 <span
-                    class="bg-gray-800 text-gray-100 rounded whitespace-nowrap overflow-hidden text-ellipsis px-2 py-1"
+                    class="bg-gray-800 text-gray-100 text-sm rounded whitespace-nowrap overflow-hidden text-ellipsis px-2 py-1"
                 >
                     {{ name }}
                 </span>
@@ -100,9 +99,11 @@ onBeforeUnmount(() => setVideoSource(null));
                 }"
                 @click.stop="emit('toggle-mute')"
             >
-                <Icon
+                <UIcon
                     class="w-5 h-5"
-                    :name="isMuted ? 'microphone-off' : 'microphone'"
+                    :name="
+                        isMuted ? 'i-mdi-microphone' : 'i-mdi-microphone-off'
+                    "
                 />
             </button>
 
@@ -111,7 +112,7 @@ onBeforeUnmount(() => setVideoSource(null));
                     v-if="state.isLoading"
                     class="absolute inset-0 flex justify-center items-center bg-gray-800 text-gray-100"
                 >
-                    <LoadingIcon class="w-6 h-6" />
+                    <Loader class="w-6 h-6" />
                 </span>
             </Transition>
         </div>

@@ -1,23 +1,27 @@
-import { reactive, toRefs, watchEffect } from 'vue';
+import { reactive, toRefs, watch } from 'vue';
 import { getStorageItem, setStorageItem } from '../../utils/storage';
 
 interface State {
+    displayName: string;
     audioDeviceId: string;
     videoDeviceId: string;
 }
 
-const state = reactive<State>({
-    audioDeviceId: getStorageItem('audioDeviceId') || null,
-    videoDeviceId: getStorageItem('videoDeviceId') || null
+const state = reactive<State>(
+    getStorageItem('settings') || {
+        displayName: '',
+        audioDeviceId: '',
+        videoDeviceId: ''
+    }
+);
+
+watch(state, () => {
+    console.log('saveSettings');
+
+    setStorageItem('settings', state);
 });
 
 export function useSettingsStore() {
-    watchEffect(() => {
-        setStorageItem('videoDeviceId', state.videoDeviceId);
-
-        setStorageItem('audioDeviceId', state.audioDeviceId);
-    });
-
     return {
         ...toRefs(state)
     };

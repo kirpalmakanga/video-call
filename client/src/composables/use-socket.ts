@@ -33,6 +33,11 @@ interface EmittedEventsPayloads {
         senderUserId: string;
         isMuted: boolean;
     };
+    updateUser: {
+        roomId: string;
+        senderUserId: string;
+        data: Omit<Partial<ClientUser>, 'stream'>;
+    };
 }
 
 interface ListenedEventPayloads {

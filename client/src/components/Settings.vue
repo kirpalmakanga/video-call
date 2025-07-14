@@ -1,24 +1,14 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, reactive, watch } from 'vue';
-import Button from './base/Button.vue';
-import Dropdown from './base/Dropdown.vue';
-import Icon from './base/Icon.vue';
-import LoadingIcon from './base/LoadingIcon.vue';
+import { computed, onBeforeUnmount, onMounted, reactive } from 'vue';
+import Loader from './base/Loader.vue';
 import ScrollContainer from './base/ScrollContainer.vue';
-import SlidePanel from './base/SlidePanel.vue';
 import AudioPreview from './base/AudioPreview.vue';
 import VideoPreview from './base/VideoPreview.vue';
 import { getAvailableDevices } from '../utils/media';
 import { useSettingsStore } from '../composables/store/use-settings-store';
 import { useMediaStream } from '../composables/use-media-stream';
 
-const { audioDeviceId, videoDeviceId } = useSettingsStore();
-
-interface Props {
-    isVisible: boolean;
-}
-
-const props = defineProps<Props>();
+const { displayName, audioDeviceId, videoDeviceId } = useSettingsStore();
 
 const emit = defineEmits<{ close: [e: void] }>();
 
@@ -102,88 +92,81 @@ async function loadSettings() {
     state.isLoading = false;
 }
 
-function onVisibilityChange(isVisible: boolean) {
-    if (isVisible) {
-        loadSettings();
-    } else {
-        disableStream();
-    }
-}
-
-watch(() => props.isVisible, onVisibilityChange);
+onMounted(loadSettings);
 
 onBeforeUnmount(disableStream);
 </script>
 
 <template>
-    <SlidePanel title="Settings" :is-visible="isVisible" @close="emit('close')">
-        <template v-if="isVisible">
-            <ScrollContainer class="grow">
-                <div class="relative flex flex-col grow gap-8 text-gray-100">
-                    <div class="flex flex-col">
-                        <h2 class="font-bold mb-2 flex items-center">
-                            <Icon class="w-5 h-5 mr-2" name="camera" />
-                            Camera
-                        </h2>
+    <ScrollContainer class="grow">
+        <div class="relative flex flex-col grow gap-8 text-gray-100">
+            <UFormField label="Display name">
+                <UInput
+                    class="w-full"
+                    variant="soft"
+                    size="lg"
+                    v-model="displayName"
+                />
+            </UFormField>
 
-                        <VideoPreview :device-id="videoDeviceId" />
+            <UFormField label="Camera">
+                <VideoPreview class="rounded" :device-id="videoDeviceId" />
 
-                        <Dropdown
-                            :items="videoDeviceSelectItems"
-                            :disabled="!state.videoDevices.length"
-                            v-model="videoDeviceId"
-                        />
+                <USelect
+                    class="w-full mt-2"
+                    variant="soft"
+                    size="lg"
+                    :items="videoDeviceSelectItems"
+                    :disabled="!state.videoDevices.length"
+                    v-model="videoDeviceId"
+                />
 
-                        <p
-                            v-if="!state.videoDevices.length"
-                            class="bg-red-500 p-4 mt-4"
-                        >
-                            No camera found. Check if it is plugged in and you
-                            gave the proper permissions then refresh.
-                        </p>
-                    </div>
+                <UAlert
+                    v-if="!state.videoDevices.length"
+                    class="mt-4"
+                    color="error"
+                    description="
+                    No camera found. Check if it is plugged in and you gave the
+                    proper permissions then refresh."
+                />
+            </UFormField>
 
-                    <div class="flex flex-col">
-                        <h2 class="font-bold mb-2 flex items-center">
-                            <Icon class="w-5 h-5 mr-2" name="microphone" />
-                            Microphone
-                        </h2>
+            <UFormField label="Microphone">
+                <AudioPreview :device-id="audioDeviceId" />
 
-                        <AudioPreview :device-id="audioDeviceId" />
+                <USelect
+                    class="w-full mt-2"
+                    variant="soft"
+                    size="lg"
+                    :items="audioDeviceSelectItems"
+                    :disabled="!state.audioDevices.length"
+                    v-model="audioDeviceId"
+                />
 
-                        <Dropdown
-                            :items="audioDeviceSelectItems"
-                            :disabled="!state.audioDevices.length"
-                            v-model="audioDeviceId"
-                        />
+                <UAlert
+                    v-if="!state.audioDevices.length"
+                    class="mt-2"
+                    color="error"
+                    description="No microphone found. Check if it is plugged in and you gave the proper permissions then refresh."
+                />
+            </UFormField>
 
-                        <p
-                            v-if="!state.audioDevices.length"
-                            class="bg-red-500 p-4 mt-4"
-                        >
-                            No microphone found. Check if it is plugged in and
-                            you gave the proper permissions then refresh.
-                        </p>
-                    </div>
-
-                    <Transition name="fade" mode="out-in">
-                        <div
-                            v-if="state.isLoading"
-                            class="absolute inset-0 bg-gray-900 flex justify-center"
-                        >
-                            <LoadingIcon class="w-6 h-6 text-gray-100" />
-                        </div>
-                    </Transition>
+            <Transition name="fade" mode="out-in">
+                <div
+                    v-if="state.isLoading"
+                    class="absolute inset-0 bg-gray-900 flex justify-center"
+                >
+                    <Loader class="w-6 h-6 text-gray-100" />
                 </div>
-            </ScrollContainer>
+            </Transition>
+        </div>
+    </ScrollContainer>
 
-            <div class="flex justify-end gap-4 mt-8">
-                <Button @click="loadSettings" :disabled="state.isLoading">
-                    Refresh devices
-                </Button>
+    <div class="flex justify-end gap-4 mt-8">
+        <UButton @click="loadSettings" :disabled="state.isLoading">
+            Refresh devices
+        </UButton>
 
-                <Button @click="emit('close')">Done</Button>
-            </div>
-        </template>
-    </SlidePanel>
+        <UButton @click="emit('close')">Done</UButton>
+    </div>
 </template>

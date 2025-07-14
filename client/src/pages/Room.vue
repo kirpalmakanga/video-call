@@ -10,7 +10,7 @@ import {
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import ControlButton from '../components/base/ControlButton.vue';
+import RoomControlButton from '../components/room/RoomControlButton.vue';
 import Settings from '../components/Settings.vue';
 import Participant from '../components/room/Participant.vue';
 import { useMediaStream } from '../composables/use-media-stream';
@@ -18,6 +18,12 @@ import { useRoom } from '../composables/use-room';
 import { useSettingsStore } from '../composables/store/use-settings-store';
 import Placeholder from '../components/base/Placeholder.vue';
 import ParticipantGrid from '../components/room/ParticipantGrid.vue';
+import { debounce } from '../utils/helpers';
+
+const viewModeIcons = {
+    grid: 'i-mdi-view-grid',
+    sidebar: 'i-mdi-dock-right'
+};
 
 type ViewMode = 'sidebar' | 'grid';
 
@@ -35,7 +41,7 @@ const {
     params: { roomId }
 } = useRoute();
 
-const { videoDeviceId, audioDeviceId } = useSettingsStore();
+const { displayName, videoDeviceId, audioDeviceId } = useSettingsStore();
 
 const {
     stream,
@@ -49,12 +55,12 @@ const {
 
 const localParticipant = ref<ClientUser>({
     id: userId,
-    name: `user_${userId}`,
+    name: displayName.value || `user_${userId}`,
     stream: null,
     isMuted: false
 });
 
-const { users, startCall, stopCall, sendMicrophoneStatus } = useRoom({
+const { users, startCall, stopCall } = useRoom({
     roomId: roomId as string,
     userRef: localParticipant,
     streamRef: stream
@@ -140,7 +146,16 @@ watch(stream, () => {
     }
 });
 
-watch(isAudioEnabled, (isEnabled) => sendMicrophoneStatus(!isEnabled));
+watch(
+    displayName,
+    debounce((name: string) => {
+        localParticipant.value = { ...localParticipant.value, name };
+    }, 1000)
+);
+
+watch(isAudioEnabled, (isEnabled) => {
+    localParticipant.value = { ...localParticipant.value, isMuted: !isEnabled };
+});
 
 watch(users, (currentUsers) => {
     const lastUser = currentUsers.at(-1);
@@ -177,7 +192,7 @@ onBeforeUnmount(() => {
                 <Placeholder
                     v-else
                     class="grow bg-gray-800 text-gray-100 rounded"
-                    icon="camera"
+                    icon="i-mdi-video"
                     text="Awaiting participants..."
                 />
             </div>
@@ -221,26 +236,36 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="flex justify-center items-end gap-4">
-            <ControlButton
-                :icon="isVideoEnabled ? 'camera' : 'camera-off'"
+            <RoomControlButton
+                :icon="isVideoEnabled ? 'i-mdi-video' : 'i-mdi-video-off'"
                 @click="toggleVideo"
             />
-            <ControlButton
-                :icon="isAudioEnabled ? 'microphone' : 'microphone-off'"
+            <RoomControlButton
+                :icon="
+                    isAudioEnabled ? 'i-mdi-microphone' : 'i-mdi-microphone-off'
+                "
                 @click="toggleAudio"
             />
-            <ControlButton
+            <RoomControlButton
                 class="w-16 h-16 text-gray-100 bg-red-900"
-                icon="call-off"
+                icon="i-mdi-phone-off"
                 @click="leaveRoom"
             />
-            <ControlButton icon="settings" @click="toggleSettings" />
-            <ControlButton :icon="state.viewMode" @click="toggleViewMode" />
+            <RoomControlButton icon="i-mdi-cog" @click="toggleSettings" />
+            <RoomControlButton
+                :icon="viewModeIcons[state.viewMode]"
+                @click="toggleViewMode"
+            />
         </div>
 
-        <Settings
-            :is-visible="state.areSettingsVisible"
-            @close="toggleSettings"
-        />
+        <USlideover
+            title="Settings"
+            v-model:open="state.areSettingsVisible"
+            :ui="{ body: 'flex flex-col' }"
+        >
+            <template #body>
+                <Settings class="h-full" @close="toggleSettings" />
+            </template>
+        </USlideover>
     </section>
 </template>

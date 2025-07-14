@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, useTemplateRef, watch } from 'vue';
-import LoadingIcon from './LoadingIcon.vue';
+import Loader from './Loader.vue';
 import { useMediaStream } from '../../composables/use-media-stream';
 
 const video = useTemplateRef<HTMLVideoElement>('video');
@@ -40,7 +40,7 @@ onBeforeUnmount(disableStream);
                 v-if="isLoadingStream"
                 class="absolute inset-0 bg-gray-800 flex items-center justify-center"
             >
-                <LoadingIcon class="w-6 h-6" />
+                <Loader class="w-6 h-6" />
             </div>
         </Transition>
     </div>

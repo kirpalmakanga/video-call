@@ -163,15 +163,17 @@ export default function startSocketServer(
         );
 
         socket.on(
-            'toggleMicrophone',
-            (event: {
+            'updateUser',
+            ({
+                roomId,
+                senderUserId,
+                data
+            }: {
                 roomId: string;
                 senderUserId: string;
-                isMuted: boolean;
+                data: Omit<Partial<ClientUser>, 'stream'>;
             }) => {
-                updateUser(event.senderUserId, event.roomId, {
-                    isMuted: event.isMuted
-                });
+                updateUser(senderUserId, roomId, data);
             }
         );
     });

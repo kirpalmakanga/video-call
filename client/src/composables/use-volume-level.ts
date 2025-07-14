@@ -52,11 +52,11 @@ export function useVolumeLevel(stream: Ref<MediaStream | null>) {
 
                 volume.value = v > 100 ? 100 : v;
 
-                window.requestAnimationFrame(onFrame);
+                requestAnimationFrame(onFrame);
             }
         }
 
-        window.requestAnimationFrame(onFrame);
+        requestAnimationFrame(onFrame);
     }
 
     watch(

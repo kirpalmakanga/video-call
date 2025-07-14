@@ -27,8 +27,6 @@ export function useRoom({ roomId, userRef, streamRef }: RoomConfig) {
     } = useRTCSession();
 
     const users = ref<ClientUser[]>([]);
-    const isConnected = ref<boolean>(false);
-    const isConnecting = ref<boolean>(false);
 
     function removeUser(userId: string) {
         users.value = users.value.filter(({ id }) => id !== userId);
@@ -49,8 +47,6 @@ export function useRoom({ roomId, userRef, streamRef }: RoomConfig) {
     }
 
     async function startCall() {
-        isConnecting.value = true;
-
         emit('call', {
             roomId,
             user: omit(userRef.value, 'stream')
@@ -77,14 +73,6 @@ export function useRoom({ roomId, userRef, streamRef }: RoomConfig) {
             roomId,
             sdpMLineIndex: candidate.sdpMLineIndex,
             candidate: candidate.candidate
-        });
-    }
-
-    function sendMicrophoneStatus(isMuted: boolean) {
-        emit('toggleMicrophone', {
-            roomId,
-            senderUserId: userRef.value.id,
-            isMuted
         });
     }
 
@@ -163,11 +151,15 @@ export function useRoom({ roomId, userRef, streamRef }: RoomConfig) {
         removeUser(userId);
     });
 
-    watch(streamRef, (stream, previousStream) => {
-        if (!isConnected.value) {
-            return;
-        }
+    watch(userRef, (user) => {
+        emit('updateUser', {
+            roomId,
+            senderUserId: user.id,
+            data: omit(user, 'stream')
+        });
+    });
 
+    watch(streamRef, (stream, previousStream) => {
         if (previousStream) {
             removeStreamFromAllConnections();
         }
@@ -179,18 +171,13 @@ export function useRoom({ roomId, userRef, streamRef }: RoomConfig) {
 
     watch(users, () => {
         if (users.value.length === 0) {
-            isConnected.value = false;
-
             clearConnections();
         }
     });
 
     return {
         users,
-        isConnected,
-        isConnecting,
         startCall,
-        stopCall,
-        sendMicrophoneStatus
+        stopCall
     };
 }

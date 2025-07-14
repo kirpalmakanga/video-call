@@ -25,12 +25,5 @@ onBeforeUnmount(disableStream);
 </script>
 
 <template>
-    <div class="flex items-center gap-4">
-        <div class="flex grow h-2 overflow-hidden bg-gray-100">
-            <div
-                class="h-full w-full bg-green-700"
-                :style="{ transform: `translateX(${volume - 100}%)` }"
-            ></div>
-        </div>
-    </div>
+    <UProgress v-model="volume" />
 </template>
