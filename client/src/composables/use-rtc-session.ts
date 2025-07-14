@@ -11,7 +11,16 @@ import { ref } from 'vue';
 export function useRTCSession() {
     const peerConnections = ref<Map<string, RTCPeerConnection>>(new Map());
 
+    function removeConnection(remotePeerId: string) {
+        if (peerConnections.value.has(remotePeerId)) {
+            peerConnections.value.get(remotePeerId)?.close();
+            peerConnections.value.delete(remotePeerId);
+        }
+    }
+
     function createConnection(remotePeerId: string) {
+        removeConnection(remotePeerId);
+
         const connection = new RTCPeerConnection();
 
         peerConnections.value.set(remotePeerId, connection);
@@ -46,12 +55,7 @@ export function useRTCSession() {
     }
 
     return {
-        removeConnection(remotePeerId: string) {
-            if (peerConnections.value.has(remotePeerId)) {
-                peerConnections.value.get(remotePeerId)?.close();
-                peerConnections.value.delete(remotePeerId);
-            }
-        },
+        removeConnection,
         clearConnections() {
             Object.values(peerConnections.value).map((connection) =>
                 connection.close()
