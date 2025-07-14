@@ -164,12 +164,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <section class="flex flex-col flex-grow gap-4 p-4">
-        <div class="relative flex flex-grow gap-4">
-            <div
-                v-if="isViewMode('sidebar')"
-                class="flex flex-col flex-grow gap-4"
-            >
+    <section class="flex flex-col grow gap-4 p-4">
+        <div class="relative flex grow gap-4">
+            <div v-if="isViewMode('sidebar')" class="flex flex-col grow gap-4">
                 <Participant
                     v-if="activeParticipant"
                     v-bind="activeParticipant"
@@ -196,10 +193,10 @@ onBeforeUnmount(() => {
                     >
                         <li>
                             <Participant
-                                class="block hover:scale-90 hover:active:scale-100 transition-transform shadow"
                                 :class="{ hidden: isActiveParticipant(id) }"
                                 v-bind="user"
                                 :is-local-participant="isLocalParticipant(id)"
+                                :use-content-ratio="true"
                                 @toggle-mute="toggleMuteUser(id)"
                                 @click="setActiveParticipant(id)"
                             />
@@ -211,11 +208,10 @@ onBeforeUnmount(() => {
             <ParticipantGrid
                 v-else-if="isViewMode('grid')"
                 class="grow"
-                :users="allParticipants"
+                :items="allParticipants"
             >
                 <template #item="{ id, ...user }">
                     <Participant
-                        class="block shadow"
                         v-bind="user"
                         :is-local-participant="isLocalParticipant(id)"
                         @toggle-mute="toggleMuteUser(id)"

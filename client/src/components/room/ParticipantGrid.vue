@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { computed, useTemplateRef, watch } from 'vue';
+import { useTemplateRef, watch } from 'vue';
 import { useResizeObserver } from '@vueuse/core';
 import { debounce } from '../../utils/helpers';
 
-const props = defineProps<{ users: ClientUser[] }>();
+interface GridLayout {
+    width: number;
+    height: number;
+    cols: number;
+}
+
+const props = defineProps<{ items: ClientUser[] }>();
 
 const container = useTemplateRef('container');
 
@@ -14,7 +20,7 @@ function calculateLayout(
     containerHeight: number,
     videoCount: number,
     aspectRatio: number
-): { width: number; height: number; cols: number } {
+): GridLayout {
     let bestLayout = {
         area: 0,
         cols: 0,
@@ -23,7 +29,6 @@ function calculateLayout(
         height: 0
     };
 
-    // brute-force search layout where video occupy the largest area of the container
     for (let cols = 1; cols <= videoCount; cols++) {
         const rows = Math.ceil(videoCount / cols);
         const hScale = containerWidth / (cols * aspectRatio);
@@ -58,43 +63,43 @@ function calculateLayout(
 
 function recalculateLayout() {
     if (container.value) {
-        console.log('recalculateLayout');
-        const { height: containerHeight, width: containerWidth } =
-            container.value.getBoundingClientRect();
+        const { offsetHeight: containerHeight, offsetWidth: containerWidth } =
+            container.value;
 
         const { width, height, cols } = calculateLayout(
             containerWidth,
             containerHeight,
-            props.users.length,
+            props.items.length,
             aspectRatio
         );
 
-        container.value.style.setProperty('--cell-width', `${width - 16}px`);
-        container.value.style.setProperty('--cell-height', `${height - 16}px`);
+        container.value.style.setProperty('--cell-width', `${width}px`);
+        container.value.style.setProperty('--cell-height', `${height}px`);
         container.value.style.setProperty('--cols', cols.toString());
     }
 }
 
 useResizeObserver(container, debounce(recalculateLayout, 50));
 
-watch(() => props.users, recalculateLayout);
+watch(() => props.items, recalculateLayout);
 </script>
 
 <template>
-    <ul
-        ref="container"
-        class="flex flex-wrap justify-center items-center overflow-hidden"
-    >
-        <li
-            v-for="user in users"
-            :key="user.id"
-            class="flex justify-center items-center overflow-hidden rounded"
-            :style="{
-                width: 'var(--cell-width)',
-                height: 'var(--cell-height)'
-            }"
+    <div class="relative">
+        <ul
+            ref="container"
+            class="absolute inset-0 flex flex-wrap justify-center items-center"
         >
-            <slot name="item" v-bind="user" />
-        </li>
-    </ul>
+            <li v-for="item in items" :key="item.id" class="grid-item flex">
+                <slot name="item" v-bind="item" />
+            </li>
+        </ul>
+    </div>
 </template>
+
+<style lang="scss" scoped>
+.grid-item {
+    width: var(--cell-width);
+    height: var(--cell-height);
+}
+</style>

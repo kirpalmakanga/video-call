@@ -19,6 +19,7 @@ const props = withDefaults(
         isActiveParticipant?: boolean;
         stream: MediaStream | null;
         isMuted: boolean;
+        useContentRatio?: boolean;
     }>(),
     { stream: null }
 );
@@ -66,16 +67,14 @@ onBeforeUnmount(() => setVideoSource(null));
 
 <template>
     <Contain
-        class="flex-grow"
+        class="grow"
         :aspect-ratio="state.aspectRatio"
-        :style="
-            !isActiveParticipant ? { aspectRatio: state.aspectRatio } : null
-        "
+        :style="useContentRatio ? { aspectRatio: state.aspectRatio } : null"
     >
         <div class="relative flex w-full h-full rounded overflow-hidden">
             <video
                 ref="video"
-                class="flex-grow"
+                class="grow"
                 autoplay
                 :muted="isLocalParticipant || isActiveParticipant || isMuted"
                 @loadeddata="onVideoLoaded"
