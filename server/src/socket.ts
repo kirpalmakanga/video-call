@@ -3,6 +3,7 @@ import {
     Server as SocketServer,
     type ServerOptions as SocketServerOptions
 } from 'socket.io';
+import { update } from './utils';
 
 export default function startSocketServer(
     httpServer: Server,
@@ -35,19 +36,11 @@ export default function startSocketServer(
         roomId: string,
         data: Partial<User>
     ) {
-        const users = [...getUsersForRoom(roomId)];
-        const index = users.findIndex(({ id }) => id === userId);
-
-        if (index === -1) {
-            return;
-        }
-
-        const { [index]: user } = users;
-
-        if (user) {
-            users.splice(index, 1, { ...user, ...data });
-
-            usersByRoom.set(roomId, users);
+        if (isUserInRoom(userId, roomId)) {
+            usersByRoom.set(
+                roomId,
+                update(getUsersForRoom(roomId), ({ id }) => id === userId, data)
+            );
         }
     }
 
@@ -67,13 +60,13 @@ export default function startSocketServer(
         }
     }
 
-    io.on('connection', (socket) => {
-        function syncRoomUsers(roomId: string) {
-            io.in(roomId).emit('usersListUpdated', {
-                users: getUsersForRoom(roomId)
-            });
-        }
+    function syncRoomUsers(roomId: string) {
+        io.in(roomId).emit('usersListUpdated', {
+            users: getUsersForRoom(roomId)
+        });
+    }
 
+    io.on('connection', (socket) => {
         async function addUser(roomId: string, user: User) {
             await socket.join(roomId);
 
