@@ -102,7 +102,7 @@ onBeforeUnmount(() => setVideoSource(null));
                 <UIcon
                     class="w-5 h-5"
                     :name="
-                        isMuted ? 'i-mdi-microphone' : 'i-mdi-microphone-off'
+                        isMuted ? 'i-mdi-microphone-off' : 'i-mdi-microphone'
                     "
                 />
             </button>
