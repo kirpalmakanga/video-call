@@ -66,7 +66,7 @@ onBeforeUnmount(() => setVideoSource(null));
 
 <template>
     <div
-        class="relative flex flex-grow overflow-hidden"
+        class="relative flex flex-grow rounded overflow-hidden"
         :style="!isActiveUser ? { aspectRatio: state.aspectRatio } : null"
     >
         <Contain class="flex-grow" :aspect-ratio="state.aspectRatio">

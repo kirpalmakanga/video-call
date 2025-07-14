@@ -12,11 +12,12 @@ import { useRoute, useRouter } from 'vue-router';
 
 import ControlButton from '../components/base/ControlButton.vue';
 import Settings from '../components/Settings.vue';
-import CallerScreen from '../components/room/RoomUser.vue';
+import Participant from '../components/room/Participant.vue';
 import { useMediaStream } from '../composables/use-media-stream';
 import { useRoom } from '../composables/use-room';
 import { useSettingsStore } from '../composables/store/use-settings-store';
 import Placeholder from '../components/base/Placeholder.vue';
+import ParticipantGrid from '../components/room/ParticipantGrid.vue';
 
 type ViewMode = 'sidebar' | 'grid';
 
@@ -168,13 +169,10 @@ onBeforeUnmount(() => {
     <section class="flex flex-col flex-grow gap-4 p-4">
         <div class="relative flex flex-grow gap-4">
             <section
-                :class="{
-                    'flex flex-col flex-grow gap-4': isViewMode('sidebar'),
-                    'absolute bottom-4 left-4 w-32 aspect-video':
-                        isViewMode('grid')
-                }"
+                v-if="isViewMode('sidebar')"
+                class="flex flex-col flex-grow gap-4"
             >
-                <CallerScreen
+                <Participant
                     v-if="activeUser"
                     v-bind="activeUser"
                     :is-active-user="true"
@@ -190,39 +188,37 @@ onBeforeUnmount(() => {
             </section>
 
             <aside
-                v-if="allUsers.length > 1"
-                class="overflow-y-auto"
-                :class="{
-                    'absolute inset-0': isViewMode('grid'),
-                    'w-64 relative h-full': isViewMode('sidebar')
-                }"
+                v-if="isViewMode('sidebar') && allUsers.length > 1"
+                class="w-64 relative h-full overflow-y-auto"
             >
                 <ul class="flex flex-col gap-4">
                     <template v-for="{ id, ...user } of allUsers" :key="id">
                         <li>
-                            <CallerScreen
-                                class="block transition-transform shadow"
-                                :class="{
-                                    hidden:
-                                        isActiveUser(id) &&
-                                        isViewMode('sidebar'),
-                                    'hover:scale-90 hover:active:scale-100':
-                                        isViewMode('sidebar')
-                                }"
+                            <Participant
+                                class="block hover:scale-90 hover:active:scale-100 transition-transform shadow"
+                                :class="{ hidden: isActiveUser(id) }"
                                 v-bind="user"
                                 @toggle-mute="toggleMuteUser(id)"
-                                v-on="
-                                    isViewMode('sidebar')
-                                        ? {
-                                              click: () => setActiveUser(id)
-                                          }
-                                        : {}
-                                "
+                                @click="setActiveUser(id)"
                             />
                         </li>
                     </template>
                 </ul>
             </aside>
+
+            <ParticipantGrid
+                v-else-if="isViewMode('grid')"
+                class="grow"
+                :users="allUsers"
+            >
+                <template #item="{ id, ...user }">
+                    <Participant
+                        class="block shadow"
+                        v-bind="user"
+                        @toggle-mute="toggleMuteUser(id)"
+                    />
+                </template>
+            </ParticipantGrid>
         </div>
 
         <div class="flex justify-center items-end gap-4">
