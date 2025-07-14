@@ -169,7 +169,13 @@ watch(users, (currentUsers) => {
 
 watch([videoDeviceId, audioDeviceId], fetchLocalStream);
 
-onMounted(fetchLocalStream);
+onMounted(() => {
+    if (areDevicesReady.value) {
+        fetchLocalStream();
+    } else {
+        toggleSettings();
+    }
+});
 
 onBeforeUnmount(() => {
     stopCall();
