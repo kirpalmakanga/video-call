@@ -47,7 +47,7 @@ export function useMediaStream() {
                 state.isVideoEnabled = !state.isVideoEnabled;
 
                 state.stream.getVideoTracks().forEach((track) => {
-                    track.enabled = !state.isVideoEnabled;
+                    track.enabled = state.isVideoEnabled;
                 });
             }
         },
@@ -56,7 +56,7 @@ export function useMediaStream() {
                 state.isAudioEnabled = !state.isAudioEnabled;
 
                 state.stream.getAudioTracks().forEach((track) => {
-                    track.enabled = !state.isAudioEnabled;
+                    track.enabled = state.isAudioEnabled;
                 });
             }
         }
