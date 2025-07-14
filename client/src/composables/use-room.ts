@@ -48,27 +48,13 @@ export function useRoom({ roomId, userRef, streamRef }: RoomConfig) {
         }
     }
 
-    function joinRoom() {
-        emit('joinRoom', { roomId, user: omit(userRef.value, 'stream') });
-    }
-
     async function startCall() {
         isConnecting.value = true;
 
-        // emit('join', { roomId, user: omit(userRef.value, 'stream') });
-
         emit('call', {
             roomId,
-            senderUserId: userRef.value.id
+            user: omit(userRef.value, 'stream')
         });
-    }
-
-    function setCallInProgress() {
-        if (!isConnected.value) {
-            isConnected.value = true;
-
-            isConnecting.value = false;
-        }
     }
 
     function stopCall() {
@@ -150,14 +136,10 @@ export function useRoom({ roomId, userRef, streamRef }: RoomConfig) {
                 answer: await createAnswer(senderUserId, offer)
             });
         }
-
-        // setCallInProgress();
     });
 
     listen('incomingAnswer', ({ senderUserId, answer }) => {
         processAnswer(senderUserId, answer);
-
-        // setCallInProgress();
     });
 
     listen(
@@ -207,7 +189,6 @@ export function useRoom({ roomId, userRef, streamRef }: RoomConfig) {
         users,
         isConnected,
         isConnecting,
-        joinRoom,
         startCall,
         stopCall,
         sendMicrophoneStatus

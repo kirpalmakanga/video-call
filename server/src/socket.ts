@@ -92,8 +92,8 @@ export default function startSocketServer(
             syncRoomUsers(roomId);
         }
 
-        async function removeUser(userId: string, roomId: string) {
-            await socket.leave(roomId);
+        function removeUser(userId: string, roomId: string) {
+            socket.leave(roomId);
 
             removeUserFromRoom(userId, roomId);
 
@@ -101,17 +101,20 @@ export default function startSocketServer(
         }
 
         socket.on(
-            'joinRoom',
+            'call',
             async ({ roomId, user }: { roomId: string; user: User }) => {
-                const { id: userId } = user;
-
-                if (!isUserInRoom(userId, roomId)) {
-                    addUser(roomId, user);
+                if (!isUserInRoom(user.id, roomId)) {
+                    await addUser(roomId, user);
 
                     socket.on('disconnect', () => {
-                        removeUser(userId, roomId);
+                        removeUser(user.id, roomId);
                     });
                 }
+
+                socket.to(roomId).emit('incomingCall', {
+                    roomId,
+                    senderUserId: user.id
+                });
             }
         );
 
@@ -121,10 +124,6 @@ export default function startSocketServer(
                 removeUser(userId, roomId);
             }
         );
-
-        socket.on('call', (event: { roomId: string; senderUserId: string }) => {
-            socket.to(event.roomId).emit('incomingCall', event);
-        });
 
         socket.on(
             'offer',

@@ -53,15 +53,7 @@ const currentUser = ref<ClientUser>({
     isMuted: false
 });
 
-const {
-    isConnected,
-    isConnecting,
-    users,
-    joinRoom,
-    startCall,
-    stopCall,
-    sendMicrophoneStatus
-} = useRoom({
+const { users, startCall, stopCall, sendMicrophoneStatus } = useRoom({
     roomId: roomId as string,
     userRef: currentUser,
     streamRef: stream
@@ -129,6 +121,8 @@ async function fetchLocalStream() {
 function leaveRoom() {
     stopCall();
 
+    disableStream();
+
     router.push('/');
 }
 
@@ -139,12 +133,12 @@ watch(stream, () => {
 watch(isAudioEnabled, (isEnabled) => sendMicrophoneStatus(!isEnabled));
 
 watch(users, (currentUsers) => {
-    if (
-        currentUsers.some(({ id }) => id === state.activeUserId) ||
-        !currentUsers.length
-    ) {
-        return;
-    }
+    // if (
+    //     currentUsers.some(({ id }) => id === state.activeUserId) ||
+    //     !currentUsers.length
+    // ) {
+    //     return;
+    // }
 
     const lastUser = currentUsers.at(-1);
 
@@ -160,12 +154,14 @@ watch([videoDeviceId, audioDeviceId], fetchLocalStream);
 onMounted(async () => {
     await fetchLocalStream();
 
-    joinRoom();
-
     startCall();
 });
 
-onBeforeUnmount(disableStream);
+onBeforeUnmount(() => {
+    stopCall();
+
+    disableStream();
+});
 </script>
 
 <template>

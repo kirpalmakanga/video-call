@@ -1,17 +1,9 @@
 import { io } from 'socket.io-client';
 
-interface CommonEvents {
+interface EmittedEventsPayloads {
     call: {
         roomId: string;
-        senderUserId: string;
-    };
-}
-
-interface EmittedEventsPayloads extends CommonEvents {
-    joinRoom: { roomId: string; user: User };
-    call: {
-        roomId: string;
-        senderUserId: string;
+        user: User;
     };
     leaveRoom: {
         roomId: string;
@@ -43,7 +35,7 @@ interface EmittedEventsPayloads extends CommonEvents {
     };
 }
 
-interface ListenedEventPayloads extends CommonEvents {
+interface ListenedEventPayloads {
     incomingCall: {
         roomId: string;
         senderUserId: string;
