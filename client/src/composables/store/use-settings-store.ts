@@ -16,8 +16,6 @@ const state = reactive<State>(
 );
 
 watch(state, () => {
-    console.log('saveSettings');
-
     setStorageItem('settings', state);
 });
 
