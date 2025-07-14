@@ -128,6 +128,10 @@ function leaveRoom() {
 
 watch(stream, () => {
     currentUser.value.stream = stream.value;
+
+    if (stream.value) {
+        startCall();
+    }
 });
 
 watch(isAudioEnabled, (isEnabled) => sendMicrophoneStatus(!isEnabled));
@@ -151,11 +155,7 @@ watch(users, (currentUsers) => {
 
 watch([videoDeviceId, audioDeviceId], fetchLocalStream);
 
-onMounted(async () => {
-    await fetchLocalStream();
-
-    startCall();
-});
+onMounted(fetchLocalStream);
 
 onBeforeUnmount(() => {
     stopCall();
