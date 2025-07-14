@@ -33,12 +33,12 @@ const onClickClose = () => props.isVisible && emit('close');
                         <Icon class="w-5 h-5" name="close" />
                     </button>
 
-                    <div v-if="title" class="flex-grow text-md">
+                    <div v-if="title" class="grow text-md">
                         {{ title }}
                     </div>
                 </header>
 
-                <div class="flex flex-col flex-grow"><slot /></div>
+                <div class="flex flex-col grow"><slot /></div>
             </div>
         </Transition>
     </Teleport>

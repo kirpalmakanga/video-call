@@ -118,10 +118,8 @@ onBeforeUnmount(disableStream);
 <template>
     <SlidePanel title="Settings" :is-visible="isVisible" @close="emit('close')">
         <template v-if="isVisible">
-            <ScrollContainer class="flex-grow">
-                <div
-                    class="relative flex flex-col flex-grow gap-8 text-gray-100"
-                >
+            <ScrollContainer class="grow">
+                <div class="relative flex flex-col grow gap-8 text-gray-100">
                     <div class="flex flex-col">
                         <h2 class="font-bold mb-2 flex items-center">
                             <Icon class="w-5 h-5 mr-2" name="camera" />
