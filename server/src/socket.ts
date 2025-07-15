@@ -84,30 +84,6 @@ export default function startSocketServer(
     }
 
     io.on('connection', (socket) => {
-        async function addParticipant(
-            roomId: string,
-            participant: Participant
-        ) {
-            await Promise.all([
-                socket.join(roomId),
-                socket.join(`${roomId}_${participant.id}`)
-            ]);
-
-            addParticipantToRoom(participant, roomId);
-
-            syncRoomParticipants(roomId);
-        }
-
-        function updateParticipant(
-            participantId: string,
-            roomId: string,
-            data: Partial<Participant>
-        ) {
-            updateRoomParticipant(participantId, roomId, data);
-
-            syncRoomParticipants(roomId);
-        }
-
         function removeParticipant(participantId: string, roomId: string) {
             socket.leave(roomId);
 
@@ -128,7 +104,14 @@ export default function startSocketServer(
                 participant: Participant;
             }) => {
                 if (!isParticipantInRoom(participant.id, roomId)) {
-                    await addParticipant(roomId, participant);
+                    await Promise.all([
+                        socket.join(roomId),
+                        socket.join(`${roomId}_${participant.id}`)
+                    ]);
+
+                    addParticipantToRoom(participant, roomId);
+
+                    syncRoomParticipants(roomId);
 
                     socket.on('disconnect', () => {
                         removeParticipant(participant.id, roomId);
@@ -152,6 +135,8 @@ export default function startSocketServer(
                 participantId: string;
             }) => {
                 removeParticipant(participantId, roomId);
+
+                socket.removeAllListeners('disconnect');
             }
         );
 
@@ -231,7 +216,9 @@ export default function startSocketServer(
                 data: Omit<Partial<ClientParticipant>, 'stream'>;
             }) => {
                 if (isParticipantInRoom(senderParticipantId, roomId)) {
-                    updateParticipant(senderParticipantId, roomId, data);
+                    updateRoomParticipant(senderParticipantId, roomId, data);
+
+                    syncRoomParticipants(roomId);
                 }
             }
         );
