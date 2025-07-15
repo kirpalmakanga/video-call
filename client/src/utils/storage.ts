@@ -1,6 +1,6 @@
 export const setStorageItem = (
     key: string,
-    value: string | number | Record<string, string | number>
+    value: string | number | Record<string, string | number | boolean>
 ) => {
     try {
         localStorage.setItem(key, JSON.stringify(value));
