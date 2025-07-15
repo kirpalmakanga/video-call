@@ -1,7 +1,7 @@
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 
 interface EmittedEventsPayloads {
-    call: {
+    joinRoom: {
         roomId: string;
         participant: Participant;
     };
@@ -66,21 +66,46 @@ interface ListenedEventPayloads {
     participantDisconnected: { participantId: string };
 }
 
+let socket: Socket;
+
 export function useSocket() {
-    const socket = io(import.meta.env.VITE_API_URI);
+    const subscriptions = new Map<string, (...args: any[]) => void>();
+
+    function getSocket() {
+        if (!socket) {
+            socket = io(import.meta.env.VITE_API_URI);
+        }
+
+        return socket;
+    }
 
     return {
         emit<E extends keyof EmittedEventsPayloads>(
             event: E,
             data: EmittedEventsPayloads[E]
         ) {
-            socket.emit(event, data);
+            getSocket().emit(event, data);
         },
-        listen<E extends keyof ListenedEventPayloads>(
+        subscribe<E extends keyof ListenedEventPayloads>(
             event: E,
             callback: (payload: ListenedEventPayloads[E]) => void
         ) {
+            const socket = getSocket();
+
             socket.on(event, callback);
+
+            subscriptions.set(event, callback);
+
+            return () => {
+                socket.off(event, callback);
+
+                subscriptions.delete(event);
+            };
+        },
+        unsubscribeAll() {
+            for (const [event, callback] of subscriptions) {
+                socket.off(event, callback);
+            }
         }
     };
 }

@@ -119,7 +119,7 @@ export default function startSocketServer(
         }
 
         socket.on(
-            'call',
+            'joinRoom',
             async ({
                 roomId,
                 participant

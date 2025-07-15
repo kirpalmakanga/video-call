@@ -1,23 +1,21 @@
 <script setup lang="ts">
 import {
     computed,
+    onBeforeMount,
     onBeforeUnmount,
     onMounted,
     reactive,
-    ref,
-    toValue,
     watch
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import RoomControlButton from '../components/room/RoomControlButton.vue';
+import Placeholder from '../components/base/Placeholder.vue';
 import Settings from '../components/Settings.vue';
 import Participant from '../components/room/Participant.vue';
-import { useMediaStream } from '../composables/use-media-stream';
+import ParticipantGrid from '../components/room/ParticipantGrid.vue';
+import RoomControlButton from '../components/room/RoomControlButton.vue';
 import { useRoom } from '../composables/use-room';
 import { useSettingsStore } from '../composables/store/use-settings-store';
-import Placeholder from '../components/base/Placeholder.vue';
-import ParticipantGrid from '../components/room/ParticipantGrid.vue';
 import { debounce } from '../utils/helpers';
 
 const viewModeIcons = {
@@ -33,38 +31,31 @@ interface State {
     activeParticipantId: string | null;
 }
 
-const participantId = crypto.randomUUID();
-
 const router = useRouter();
 
 const {
     params: { roomId }
 } = useRoute();
 
-const { displayName, videoDeviceId, audioDeviceId } = useSettingsStore();
+const {
+    displayName,
+    isVideoEnabled: isSettingsVideoEnabled,
+    isAudioEnabled: isSettingsAudioEnabled,
+    videoDeviceId,
+    audioDeviceId
+} = useSettingsStore();
 
 const {
-    stream,
+    localParticipant,
+    participants,
     isVideoEnabled,
     isAudioEnabled,
-    enableStream,
-    disableStream,
     toggleVideo,
-    toggleAudio
-} = useMediaStream();
-
-const localParticipant = ref<ClientParticipant>({
-    id: participantId,
-    name: displayName.value,
-    stream: null,
-    isMuted: false
-});
-
-const { participants, startCall, stopCall } = useRoom({
-    roomId: roomId as string,
-    localParticipantRef: localParticipant,
-    streamRef: stream
-});
+    toggleAudio,
+    toggleMuteParticipant,
+    connect,
+    disconnect
+} = useRoom(roomId as string);
 
 const state = reactive<State>({
     viewMode: 'sidebar',
@@ -73,7 +64,7 @@ const state = reactive<State>({
 });
 
 const allParticipants = computed(() => [
-    localParticipant.value,
+    localParticipant,
     ...participants.value
 ]);
 
@@ -99,10 +90,6 @@ function toggleViewMode() {
     state.viewMode = isViewMode('grid') ? 'sidebar' : 'grid';
 }
 
-function isLocalParticipant(id: string) {
-    return id === localParticipant.value.id;
-}
-
 function isActiveParticipant(id: string) {
     return id === state.activeParticipantId;
 }
@@ -111,79 +98,66 @@ function setActiveParticipant(id: string) {
     state.activeParticipantId = id;
 }
 
-function toggleMuteParticipant(participantId: string) {
-    const participant = participants.value.find(
-        ({ id }) => id === participantId
-    );
-
-    if (participant) {
-        participant.isMuted = !participant.isMuted;
-    }
+function leaveRoom() {
+    router.push('/');
 }
 
-async function fetchLocalStream() {
-    await enableStream({
-        video: {
-            deviceId: toValue(videoDeviceId)
-        },
-        audio: {
-            deviceId: toValue(audioDeviceId)
+async function connectToRoom() {
+    await connect({
+        displayName: displayName.value,
+        streamOptions: {
+            video: {
+                deviceId: videoDeviceId.value
+            },
+            audio: {
+                deviceId: audioDeviceId.value
+            }
         }
     });
 }
 
-function leaveRoom() {
-    stopCall();
-
-    disableStream();
-
-    router.push('/');
-}
-
-watch(stream, () => {
-    localParticipant.value.stream = stream.value;
-
-    if (stream.value) {
-        startCall();
-    }
-});
-
 watch(
     displayName,
-    debounce((name: string) => {
-        localParticipant.value = { ...localParticipant.value, name };
+    debounce((value: string) => {
+        localParticipant.name = value;
     }, 1000)
 );
 
-watch(isAudioEnabled, (isEnabled) => {
-    localParticipant.value = { ...localParticipant.value, isMuted: !isEnabled };
+watch(isVideoEnabled, (value) => {
+    isSettingsVideoEnabled.value = value;
+});
+watch(isAudioEnabled, (value) => {
+    isSettingsAudioEnabled.value = value;
 });
 
-watch(participants, (currentParticipants) => {
+watch(areDevicesReady, (ready) => {
+    if (ready) {
+        connectToRoom();
+    }
+});
+
+watch(allParticipants, (currentParticipants) => {
     const lastParticipant = currentParticipants.at(-1);
 
     if (lastParticipant) {
         setActiveParticipant(lastParticipant.id);
-    } else {
-        setActiveParticipant(localParticipant.value.id);
     }
 });
 
-watch([videoDeviceId, audioDeviceId], fetchLocalStream);
+onBeforeMount(() => {
+    isVideoEnabled.value = isSettingsVideoEnabled.value;
+    isAudioEnabled.value = isSettingsAudioEnabled.value;
+});
 
 onMounted(() => {
     if (areDevicesReady.value) {
-        fetchLocalStream();
+        connectToRoom();
     } else {
         toggleSettings();
     }
 });
 
-onBeforeUnmount(() => {
-    stopCall();
-
-    disableStream();
-});
+onBeforeUnmount(disconnect);
 </script>
 
 <template>
@@ -218,7 +192,6 @@ onBeforeUnmount(() => {
                             <Participant
                                 :class="{ hidden: isActiveParticipant(id) }"
                                 v-bind="participant"
-                                :is-local-participant="isLocalParticipant(id)"
                                 :use-content-ratio="true"
                                 @toggle-mute="toggleMuteParticipant(id)"
                                 @click="setActiveParticipant(id)"
@@ -236,7 +209,6 @@ onBeforeUnmount(() => {
                 <template #item="{ id, ...participant }">
                     <Participant
                         v-bind="participant"
-                        :is-local-participant="isLocalParticipant(id)"
                         @toggle-mute="toggleMuteParticipant(id)"
                     />
                 </template>
