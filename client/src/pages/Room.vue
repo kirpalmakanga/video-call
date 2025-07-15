@@ -13,7 +13,6 @@ import Placeholder from '../components/base/Placeholder.vue';
 import Settings from '../components/Settings.vue';
 import Participant from '../components/room/Participant.vue';
 import ParticipantGrid from '../components/room/ParticipantGrid.vue';
-import RoomControlButton from '../components/room/RoomControlButton.vue';
 import { useRoom } from '../composables/use-room';
 import { useSettingsStore } from '../composables/store/use-settings-store';
 import { debounce } from '../utils/helpers';
@@ -98,10 +97,6 @@ function setActiveParticipant(id: string) {
     state.activeParticipantId = id;
 }
 
-function leaveRoom() {
-    router.push('/');
-}
-
 async function connectToRoom() {
     await connect({
         displayName: displayName.value,
@@ -114,6 +109,10 @@ async function connectToRoom() {
             }
         }
     });
+}
+
+function leaveRoom() {
+    router.push('/');
 }
 
 watch(
@@ -163,7 +162,10 @@ onBeforeUnmount(disconnect);
 <template>
     <section class="flex flex-col grow gap-4 p-4">
         <div class="relative flex grow gap-4">
-            <div v-if="isViewMode('sidebar')" class="flex flex-col grow gap-4">
+            <div
+                v-if="isViewMode('sidebar')"
+                class="flex flex-col grow gap-4 bg-neutral-800 bg p-4 rounded"
+            >
                 <Participant
                     v-if="activeParticipant"
                     v-bind="activeParticipant"
@@ -173,7 +175,7 @@ onBeforeUnmount(disconnect);
 
                 <Placeholder
                     v-else
-                    class="grow bg-gray-800 text-gray-100 rounded"
+                    class="grow text-gray-100 rounded"
                     icon="i-mdi-video"
                     text="Awaiting participants..."
                 />
@@ -181,7 +183,7 @@ onBeforeUnmount(disconnect);
 
             <div
                 v-if="isViewMode('sidebar') && allParticipants.length > 1"
-                class="w-64 relative h-full overflow-y-auto"
+                class="w-64 relative h-full overflow-y-auto bg-neutral-700 p-4 rounded"
             >
                 <ul class="flex flex-col gap-4">
                     <template
@@ -201,41 +203,85 @@ onBeforeUnmount(disconnect);
                 </ul>
             </div>
 
-            <ParticipantGrid
+            <div
                 v-else-if="isViewMode('grid')"
-                class="grow"
-                :items="allParticipants"
+                class="flex grow bg-neutral-700 p-4 rounded"
             >
-                <template #item="{ id, ...participant }">
-                    <Participant
-                        v-bind="participant"
-                        @toggle-mute="toggleMuteParticipant(id)"
-                    />
-                </template>
-            </ParticipantGrid>
+                <ParticipantGrid class="grow" :items="allParticipants">
+                    <template #item="{ id, ...participant }">
+                        <Participant
+                            v-bind="participant"
+                            @toggle-mute="toggleMuteParticipant(id)"
+                        />
+                    </template>
+                </ParticipantGrid>
+            </div>
         </div>
 
-        <div class="flex justify-center items-end gap-4">
-            <RoomControlButton
-                :icon="isVideoEnabled ? 'i-mdi-video' : 'i-mdi-video-off'"
-                @click="toggleVideo"
-            />
-            <RoomControlButton
-                :icon="
-                    isAudioEnabled ? 'i-mdi-microphone' : 'i-mdi-microphone-off'
-                "
-                @click="toggleAudio"
-            />
-            <RoomControlButton
-                class="w-16 h-16 text-gray-100 bg-red-900"
-                icon="i-mdi-phone-off"
-                @click="leaveRoom"
-            />
-            <RoomControlButton icon="i-mdi-cog" @click="toggleSettings" />
-            <RoomControlButton
-                :icon="viewModeIcons[state.viewMode]"
-                @click="toggleViewMode"
-            />
+        <div class="flex justify-between items-end gap-4">
+            <UButtonGroup>
+                <UTooltip
+                    :text="
+                        isVideoEnabled ? 'Turn camera off' : 'Toggle camera on'
+                    "
+                >
+                    <UButton color="neutral" @click="toggleVideo">
+                        <UIcon
+                            class="size-5"
+                            :name="
+                                isVideoEnabled
+                                    ? 'i-mdi-video'
+                                    : 'i-mdi-video-off'
+                            "
+                        />
+                    </UButton>
+                </UTooltip>
+                <UTooltip
+                    :text="
+                        isAudioEnabled
+                            ? 'Disable microphone'
+                            : 'Enable microphone'
+                    "
+                >
+                    <UButton color="neutral" @click="toggleAudio">
+                        <UIcon
+                            class="size-5"
+                            :name="
+                                isAudioEnabled
+                                    ? 'i-mdi-microphone'
+                                    : 'i-mdi-microphone-off'
+                            "
+                        />
+                    </UButton>
+                </UTooltip>
+                <UTooltip
+                    :text="
+                        state.viewMode === 'sidebar'
+                            ? 'Switch to grid layout'
+                            : 'Switch to sidebar layout'
+                    "
+                >
+                    <UButton color="neutral" @click="toggleViewMode">
+                        <UIcon
+                            class="size-5"
+                            :name="viewModeIcons[state.viewMode]"
+                        />
+                    </UButton>
+                </UTooltip>
+            </UButtonGroup>
+
+            <UButtonGroup>
+                <UTooltip text="Settings">
+                    <UButton color="neutral" @click="toggleSettings">
+                        <UIcon class="size-5" name="i-mdi-cog" />
+                    </UButton>
+                </UTooltip>
+                <UTooltip text="Leave room">
+                    <UButton color="error" @click="leaveRoom">
+                        <UIcon class="size-5" name="i-mdi-phone-off" />
+                    </UButton>
+                </UTooltip>
+            </UButtonGroup>
         </div>
 
         <USlideover
