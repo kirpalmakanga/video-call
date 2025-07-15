@@ -3,67 +3,67 @@ import { io } from 'socket.io-client';
 interface EmittedEventsPayloads {
     call: {
         roomId: string;
-        user: User;
+        participant: Participant;
     };
     leaveRoom: {
         roomId: string;
-        userId: string;
+        participantId: string;
     };
     offer: {
         roomId: string;
-        senderUserId: string;
-        receiverUserId: string;
+        senderParticipantId: string;
+        targetParticipantId: string;
         offer: RTCSessionDescriptionInit;
     };
     answer: {
         roomId: string;
-        senderUserId: string;
-        receiverUserId: string;
+        senderParticipantId: string;
+        targetParticipantId: string;
         answer: RTCSessionDescriptionInit;
     };
     iceCandidate: {
-        senderUserId: string;
-        remotePeerId: string;
+        senderParticipantId: string;
+        targetParticipantId: string;
         roomId: string;
         sdpMLineIndex: number | null | undefined;
         candidate: string | undefined;
     };
     toggleMicrophone: {
         roomId: string;
-        senderUserId: string;
+        senderParticipantId: string;
         isMuted: boolean;
     };
-    updateUser: {
+    updateParticipant: {
         roomId: string;
-        senderUserId: string;
-        data: Omit<Partial<ClientUser>, 'stream'>;
+        senderParticipantId: string;
+        data: Omit<Partial<ClientParticipant>, 'stream'>;
     };
 }
 
 interface ListenedEventPayloads {
     incomingCall: {
         roomId: string;
-        senderUserId: string;
+        senderParticipantId: string;
     };
     incomingOffer: {
         roomId: string;
-        senderUserId: string;
-        receiverUserId: string;
+        senderParticipantId: string;
+        targetParticipantId: string;
         offer: RTCSessionDescriptionInit;
     };
     incomingAnswer: {
         roomId: string;
-        senderUserId: string;
-        receiverUserId: string;
+        senderParticipantId: string;
+        targetParticipantId: string;
         answer: RTCSessionDescriptionInit;
     };
     incomingIceCandidate: {
-        remotePeerId: string;
+        senderParticipantId: string;
         sdpMLineIndex: number;
         candidate: string;
     };
-    usersListUpdated: { users: ClientUser[] };
-    userDisconnected: { userId: string };
+    participantsListUpdated: { participants: ClientParticipant[] };
+    participantDisconnected: { participantId: string };
 }
 
 export function useSocket() {

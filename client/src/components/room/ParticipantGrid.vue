@@ -9,7 +9,7 @@ interface GridLayout {
     cols: number;
 }
 
-const props = defineProps<{ items: ClientUser[] }>();
+const props = defineProps<{ items: ClientParticipant[] }>();
 
 const container = useTemplateRef('container');
 

@@ -11,110 +11,147 @@ export default function startSocketServer(
 ) {
     const io = new SocketServer(httpServer, socketOptions);
 
-    const usersByRoom = new Map<string, User[]>();
+    const participantsByRoom = new Map<string, Participant[]>();
 
-    function getUsersForRoom(roomId: string) {
-        if (!usersByRoom.has(roomId)) {
-            usersByRoom.set(roomId, []);
+    function getParticipantsForRoom(roomId: string) {
+        if (!participantsByRoom.has(roomId)) {
+            participantsByRoom.set(roomId, []);
         }
 
-        return usersByRoom.get(roomId) as User[];
+        return participantsByRoom.get(roomId) as Participant[];
     }
 
-    function isUserInRoom(userId: string, roomId: string) {
-        return getUsersForRoom(roomId).some(({ id }) => id === userId);
+    function getParticipantIds(roomId: string) {
+        return getParticipantsForRoom(roomId).map(({ id }) => id);
     }
 
-    function addUserToRoom(user: User, roomId: string) {
-        if (!isUserInRoom(user.id, roomId)) {
-            usersByRoom.set(roomId, [...getUsersForRoom(roomId), user]);
+    function isParticipantInRoom(participantId: string, roomId: string) {
+        return getParticipantIds(roomId).includes(participantId);
+    }
+
+    function areParticipantsInRoom(participantIds: string[], roomId: string) {
+        const roomParticipantIds = getParticipantIds(roomId);
+
+        return participantIds.every((id) => roomParticipantIds.includes(id));
+    }
+
+    function addParticipantToRoom(participant: Participant, roomId: string) {
+        if (!isParticipantInRoom(participant.id, roomId)) {
+            participantsByRoom.set(roomId, [
+                ...getParticipantsForRoom(roomId),
+                participant
+            ]);
         }
     }
 
-    function updateRoomUser(
-        userId: string,
+    function updateRoomParticipant(
+        participantId: string,
         roomId: string,
-        data: Partial<User>
+        data: Partial<Participant>
     ) {
-        if (isUserInRoom(userId, roomId)) {
-            usersByRoom.set(
+        if (isParticipantInRoom(participantId, roomId)) {
+            participantsByRoom.set(
                 roomId,
-                update(getUsersForRoom(roomId), ({ id }) => id === userId, data)
+                update(
+                    getParticipantsForRoom(roomId),
+                    ({ id }) => id === participantId,
+                    data
+                )
             );
         }
     }
 
-    function removeUserFromRoom(userId: string, roomId: string) {
-        const users = getUsersForRoom(roomId);
+    function removeParticipantFromRoom(participantId: string, roomId: string) {
+        const participants = getParticipantsForRoom(roomId);
 
-        if (!isUserInRoom(userId, roomId)) {
+        if (!isParticipantInRoom(participantId, roomId)) {
             return;
         }
 
-        const filtered = users.filter(({ id }) => id !== userId);
+        const filtered = participants.filter(({ id }) => id !== participantId);
 
         if (filtered.length) {
-            usersByRoom.set(roomId, filtered);
+            participantsByRoom.set(roomId, filtered);
         } else {
-            usersByRoom.delete(roomId);
+            participantsByRoom.delete(roomId);
         }
     }
 
-    function syncRoomUsers(roomId: string) {
-        io.in(roomId).emit('usersListUpdated', {
-            users: getUsersForRoom(roomId)
+    function syncRoomParticipants(roomId: string) {
+        io.in(roomId).emit('participantsListUpdated', {
+            participants: getParticipantsForRoom(roomId)
         });
     }
 
     io.on('connection', (socket) => {
-        async function addUser(roomId: string, user: User) {
-            await socket.join(roomId);
-
-            addUserToRoom(user, roomId);
-
-            syncRoomUsers(roomId);
-        }
-
-        function updateUser(
-            userId: string,
+        async function addParticipant(
             roomId: string,
-            data: Partial<User>
+            participant: Participant
         ) {
-            updateRoomUser(userId, roomId, data);
+            await Promise.all([
+                socket.join(roomId),
+                socket.join(`${roomId}_${participant.id}`)
+            ]);
 
-            syncRoomUsers(roomId);
+            addParticipantToRoom(participant, roomId);
+
+            syncRoomParticipants(roomId);
         }
 
-        function removeUser(userId: string, roomId: string) {
+        function updateParticipant(
+            participantId: string,
+            roomId: string,
+            data: Partial<Participant>
+        ) {
+            updateRoomParticipant(participantId, roomId, data);
+
+            syncRoomParticipants(roomId);
+        }
+
+        function removeParticipant(participantId: string, roomId: string) {
             socket.leave(roomId);
 
-            removeUserFromRoom(userId, roomId);
+            removeParticipantFromRoom(participantId, roomId);
 
-            socket.to(roomId).emit('userDisconnected', { userId });
+            socket
+                .to(roomId)
+                .emit('participantDisconnected', { participantId });
         }
 
         socket.on(
             'call',
-            async ({ roomId, user }: { roomId: string; user: User }) => {
-                if (!isUserInRoom(user.id, roomId)) {
-                    await addUser(roomId, user);
+            async ({
+                roomId,
+                participant
+            }: {
+                roomId: string;
+                participant: Participant;
+            }) => {
+                if (!isParticipantInRoom(participant.id, roomId)) {
+                    await addParticipant(roomId, participant);
 
                     socket.on('disconnect', () => {
-                        removeUser(user.id, roomId);
+                        removeParticipant(participant.id, roomId);
                     });
                 }
 
                 socket.to(roomId).emit('incomingCall', {
                     roomId,
-                    senderUserId: user.id
+                    senderParticipantId: participant.id
                 });
             }
         );
 
         socket.on(
             'leaveRoom',
-            ({ roomId, userId }: { roomId: string; userId: string }) => {
-                removeUser(userId, roomId);
+            ({
+                roomId,
+                participantId
+            }: {
+                roomId: string;
+                participantId: string;
+            }) => {
+                removeParticipant(participantId, roomId);
             }
         );
 
@@ -122,11 +159,20 @@ export default function startSocketServer(
             'offer',
             (event: {
                 roomId: string;
-                senderUserId: string;
-                receiverUserId: string;
+                senderParticipantId: string;
+                targetParticipantId: string;
                 offer: RTCSessionDescriptionInit;
             }) => {
-                socket.to(event.roomId).emit('incomingOffer', event);
+                if (
+                    areParticipantsInRoom(
+                        [event.senderParticipantId, event.targetParticipantId],
+                        event.roomId
+                    )
+                ) {
+                    socket
+                        .to(`${event.roomId}_${event.targetParticipantId}`)
+                        .emit('incomingOffer', event);
+                }
             }
         );
 
@@ -134,39 +180,59 @@ export default function startSocketServer(
             'answer',
             (event: {
                 roomId: string;
-                senderUserId: string;
-                receiverUserId: string;
+                senderParticipantId: string;
+                targetParticipantId: string;
                 answer: RTCSessionDescriptionInit;
             }) => {
-                socket.to(event.roomId).emit('incomingAnswer', event);
+                if (
+                    areParticipantsInRoom(
+                        [event.senderParticipantId, event.targetParticipantId],
+                        event.roomId
+                    )
+                ) {
+                    socket
+                        .to(`${event.roomId}_${event.targetParticipantId}`)
+                        .emit('incomingAnswer', event);
+                }
             }
         );
 
         socket.on(
             'iceCandidate',
             (event: {
-                senderUserId: string;
-                remotePeerId: string;
+                senderParticipantId: string;
+                targetParticipantId: string;
                 roomId: string;
                 sdpMLineIndex: number;
                 candidate: string;
             }) => {
-                socket.to(event.roomId).emit('incomingIceCandidate', event);
+                if (
+                    areParticipantsInRoom(
+                        [event.senderParticipantId, event.targetParticipantId],
+                        event.roomId
+                    )
+                ) {
+                    socket
+                        .to(`${event.roomId}_${event.targetParticipantId}`)
+                        .emit('incomingIceCandidate', event);
+                }
             }
         );
 
         socket.on(
-            'updateUser',
+            'updateParticipant',
             ({
                 roomId,
-                senderUserId,
+                senderParticipantId,
                 data
             }: {
                 roomId: string;
-                senderUserId: string;
-                data: Omit<Partial<ClientUser>, 'stream'>;
+                senderParticipantId: string;
+                data: Omit<Partial<ClientParticipant>, 'stream'>;
             }) => {
-                updateUser(senderUserId, roomId, data);
+                if (isParticipantInRoom(senderParticipantId, roomId)) {
+                    updateParticipant(senderParticipantId, roomId, data);
+                }
             }
         );
     });

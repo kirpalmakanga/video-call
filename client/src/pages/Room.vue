@@ -33,7 +33,7 @@ interface State {
     activeParticipantId: string | null;
 }
 
-const userId = crypto.randomUUID();
+const participantId = crypto.randomUUID();
 
 const router = useRouter();
 
@@ -53,16 +53,16 @@ const {
     toggleAudio
 } = useMediaStream();
 
-const localParticipant = ref<ClientUser>({
-    id: userId,
-    name: displayName.value || `user_${userId}`,
+const localParticipant = ref<ClientParticipant>({
+    id: participantId,
+    name: displayName.value,
     stream: null,
     isMuted: false
 });
 
-const { users, startCall, stopCall } = useRoom({
+const { participants, startCall, stopCall } = useRoom({
     roomId: roomId as string,
-    userRef: localParticipant,
+    localParticipantRef: localParticipant,
     streamRef: stream
 });
 
@@ -74,7 +74,7 @@ const state = reactive<State>({
 
 const allParticipants = computed(() => [
     localParticipant.value,
-    ...users.value
+    ...participants.value
 ]);
 
 const activeParticipant = computed(() => {
@@ -111,11 +111,13 @@ function setActiveParticipant(id: string) {
     state.activeParticipantId = id;
 }
 
-function toggleMuteUser(userId: string) {
-    const user = users.value.find(({ id }) => id === userId);
+function toggleMuteParticipant(participantId: string) {
+    const participant = participants.value.find(
+        ({ id }) => id === participantId
+    );
 
-    if (user) {
-        user.isMuted = !user.isMuted;
+    if (participant) {
+        participant.isMuted = !participant.isMuted;
     }
 }
 
@@ -157,11 +159,11 @@ watch(isAudioEnabled, (isEnabled) => {
     localParticipant.value = { ...localParticipant.value, isMuted: !isEnabled };
 });
 
-watch(users, (currentUsers) => {
-    const lastUser = currentUsers.at(-1);
+watch(participants, (currentParticipants) => {
+    const lastParticipant = currentParticipants.at(-1);
 
-    if (lastUser) {
-        setActiveParticipant(lastUser.id);
+    if (lastParticipant) {
+        setActiveParticipant(lastParticipant.id);
     } else {
         setActiveParticipant(localParticipant.value.id);
     }
@@ -192,7 +194,7 @@ onBeforeUnmount(() => {
                     v-if="activeParticipant"
                     v-bind="activeParticipant"
                     :is-active-participant="true"
-                    @toggle-mute="toggleMuteUser(activeParticipant.id)"
+                    @toggle-mute="toggleMuteParticipant(activeParticipant.id)"
                 />
 
                 <Placeholder
@@ -209,16 +211,16 @@ onBeforeUnmount(() => {
             >
                 <ul class="flex flex-col gap-4">
                     <template
-                        v-for="{ id, ...user } of allParticipants"
+                        v-for="{ id, ...participant } of allParticipants"
                         :key="id"
                     >
                         <li>
                             <Participant
                                 :class="{ hidden: isActiveParticipant(id) }"
-                                v-bind="user"
+                                v-bind="participant"
                                 :is-local-participant="isLocalParticipant(id)"
                                 :use-content-ratio="true"
-                                @toggle-mute="toggleMuteUser(id)"
+                                @toggle-mute="toggleMuteParticipant(id)"
                                 @click="setActiveParticipant(id)"
                             />
                         </li>
@@ -231,11 +233,11 @@ onBeforeUnmount(() => {
                 class="grow"
                 :items="allParticipants"
             >
-                <template #item="{ id, ...user }">
+                <template #item="{ id, ...participant }">
                     <Participant
-                        v-bind="user"
+                        v-bind="participant"
                         :is-local-participant="isLocalParticipant(id)"
-                        @toggle-mute="toggleMuteUser(id)"
+                        @toggle-mute="toggleMuteParticipant(id)"
                     />
                 </template>
             </ParticipantGrid>
@@ -270,7 +272,7 @@ onBeforeUnmount(() => {
             :ui="{ body: 'flex flex-col' }"
         >
             <template #body>
-                <Settings class="h-full" @close="toggleSettings" />
+                <Settings @close="toggleSettings" />
             </template>
         </USlideover>
     </section>

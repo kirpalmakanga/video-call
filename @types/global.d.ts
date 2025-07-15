@@ -5,7 +5,7 @@ declare global {
         sdp: string;
         type: string;
     }
-    interface User {
+    interface Participant {
         id: string;
         name: string;
         isMuted?: boolean;
@@ -16,11 +16,8 @@ declare global {
         label: string;
     }
 
-    interface ClientUser {
-        id: string;
-        name: string;
+    interface ClientParticipant extends Participant {
         stream: MediaStream | null;
         isLocalUser?: boolean;
-        isMuted: boolean;
     }
 }
