@@ -11,6 +11,10 @@ import { ref } from 'vue';
 export function useRTCSession() {
     const peerConnections = ref<Map<string, RTCPeerConnection>>(new Map());
 
+    function hasConnections() {
+        return !!peerConnections.value.size;
+    }
+
     function removeConnection(remotePeerId: string) {
         if (peerConnections.value.has(remotePeerId)) {
             peerConnections.value.get(remotePeerId)?.close();
@@ -102,7 +106,7 @@ export function useRTCSession() {
         },
         bindStreamToConnection,
         bindStreamToAllConnections(stream: MediaStream) {
-            if (peerConnections.value.size) {
+            if (hasConnections()) {
                 for (const remotePeerId of peerConnections.value.keys()) {
                     bindStreamToConnection(remotePeerId, stream);
                 }
@@ -110,7 +114,7 @@ export function useRTCSession() {
         },
         removeStreamFromConnection,
         removeStreamFromAllConnections() {
-            if (peerConnections.value.size) {
+            if (hasConnections()) {
                 for (const remotePeerId of peerConnections.value.keys()) {
                     removeStreamFromConnection(remotePeerId);
                 }
