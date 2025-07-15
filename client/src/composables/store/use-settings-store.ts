@@ -5,19 +5,24 @@ interface State {
     displayName: string;
     isAudioEnabled: boolean;
     audioDeviceId: string;
-    isVideoEnabled: string;
+    isVideoEnabled: boolean;
     videoDeviceId: string;
 }
 
-const state = reactive<State>(
-    getStorageItem('settings') || {
+function getInitialState() {
+    return {
         displayName: '',
         isAudioEnabled: true,
         audioDeviceId: '',
         isVideoEnabled: true,
         videoDeviceId: ''
-    }
-);
+    };
+}
+
+const state = reactive<State>({
+    ...getInitialState(),
+    ...(getStorageItem('settings') || {})
+});
 
 watch(state, () => {
     setStorageItem('settings', state);
