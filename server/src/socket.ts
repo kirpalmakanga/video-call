@@ -86,6 +86,7 @@ export default function startSocketServer(
     io.on('connection', (socket) => {
         function removeParticipant(participantId: string, roomId: string) {
             socket.leave(roomId);
+            socket.leave(`${roomId}_${participantId}`);
 
             removeParticipantFromRoom(participantId, roomId);
 
