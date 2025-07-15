@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@iconify-json/mdi": "^1.2.3",
+    "@iconify-json/svg-spinners": "^1.2.2",
     "@nuxt/ui": "^3.2.0",
     "@vueuse/core": "^13.5.0",
     "socket.io-client": "^4.7.5",
