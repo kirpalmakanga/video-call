@@ -18,6 +18,18 @@ export function useMediaStream() {
         isAudioEnabled: true
     });
 
+    function setVideoTracksStatus() {
+        state.stream?.getVideoTracks().forEach((track) => {
+            track.enabled = state.isVideoEnabled;
+        });
+    }
+
+    function setAudioTracksStatus() {
+        state.stream?.getAudioTracks().forEach((track) => {
+            track.enabled = state.isAudioEnabled;
+        });
+    }
+
     return {
         ...toRefs(state),
         async enableStream(config: MediaStreamConstraints) {
@@ -29,6 +41,9 @@ export function useMediaStream() {
                 state.isLoadingStream = true;
 
                 state.stream = await createStream(config);
+
+                setVideoTracksStatus();
+                setAudioTracksStatus();
             } catch (e) {
                 state.hasStreamError = true;
             } finally {
@@ -46,18 +61,14 @@ export function useMediaStream() {
             if (state.stream) {
                 state.isVideoEnabled = !state.isVideoEnabled;
 
-                state.stream.getVideoTracks().forEach((track) => {
-                    track.enabled = state.isVideoEnabled;
-                });
+                setVideoTracksStatus();
             }
         },
         toggleAudio() {
             if (state.stream) {
                 state.isAudioEnabled = !state.isAudioEnabled;
 
-                state.stream.getAudioTracks().forEach((track) => {
-                    track.enabled = state.isAudioEnabled;
-                });
+                setAudioTracksStatus();
             }
         }
     };
