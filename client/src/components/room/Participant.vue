@@ -94,9 +94,7 @@ onBeforeUnmount(() => setVideoSource(null));
 
             <button
                 class="absolute top-2 right-2 bg-gray-800 text-gray-100 rounded p-1 flex justify-center items-center"
-                :class="{
-                    'pointer-events-none cursor-default': isLocalParticipant
-                }"
+                :disabled="isLocalParticipant"
                 @click.stop="emit('toggle-mute')"
             >
                 <UIcon
