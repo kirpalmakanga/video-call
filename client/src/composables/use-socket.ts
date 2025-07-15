@@ -67,7 +67,7 @@ interface ListenedEventPayloads {
 }
 
 export function useSocket() {
-    const socket = io('https://api.video-call.dev');
+    const socket = io(import.meta.env.VITE_API_URI);
 
     return {
         emit<E extends keyof EmittedEventsPayloads>(

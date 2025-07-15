@@ -1,5 +1,62 @@
-# Vue 3 + Vite
+# video-call
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Experimental WebRTC videoconferencing app
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## Client
+
+### Environment
+
+.env file
+
+```
+VITE_API_URI=[your_api_uri]
+```
+
+#### Setup
+
+Make sure to install the dependencies:
+
+```bash
+# pnpm
+pnpm install
+```
+
+#### Development Server
+
+```bash
+pnpm run dev
+```
+
+#### Production
+
+Build the application for production:
+
+```bash
+pnpm run build
+```
+
+## API
+
+### Environment
+
+.env file
+
+```
+PORT=[your_api_port]
+CLIENT_URI=[your_client_uri]
+```
+
+#### Setup
+
+Make sure to install the dependencies:
+
+```bash
+# pnpm
+pnpm install
+```
+
+#### Development Server
+
+```bash
+pnpm run dev
+```
