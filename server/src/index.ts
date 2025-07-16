@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import { Server } from 'socket.io';
 import startSocketServer from './socket';
 
 const { PORT, CLIENT_URI } = process.env;
