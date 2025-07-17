@@ -1,5 +1,35 @@
 <script setup lang="ts">
+import axios from 'axios';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
+import { useSocket } from '../composables/use-socket';
+import Placeholder from '../components/base/Placeholder.vue';
+
+const rooms = ref<ClientRoom[]>([]);
+
+const { subscribe, unsubscribe } = useSocket();
+
+async function fetchRooms() {
+    const { data } = await axios.get(`${import.meta.env.VITE_API_URI}/rooms`);
+
+    console.log({ data });
+
+    rooms.value = data;
+}
+
+function onRoomsListSync({ items }: { items: ClientRoom[] }) {
+    rooms.value = items;
+}
+
+onMounted(() => {
+    fetchRooms();
+
+    subscribe('roomsListSync', onRoomsListSync);
+});
+
+onBeforeUnmount(() => unsubscribe('roomsListSync', onRoomsListSync));
+
+Placeholder;
 </script>
 
 <template>
@@ -7,17 +37,38 @@ import { RouterLink } from 'vue-router';
         <div class="md:rounded md:bg-slate-800 p-4 w-full md:w-1/2">
             <p class="text-neutral-100 mb-4">Available rooms</p>
 
-            <ul class="flex flex-col gap-2">
-                <li>
+            <ul v-if="rooms.length" class="flex flex-col gap-2">
+                <li v-for="{ id, name, participantCount } of rooms">
                     <RouterLink
-                        class="flex flex-col p-4 bg-slate-700 hover:bg-slate-600 text-neutral-100 rounded"
-                        to="/room/room1"
+                        class="group flex items-center p-4 bg-slate-700 hover:bg-slate-600 text-neutral-100 rounded transition-colors"
+                        :to="`/room/${id}`"
                     >
-                        <span>Test room</span>
-                        <span class="opacity-70">0 users</span>
+                        <span class="flex flex-col grow">
+                            <span>{{ name }}</span>
+                            <span class="flex items-center opacity-70">
+                                <UIcon
+                                    class="size-5 mr-1"
+                                    name="i-mdi-user"
+                                    aria-label="participants"
+                                />
+                                {{ participantCount }}
+                            </span>
+                        </span>
+
+                        <UIcon
+                            class="size-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            name="i-mdi-arrow-right"
+                        />
                     </RouterLink>
                 </li>
             </ul>
+
+            <Placeholder
+                v-else
+                class="bg-slate-700 text-neutral-100 rounded"
+                icon="i-mdi-format-list-bulleted"
+                text="No available rooms."
+            />
         </div>
     </div>
 </template>

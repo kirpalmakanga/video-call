@@ -1,3 +1,5 @@
+/// <reference types="vite/types/importMeta.d.ts" />
+
 export {};
 
 declare global {
@@ -20,4 +22,12 @@ declare global {
         stream: MediaStream | null;
         isLocalParticipant?: boolean;
     }
+
+    interface Room {
+        id: string;
+        name: string;
+        participants: Participant[];
+    }
+
+    type ClientRoom = Pick<Room, 'id' | 'name'> & { participantCount: number };
 }

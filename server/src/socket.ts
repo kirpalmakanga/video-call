@@ -3,7 +3,15 @@ import {
     Server as SocketServer,
     type ServerOptions as SocketServerOptions
 } from 'socket.io';
-import { update } from './utils';
+import {
+    addParticipantToRoom,
+    areParticipantsInRoom,
+    getAllRooms,
+    getParticipantsForRoom,
+    isParticipantInRoom,
+    removeParticipantFromRoom,
+    updateRoomParticipant
+} from './rooms';
 
 export default function startSocketServer(
     httpServer: Server,
@@ -11,70 +19,10 @@ export default function startSocketServer(
 ) {
     const io = new SocketServer(httpServer, socketOptions);
 
-    const participantsByRoom = new Map<string, Participant[]>();
-
-    function getParticipantsForRoom(roomId: string) {
-        if (!participantsByRoom.has(roomId)) {
-            participantsByRoom.set(roomId, []);
-        }
-
-        return participantsByRoom.get(roomId) as Participant[];
-    }
-
-    function getParticipantIds(roomId: string) {
-        return getParticipantsForRoom(roomId).map(({ id }) => id);
-    }
-
-    function isParticipantInRoom(participantId: string, roomId: string) {
-        return getParticipantIds(roomId).includes(participantId);
-    }
-
-    function areParticipantsInRoom(participantIds: string[], roomId: string) {
-        const roomParticipantIds = getParticipantIds(roomId);
-
-        return participantIds.every((id) => roomParticipantIds.includes(id));
-    }
-
-    function addParticipantToRoom(participant: Participant, roomId: string) {
-        if (!isParticipantInRoom(participant.id, roomId)) {
-            participantsByRoom.set(roomId, [
-                ...getParticipantsForRoom(roomId),
-                participant
-            ]);
-        }
-    }
-
-    function updateRoomParticipant(
-        participantId: string,
-        roomId: string,
-        data: Partial<Participant>
-    ) {
-        if (isParticipantInRoom(participantId, roomId)) {
-            participantsByRoom.set(
-                roomId,
-                update(
-                    getParticipantsForRoom(roomId),
-                    ({ id }) => id === participantId,
-                    data
-                )
-            );
-        }
-    }
-
-    function removeParticipantFromRoom(participantId: string, roomId: string) {
-        const participants = getParticipantsForRoom(roomId);
-
-        if (!isParticipantInRoom(participantId, roomId)) {
-            return;
-        }
-
-        const filtered = participants.filter(({ id }) => id !== participantId);
-
-        if (filtered.length) {
-            participantsByRoom.set(roomId, filtered);
-        } else {
-            participantsByRoom.delete(roomId);
-        }
+    function syncRoomsList() {
+        io.sockets.emit('roomsListSync', {
+            items: getAllRooms()
+        });
     }
 
     function syncRoomParticipants(roomId: string) {
@@ -89,6 +37,8 @@ export default function startSocketServer(
             socket.leave(`${roomId}_${participantId}`);
 
             removeParticipantFromRoom(participantId, roomId);
+
+            syncRoomsList();
 
             socket
                 .to(roomId)
@@ -113,6 +63,8 @@ export default function startSocketServer(
                     addParticipantToRoom(participant, roomId);
 
                     syncRoomParticipants(roomId);
+
+                    syncRoomsList();
 
                     socket.on('disconnect', () => {
                         removeParticipant(participant.id, roomId);

@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 
-interface EmittedEventsPayloads {
+interface EmissionsPayloads {
     joinRoom: {
         roomId: string;
         participant: Participant;
@@ -38,9 +38,10 @@ interface EmittedEventsPayloads {
         senderParticipantId: string;
         data: Omit<Partial<ClientParticipant>, 'stream'>;
     };
+    requestRoomsList: null;
 }
 
-interface ListenedEventPayloads {
+interface SubscriptionPayloads {
     incomingCall: {
         roomId: string;
         senderParticipantId: string;
@@ -64,6 +65,7 @@ interface ListenedEventPayloads {
     };
     participantsListUpdated: { participants: ClientParticipant[] };
     participantDisconnected: { participantId: string };
+    roomsListSync: { items: ClientRoom[] };
 }
 
 let socket: Socket;
@@ -80,15 +82,15 @@ export function useSocket() {
     }
 
     return {
-        emit<E extends keyof EmittedEventsPayloads>(
+        emit<E extends keyof EmissionsPayloads>(
             event: E,
-            data: EmittedEventsPayloads[E]
+            data: EmissionsPayloads[E]
         ) {
             getSocket().emit(event, data);
         },
-        subscribe<E extends keyof ListenedEventPayloads>(
+        subscribe<E extends keyof SubscriptionPayloads>(
             event: E,
-            callback: (payload: ListenedEventPayloads[E]) => void
+            callback: (payload: SubscriptionPayloads[E]) => void
         ) {
             const socket = getSocket();
 
@@ -101,6 +103,12 @@ export function useSocket() {
 
                 subscriptions.delete(event);
             };
+        },
+        unsubscribe<E extends keyof SubscriptionPayloads>(
+            event: E,
+            callback: (payload: SubscriptionPayloads[E]) => void
+        ) {
+            getSocket().off(event, callback);
         },
         unsubscribeAll() {
             for (const [event, callback] of subscriptions) {
