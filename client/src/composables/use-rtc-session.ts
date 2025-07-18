@@ -8,6 +8,12 @@ import { ref } from 'vue';
 //     ]
 // };
 
+interface PeerConnectionEvents {
+    onIceCandidate: (candidate: RTCIceCandidate) => void;
+    onStreamAvailable: (remoteStream: MediaStream | null) => void;
+    onDisconnection: () => void;
+}
+
 export function useRTCSession() {
     const peerConnections = ref<Map<string, RTCPeerConnection>>(new Map());
 
@@ -138,11 +144,7 @@ export function useRTCSession() {
                 onIceCandidate,
                 onStreamAvailable,
                 onDisconnection
-            }: {
-                onIceCandidate: (candidate: RTCIceCandidate) => void;
-                onStreamAvailable: (remoteStream: MediaStream | null) => void;
-                onDisconnection: () => void;
-            }
+            }: PeerConnectionEvents
         ) {
             const peerConnection = createConnection(remotePeerId);
 
