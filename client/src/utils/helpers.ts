@@ -69,6 +69,17 @@ export function omit<T extends object, K extends keyof T>(
     return base;
 }
 
+export function pick<T extends object, K extends keyof T>(
+    base: T,
+    ...keys: K[]
+): Pick<T, K> {
+    if (!keys.length) return base;
+
+    const entries = keys.map((key) => [key, base[key]]);
+
+    return Object.fromEntries(entries);
+}
+
 export function mergeByKey<T extends object, K extends keyof T>(
     arr1: T[],
     arr2: T[],

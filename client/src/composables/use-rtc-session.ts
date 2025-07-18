@@ -1,4 +1,5 @@
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { closeStream } from '../utils/media';
 
 // const configuration = {
 //     iceServers: [
@@ -8,167 +9,194 @@ import { ref } from 'vue';
 //     ]
 // };
 
-interface PeerConnectionEvents {
-    onIceCandidate: (candidate: RTCIceCandidate) => void;
-    onStreamAvailable: (remoteStream: MediaStream | null) => void;
-    onDisconnection: () => void;
+interface RTCSessionOptions {
+    onIceCandidate: (peerId: string, candidate: RTCIceCandidate) => void;
+    onDisconnection: (peerId: string) => void;
 }
 
-export function useRTCSession() {
-    const peerConnections = ref<Map<string, RTCPeerConnection>>(new Map());
+export function useRTCSession({
+    onIceCandidate,
+    onDisconnection
+}: RTCSessionOptions) {
+    const peers = ref<
+        Map<
+            string,
+            { connection: RTCPeerConnection; stream: MediaStream | null }
+        >
+    >(new Map());
 
-    function hasConnections() {
-        return !!peerConnections.value.size;
+    function hasPeers() {
+        return !!peers.value.size;
     }
 
-    function removeConnection(remotePeerId: string) {
-        if (peerConnections.value.has(remotePeerId)) {
-            peerConnections.value.get(remotePeerId)?.close();
-            peerConnections.value.delete(remotePeerId);
-        }
+    function getAllPeerIds() {
+        return peers.value.keys();
     }
 
-    function createConnection(remotePeerId: string) {
-        removeConnection(remotePeerId);
+    function disconnectFromPeer(peerId: string) {
+        const entry = peers.value.get(peerId);
 
-        const connection = new RTCPeerConnection();
+        if (!entry) return;
 
-        peerConnections.value.set(remotePeerId, connection);
+        entry.connection.close();
 
-        return connection;
+        if (entry.stream) closeStream(entry.stream);
+
+        peers.value.delete(peerId);
     }
 
-    function getConnection(remotePeerId: string) {
-        let connection = peerConnections.value.get(remotePeerId);
+    function createPeer(peerId: string) {
+        disconnectFromPeer(peerId);
+
+        const entry = { connection: new RTCPeerConnection(), stream: null };
+
+        peers.value.set(peerId, entry);
+
+        return entry;
+    }
+
+    function getPeer(peerId: string) {
+        let connection = peers.value.get(peerId);
 
         if (!connection) {
-            connection = createConnection(remotePeerId);
+            connection = createPeer(peerId);
         }
 
         return connection;
     }
 
-    function bindStreamToConnection(remotePeerId: string, stream: MediaStream) {
-        const peerConnection = getConnection(remotePeerId);
+    function bindStreamToConnection(peerId: string, stream: MediaStream) {
+        const { connection } = getPeer(peerId);
 
-        stream
-            .getTracks()
-            .forEach((track) => peerConnection.addTrack(track, stream));
+        for (const track of stream.getTracks()) {
+            connection.addTrack(track, stream);
+        }
     }
 
-    function removeStreamFromConnection(remotePeerId: string) {
-        const peerConnection = getConnection(remotePeerId);
+    function removeStreamFromConnection(peerId: string) {
+        const { connection } = getPeer(peerId);
+        const senders = connection.getSenders();
 
-        peerConnection
-            .getSenders()
-            .forEach((sender) => peerConnection.removeTrack(sender));
+        if (senders.length) {
+            for (const sender of senders) {
+                connection.removeTrack(sender);
+            }
+        }
     }
+
+    function setPeerStream(peerId: string, stream: MediaStream | null) {
+        const entry = peers.value.get(peerId);
+
+        if (entry) {
+            peers.value.set(peerId, {
+                ...entry,
+                stream
+            });
+        }
+    }
+
+    watch(peers, () => console.log('peers:update', [...peers.value.values()]), {
+        deep: true
+    });
 
     return {
-        removeConnection,
-        clearConnections() {
-            Object.values(peerConnections.value).map((connection) =>
-                connection.close()
-            );
+        disconnectFromAllPeers() {
+            for (const { connection, stream } of peers.value.values()) {
+                if (stream) closeStream(stream);
 
-            peerConnections.value.clear();
+                connection.close();
+            }
+
+            peers.value.clear();
         },
-        async createOffer(remotePeerId: string) {
-            const peerConnection = getConnection(remotePeerId);
+        async createOffer(peerId: string) {
+            const { connection } = getPeer(peerId);
 
-            const offer = await peerConnection.createOffer();
+            const offer = await connection.createOffer();
 
-            await peerConnection.setLocalDescription(
+            await connection.setLocalDescription(
                 new RTCSessionDescription(offer)
             );
 
             return offer;
         },
-        async createAnswer(
-            remotePeerId: string,
-            offer: RTCSessionDescriptionInit
-        ) {
-            const peerConnection = getConnection(remotePeerId);
+        async createAnswer(peerId: string, offer: RTCSessionDescriptionInit) {
+            const { connection } = getPeer(peerId);
 
-            await peerConnection.setRemoteDescription(
+            await connection.setRemoteDescription(
                 new RTCSessionDescription(offer)
             );
 
-            const answer = await peerConnection.createAnswer();
+            const answer = await connection.createAnswer();
 
-            await peerConnection.setLocalDescription(
+            await connection.setLocalDescription(
                 new RTCSessionDescription(answer)
             );
 
             return answer;
         },
-        async processAnswer(
-            remotePeerId: string,
-            answer: RTCSessionDescriptionInit
-        ) {
-            await getConnection(remotePeerId).setRemoteDescription(
+        async processAnswer(peerId: string, answer: RTCSessionDescriptionInit) {
+            await getPeer(peerId).connection.setRemoteDescription(
                 new RTCSessionDescription(answer)
             );
         },
-        bindStreamToConnection,
-        bindStreamToAllConnections(stream: MediaStream) {
-            if (hasConnections()) {
-                for (const remotePeerId of peerConnections.value.keys()) {
-                    bindStreamToConnection(remotePeerId, stream);
+        bindLocalStream(stream: MediaStream) {
+            if (hasPeers()) {
+                for (const peerId of getAllPeerIds()) {
+                    bindStreamToConnection(peerId, stream);
                 }
             }
         },
-        removeStreamFromConnection,
-        removeStreamFromAllConnections() {
-            if (hasConnections()) {
-                for (const remotePeerId of peerConnections.value.keys()) {
-                    removeStreamFromConnection(remotePeerId);
+        unbindLocalStream() {
+            if (hasPeers()) {
+                for (const peerId of getAllPeerIds()) {
+                    removeStreamFromConnection(peerId);
                 }
             }
         },
         async addIceCandidate(
-            remotePeerId: string,
+            peerId: string,
             sdpMLineIndex: number,
             candidate: string
         ) {
-            await getConnection(remotePeerId).addIceCandidate(
+            await getPeer(peerId).connection.addIceCandidate(
                 new RTCIceCandidate({
                     sdpMLineIndex,
                     candidate
                 })
             );
         },
-        setupPeerConnection(
-            remotePeerId: string,
-            {
-                onIceCandidate,
-                onStreamAvailable,
-                onDisconnection
-            }: PeerConnectionEvents
-        ) {
-            const peerConnection = createConnection(remotePeerId);
+        connectToPeer(peerId: string, stream: MediaStream) {
+            const { connection } = createPeer(peerId);
 
-            peerConnection.onicecandidate = ({ candidate }) => {
+            connection.onicecandidate = ({ candidate }) => {
                 if (candidate) {
-                    onIceCandidate(candidate);
+                    onIceCandidate(peerId, candidate);
                 }
             };
 
-            peerConnection.ontrack = ({ streams: [stream = null] }) => {
-                onStreamAvailable(stream);
-            };
-
-            peerConnection.oniceconnectionstatechange = () => {
-                const { iceConnectionState } = peerConnection;
+            connection.oniceconnectionstatechange = () => {
+                const { iceConnectionState } = connection;
 
                 if (
                     iceConnectionState === 'failed' ||
                     iceConnectionState === 'closed' ||
                     iceConnectionState === 'disconnected'
                 ) {
-                    onDisconnection();
+                    onDisconnection(peerId);
                 }
             };
+
+            connection.ontrack = ({ streams: [stream = null] }) => {
+                console.log(`peerStream:${peerId}:stream`);
+                setPeerStream(peerId, stream);
+            };
+
+            bindStreamToConnection(peerId, stream);
+        },
+        disconnectFromPeer,
+        getPeerStream(peerId: string) {
+            return getPeer(peerId).stream;
         }
     };
 }
