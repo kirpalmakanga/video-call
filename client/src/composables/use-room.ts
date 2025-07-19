@@ -36,34 +36,6 @@ export function useRoom(roomId: string) {
         }
     }
 
-    const { emit, subscribe, unsubscribeAll } = useSocket();
-
-    const {
-        disconnectFromPeer,
-        disconnectFromAllPeers,
-        createOffer,
-        createAnswer,
-        processAnswer,
-        bindLocalStream,
-        unbindLocalStream,
-        addIceCandidate,
-        connectToPeer,
-        getPeerStream
-    } = useRTCSession({
-        onIceCandidate(peerId, candidate) {
-            emit('iceCandidate', {
-                senderParticipantId: localParticipant.id,
-                targetParticipantId: peerId,
-                roomId,
-                sdpMLineIndex: candidate.sdpMLineIndex,
-                candidate: candidate.candidate
-            });
-        },
-        onDisconnection(peerId) {
-            removeParticipant(peerId);
-        }
-    });
-
     const {
         stream,
         isVideoEnabled,
@@ -73,6 +45,29 @@ export function useRoom(roomId: string) {
         toggleVideo,
         toggleAudio
     } = useMediaStream();
+
+    const { emit, subscribe, unsubscribeAll } = useSocket();
+
+    const {
+        disconnectFromPeer,
+        disconnectFromAllPeers,
+        createOffer,
+        createAnswer,
+        processAnswer,
+        addIceCandidate,
+        connectToPeer,
+        getPeerStream
+    } = useRTCSession(stream, {
+        onIceCandidate(peerId, candidate) {
+            emit('iceCandidate', {
+                senderParticipantId: localParticipant.id,
+                targetParticipantId: peerId,
+                roomId,
+                sdpMLineIndex: candidate.sdpMLineIndex,
+                candidate: candidate.candidate
+            });
+        }
+    });
 
     function connectToParticipant(participantId: string) {
         if (localParticipant.stream) {
@@ -107,11 +102,11 @@ export function useRoom(roomId: string) {
     }
 
     function disconnect() {
+        disableStream();
+
         unsubscribeAll();
 
         disconnectFromAllPeers();
-
-        disableStream();
 
         participants.value = [];
 
@@ -174,6 +169,10 @@ export function useRoom(roomId: string) {
         removeParticipant(participantId);
     });
 
+    watch(stream, (stream) => {
+        localParticipant.stream = stream;
+    });
+
     watch(isAudioEnabled, () => {
         localParticipant.isMuted = !isAudioEnabled.value;
     });
@@ -182,22 +181,6 @@ export function useRoom(roomId: string) {
         () => pick(localParticipant, 'name', 'isMuted'),
         syncLocalParticipant
     );
-
-    watch(stream, (stream, previousStream) => {
-        localParticipant.stream = stream;
-
-        unbindLocalStream();
-
-        if (stream) {
-            bindLocalStream(stream);
-        }
-    });
-
-    watch(participants, () => {
-        if (participants.value.length === 0) {
-            disconnectFromAllPeers();
-        }
-    });
 
     return {
         localParticipant,

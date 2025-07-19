@@ -1,29 +1,29 @@
-import { computed, ref, watch } from 'vue';
+import { ref, watch, type Ref } from 'vue';
 import { closeStream } from '../utils/media';
+import { assertIsDefined } from '../utils/assert';
 
 // const configuration = {
 //     iceServers: [
-//         {
-//             urls: 'stun:stun.1.google.com:19302'
-//         }
+//         { urls: 'stun:stun.stunprotocol.org:3478' },
+//         { urls: 'stun:stun.l.google.com:19302' }
 //     ]
 // };
 
 interface RTCSessionOptions {
     onIceCandidate: (peerId: string, candidate: RTCIceCandidate) => void;
-    onDisconnection: (peerId: string) => void;
+    onDisconnection?: (peerId: string) => void;
 }
 
-export function useRTCSession({
-    onIceCandidate,
-    onDisconnection
-}: RTCSessionOptions) {
-    const peers = ref<
-        Map<
-            string,
-            { connection: RTCPeerConnection; stream: MediaStream | null }
-        >
-    >(new Map());
+interface Peer {
+    connection: RTCPeerConnection;
+    stream: MediaStream | null;
+}
+
+export function useRTCSession(
+    localStream: Ref<MediaStream | null>,
+    { onIceCandidate, onDisconnection }: RTCSessionOptions
+) {
+    const peers = ref<Map<string, Peer>>(new Map());
 
     function hasPeers() {
         return !!peers.value.size;
@@ -56,50 +56,74 @@ export function useRTCSession({
     }
 
     function getPeer(peerId: string) {
-        let connection = peers.value.get(peerId);
+        let peer = peers.value.get(peerId);
 
-        if (!connection) {
-            connection = createPeer(peerId);
-        }
-
-        return connection;
+        return peer;
     }
 
     function bindStreamToConnection(peerId: string, stream: MediaStream) {
-        const { connection } = getPeer(peerId);
+        const peer = getPeer(peerId);
+
+        assertIsDefined(peer);
 
         for (const track of stream.getTracks()) {
-            connection.addTrack(track, stream);
+            peer.connection.addTrack(track, stream);
         }
     }
 
     function removeStreamFromConnection(peerId: string) {
-        const { connection } = getPeer(peerId);
-        const senders = connection.getSenders();
+        const peer = getPeer(peerId);
+
+        assertIsDefined(peer);
+
+        const senders = peer.connection.getSenders();
 
         if (senders.length) {
             for (const sender of senders) {
-                connection.removeTrack(sender);
+                peer.connection.removeTrack(sender);
             }
         }
     }
 
     function setPeerStream(peerId: string, stream: MediaStream | null) {
-        const entry = peers.value.get(peerId);
+        const peer = getPeer(peerId);
 
-        if (entry) {
+        assertIsDefined(peer);
+
+        if (peer.stream?.id !== stream?.id) {
             peers.value.set(peerId, {
-                ...entry,
+                ...peer,
                 stream
             });
         }
     }
 
-    watch(peers, () => console.log('peers:update', [...peers.value.values()]), {
-        deep: true
+    function unbindLocalStream() {
+        for (const peerId of getAllPeerIds()) {
+            removeStreamFromConnection(peerId);
+        }
+    }
+
+    function bindLocalStream(stream: MediaStream) {
+        for (const peerId of getAllPeerIds()) {
+            bindStreamToConnection(peerId, stream);
+        }
+    }
+
+    watch(localStream, (stream, previousStream) => {
+        if (!hasPeers()) return;
+
+        if (previousStream) unbindLocalStream();
+
+        if (stream) bindLocalStream(stream);
     });
 
+    // watch(peers, () => console.log('peers:update', [...peers.value.values()]), {
+    //     deep: true
+    // });
+
     return {
+        hasPeers,
         disconnectFromAllPeers() {
             for (const { connection, stream } of peers.value.values()) {
                 if (stream) closeStream(stream);
@@ -110,56 +134,54 @@ export function useRTCSession({
             peers.value.clear();
         },
         async createOffer(peerId: string) {
-            const { connection } = getPeer(peerId);
+            const peer = getPeer(peerId);
 
-            const offer = await connection.createOffer();
+            assertIsDefined(peer);
 
-            await connection.setLocalDescription(
+            const offer = await peer.connection.createOffer();
+
+            await peer.connection.setLocalDescription(
                 new RTCSessionDescription(offer)
             );
 
             return offer;
         },
         async createAnswer(peerId: string, offer: RTCSessionDescriptionInit) {
-            const { connection } = getPeer(peerId);
+            const peer = getPeer(peerId);
 
-            await connection.setRemoteDescription(
+            assertIsDefined(peer);
+
+            await peer.connection.setRemoteDescription(
                 new RTCSessionDescription(offer)
             );
 
-            const answer = await connection.createAnswer();
+            const answer = await peer.connection.createAnswer();
 
-            await connection.setLocalDescription(
+            await peer.connection.setLocalDescription(
                 new RTCSessionDescription(answer)
             );
 
             return answer;
         },
         async processAnswer(peerId: string, answer: RTCSessionDescriptionInit) {
-            await getPeer(peerId).connection.setRemoteDescription(
+            const peer = getPeer(peerId);
+
+            assertIsDefined(peer);
+
+            await peer.connection.setRemoteDescription(
                 new RTCSessionDescription(answer)
             );
-        },
-        bindLocalStream(stream: MediaStream) {
-            if (hasPeers()) {
-                for (const peerId of getAllPeerIds()) {
-                    bindStreamToConnection(peerId, stream);
-                }
-            }
-        },
-        unbindLocalStream() {
-            if (hasPeers()) {
-                for (const peerId of getAllPeerIds()) {
-                    removeStreamFromConnection(peerId);
-                }
-            }
         },
         async addIceCandidate(
             peerId: string,
             sdpMLineIndex: number,
             candidate: string
         ) {
-            await getPeer(peerId).connection.addIceCandidate(
+            const peer = getPeer(peerId);
+
+            assertIsDefined(peer);
+
+            await peer.connection.addIceCandidate(
                 new RTCIceCandidate({
                     sdpMLineIndex,
                     candidate
@@ -175,20 +197,21 @@ export function useRTCSession({
                 }
             };
 
-            connection.oniceconnectionstatechange = () => {
-                const { iceConnectionState } = connection;
+            if (onDisconnection) {
+                connection.oniceconnectionstatechange = () => {
+                    const { iceConnectionState } = connection;
 
-                if (
-                    iceConnectionState === 'failed' ||
-                    iceConnectionState === 'closed' ||
-                    iceConnectionState === 'disconnected'
-                ) {
-                    onDisconnection(peerId);
-                }
-            };
+                    if (
+                        iceConnectionState === 'failed' ||
+                        iceConnectionState === 'closed' ||
+                        iceConnectionState === 'disconnected'
+                    ) {
+                        onDisconnection(peerId);
+                    }
+                };
+            }
 
             connection.ontrack = ({ streams: [stream = null] }) => {
-                console.log(`peerStream:${peerId}:stream`);
                 setPeerStream(peerId, stream);
             };
 
@@ -196,7 +219,7 @@ export function useRTCSession({
         },
         disconnectFromPeer,
         getPeerStream(peerId: string) {
-            return getPeer(peerId).stream;
+            return getPeer(peerId)?.stream || null;
         }
     };
 }
