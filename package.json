@@ -1,0 +1,17 @@
+{
+  "name": "video-call",
+  "version": "1.0.0",
+  "description": "Experimental WebRTC videoconferencing app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kirpalmakanga/video-call.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kirpalmakanga/video-call/issues"
+  },
+  "homepage": "https://github.com/kirpalmakanga/video-call#readme"
+}
