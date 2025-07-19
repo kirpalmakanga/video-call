@@ -270,7 +270,7 @@ onBeforeUnmount(disconnect);
                 </UTooltip>
             </UButtonGroup>
 
-            <UButtonGroup>
+            <div class="flex gap-4">
                 <UTooltip text="Settings">
                     <UButton color="neutral" @click="toggleSettings">
                         <UIcon class="size-5" name="i-mdi-cog" />
@@ -281,7 +281,7 @@ onBeforeUnmount(disconnect);
                         <UIcon class="size-5" name="i-mdi-phone-off" />
                     </UButton>
                 </UTooltip>
-            </UButtonGroup>
+            </div>
         </div>
 
         <USlideover
