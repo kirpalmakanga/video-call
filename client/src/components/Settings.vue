@@ -21,9 +21,6 @@ const audioDeviceSelectItems = computed(() =>
     audioInputs.value.map(({ label, id: value }) => ({ label, value }))
 );
 
-const audioPreview = ref<InstanceType<typeof AudioPreview> | null>(null);
-const videoPreview = ref<InstanceType<typeof VideoPreview> | null>(null);
-
 function handleAudioDevicesListChange() {
     if (!audioInputs.value.some(({ id }) => id === audioDeviceId.value)) {
         audioDeviceId.value = audioInputs.value[0]?.id || '';
@@ -61,11 +58,7 @@ watch(videoInputs, handleVideoDevicesListChange);
                     {{ label }}
                 </template>
 
-                <VideoPreview
-                    class="rounded"
-                    :device-id="videoDeviceId"
-                    ref="videoPreview"
-                />
+                <VideoPreview class="rounded" :device-id="videoDeviceId" />
 
                 <USelect
                     class="w-full mt-2"
@@ -96,7 +89,7 @@ watch(videoInputs, handleVideoDevicesListChange);
                     {{ label }}
                 </template>
 
-                <AudioPreview :device-id="audioDeviceId" ref="audioPreview" />
+                <AudioPreview :device-id="audioDeviceId" />
 
                 <USelect
                     class="w-full mt-2"
