@@ -24,17 +24,21 @@ export async function getVideoTrack(deviceId: string) {
     return track;
 }
 
-export async function getAvailableDevices(deviceType: 'audio' | 'video') {
-    let devices: Device[] = [];
+export async function getAvailableDevices() {
+    let devices: MediaDeviceInfo[] = [];
 
     try {
-        devices = (await mediaDevices.enumerateDevices())
-            .filter(({ kind }) => kind === `${deviceType}input`)
-            .map(({ deviceId: id, label }) => ({ id, label }));
+        devices = await mediaDevices.enumerateDevices();
     } catch (error) {
         console.error(error);
     } finally {
         //TODO: filter infrared or duplicates
         return devices;
     }
+}
+
+export function subscribeToDeviceChange(callback: () => void) {
+    mediaDevices.addEventListener('devicechange', callback);
+
+    return () => mediaDevices.removeEventListener('devicechange', callback);
 }

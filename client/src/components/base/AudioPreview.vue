@@ -12,10 +12,10 @@ const volume = useVolumeLevel(stream);
 watch(
     () => props.deviceId,
     async (deviceId) => {
-        disableStream();
-
         if (deviceId) {
             enableStream({ audio: { deviceId } });
+        } else {
+            disableStream();
         }
     },
     { immediate: true }

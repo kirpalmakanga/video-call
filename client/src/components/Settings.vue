@@ -1,100 +1,43 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive } from 'vue';
-import Loader from './base/Loader.vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import ScrollContainer from './base/ScrollContainer.vue';
 import AudioPreview from './base/AudioPreview.vue';
 import VideoPreview from './base/VideoPreview.vue';
-import { getAvailableDevices } from '../utils/media';
+import { useMediaDevices } from '../composables/use-devices-list';
 import { useSettingsStore } from '../composables/store/use-settings-store';
-import { useMediaStream } from '../composables/use-media-stream';
 
 const { displayName, audioDeviceId, videoDeviceId } = useSettingsStore();
 
 const emit = defineEmits<{ close: [e: void] }>();
 
-interface Device {
-    id: string;
-    label: string;
-}
-
-interface State {
-    isLoading: boolean;
-    videoDevices: Device[];
-    audioDevices: Device[];
-}
-
-const { enableStream, disableStream } = useMediaStream();
-
-const state = reactive<State>({
-    isLoading: false,
-    videoDevices: [],
-    audioDevices: []
-});
+const { audioInputs, videoInputs, isLoading, isRefreshing, refetch } =
+    useMediaDevices({ audio: true, video: true });
 
 const videoDeviceSelectItems = computed(() =>
-    state.videoDevices.map(({ label, id: value }) => ({ label, value }))
+    videoInputs.value.map(({ label, id: value }) => ({ label, value }))
 );
 
 const audioDeviceSelectItems = computed(() =>
-    state.audioDevices.map(({ label, id: value }) => ({ label, value }))
+    audioInputs.value.map(({ label, id: value }) => ({ label, value }))
 );
 
-function setDefaultVideoDeviceId() {
-    if (videoDeviceId.value) {
-        return;
-    }
+const audioPreview = ref<InstanceType<typeof AudioPreview> | null>(null);
+const videoPreview = ref<InstanceType<typeof VideoPreview> | null>(null);
 
-    const [{ id } = { id: null }] = state.videoDevices;
-
-    if (id) {
-        videoDeviceId.value = id;
+function handleAudioDevicesListChange() {
+    if (!audioInputs.value.some(({ id }) => id === audioDeviceId.value)) {
+        audioDeviceId.value = audioInputs.value[0]?.id || '';
     }
 }
 
-function setDefaultAudioDeviceId() {
-    if (audioDeviceId.value) {
-        return;
-    }
-
-    const [{ id } = { id: null }] = state.audioDevices;
-
-    if (id) {
-        audioDeviceId.value = id;
+function handleVideoDevicesListChange() {
+    if (!videoInputs.value.some(({ id }) => id === videoDeviceId.value)) {
+        videoDeviceId.value = videoInputs.value[0]?.id || '';
     }
 }
 
-async function fetchDevices() {
-    const [videoDevices, audioDevices] = await Promise.all([
-        getAvailableDevices('video'),
-        getAvailableDevices('audio')
-    ]);
-
-    Object.assign(state, {
-        videoDevices,
-        audioDevices
-    });
-}
-
-async function loadSettings() {
-    if (state.isLoading) {
-        return;
-    }
-
-    state.isLoading = true;
-
-    await enableStream({ audio: true, video: true });
-
-    await fetchDevices();
-
-    setDefaultVideoDeviceId();
-    setDefaultAudioDeviceId();
-
-    state.isLoading = false;
-}
-
-onMounted(loadSettings);
-
-onBeforeUnmount(disableStream);
+watch(audioInputs, handleAudioDevicesListChange);
+watch(videoInputs, handleVideoDevicesListChange);
 </script>
 
 <template>
@@ -109,20 +52,33 @@ onBeforeUnmount(disableStream);
                 />
             </UFormField>
 
-            <UFormField label="Camera">
-                <VideoPreview class="rounded" :device-id="videoDeviceId" />
+            <UFormField
+                label="Camera"
+                :ui="{ label: 'flex gap-1 items-center' }"
+            >
+                <template #label="{ label }">
+                    <UIcon class="size-6" name="i-mdi-video" />
+                    {{ label }}
+                </template>
+
+                <VideoPreview
+                    class="rounded"
+                    :device-id="videoDeviceId"
+                    ref="videoPreview"
+                />
 
                 <USelect
                     class="w-full mt-2"
                     variant="soft"
                     size="lg"
+                    :loading="isLoading"
                     :items="videoDeviceSelectItems"
-                    :disabled="!state.videoDevices.length"
+                    :disabled="!videoInputs.length"
                     v-model="videoDeviceId"
                 />
 
                 <UAlert
-                    v-if="!state.videoDevices.length"
+                    v-if="!isLoading && !videoInputs.length"
                     class="mt-4"
                     color="error"
                     description="
@@ -131,42 +87,46 @@ onBeforeUnmount(disableStream);
                 />
             </UFormField>
 
-            <UFormField label="Microphone">
-                <AudioPreview :device-id="audioDeviceId" />
+            <UFormField
+                label="Microphone"
+                :ui="{ label: 'flex gap-1 items-center' }"
+            >
+                <template #label="{ label }">
+                    <UIcon class="size-6" name="i-mdi-microphone" />
+                    {{ label }}
+                </template>
+
+                <AudioPreview :device-id="audioDeviceId" ref="audioPreview" />
 
                 <USelect
                     class="w-full mt-2"
                     variant="soft"
                     size="lg"
+                    :loading="isLoading"
                     :items="audioDeviceSelectItems"
-                    :disabled="!state.audioDevices.length"
+                    :disabled="!audioInputs.length"
                     v-model="audioDeviceId"
                 />
 
                 <UAlert
-                    v-if="!state.audioDevices.length"
+                    v-if="!isLoading && !audioInputs.length"
                     class="mt-2"
                     color="error"
                     description="No microphone found. Check if it is plugged in and you gave the proper permissions then refresh."
                 />
             </UFormField>
-
-            <Transition name="fade" mode="out-in">
-                <div
-                    v-if="state.isLoading"
-                    class="absolute inset-0 bg-gray-900 flex justify-center"
-                >
-                    <Loader class="w-6 h-6 text-gray-100" />
-                </div>
-            </Transition>
         </div>
     </ScrollContainer>
 
     <div class="flex justify-end gap-4 mt-8">
-        <UButton @click="loadSettings" :disabled="state.isLoading">
-            Refresh devices
+        <UButton :disabled="isRefreshing" @click="refetch">
+            <UIcon
+                class="size-4"
+                :class="{ 'animate-spin': isRefreshing }"
+                name="i-mdi-sync"
+            />
         </UButton>
 
-        <UButton @click="emit('close')">Done</UButton>
+        <UButton @click="emit('close')">Close</UButton>
     </div>
 </template>
