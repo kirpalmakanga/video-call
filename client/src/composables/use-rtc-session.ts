@@ -61,9 +61,7 @@ export function useRTCSession(
     }
 
     function getPeer(peerId: string) {
-        let peer = peers.value.get(peerId);
-
-        return peer;
+        return peers.value.get(peerId);
     }
 
     function bindStreamToConnection(peerId: string, stream: MediaStream) {
