@@ -148,9 +148,8 @@ onBeforeUnmount(disconnect);
                         v-for="{ id, ...participant } of allParticipants"
                         :key="id"
                     >
-                        <li>
+                        <li :class="{ hidden: isActiveParticipant(id) }">
                             <Participant
-                                :class="{ hidden: isActiveParticipant(id) }"
                                 v-bind="participant"
                                 :use-content-ratio="true"
                                 @toggle-mute="toggleMuteParticipant(id)"
