@@ -1,35 +1,42 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, watch } from 'vue';
 import ScrollContainer from './base/ScrollContainer.vue';
 import AudioPreview from './base/AudioPreview.vue';
 import VideoPreview from './base/VideoPreview.vue';
-import { useMediaDevices } from '../composables/use-devices-list';
 import { useSettingsStore } from '../composables/store/use-settings-store';
+import { useDevicesList } from '@vueuse/core';
 
 const { audioDeviceId, videoDeviceId } = useSettingsStore();
 
-const emit = defineEmits<{ close: [e: void] }>();
-
-const { audioInputs, videoInputs, isLoading, isRefreshing, refetch } =
-    useMediaDevices({ audio: true, video: true });
+const { permissionGranted, videoInputs, audioInputs } = useDevicesList({
+    requestPermissions: true
+});
 
 const videoDeviceSelectItems = computed(() =>
-    videoInputs.value.map(({ label, id: value }) => ({ label, value }))
+    videoInputs.value.map(({ label, deviceId: value }) => ({ label, value }))
 );
 
 const audioDeviceSelectItems = computed(() =>
-    audioInputs.value.map(({ label, id: value }) => ({ label, value }))
+    audioInputs.value.map(({ label, deviceId: value }) => ({ label, value }))
 );
 
 function handleAudioDevicesListChange() {
-    if (!audioInputs.value.some(({ id }) => id === audioDeviceId.value)) {
-        audioDeviceId.value = audioInputs.value[0]?.id || '';
+    if (
+        !audioInputs.value.some(
+            ({ deviceId }) => deviceId === audioDeviceId.value
+        )
+    ) {
+        audioDeviceId.value = audioInputs.value[0]?.deviceId || '';
     }
 }
 
 function handleVideoDevicesListChange() {
-    if (!videoInputs.value.some(({ id }) => id === videoDeviceId.value)) {
-        videoDeviceId.value = videoInputs.value[0]?.id || '';
+    if (
+        !videoInputs.value.some(
+            ({ deviceId }) => deviceId === videoDeviceId.value
+        )
+    ) {
+        videoDeviceId.value = videoInputs.value[0]?.deviceId || '';
     }
 }
 
@@ -39,7 +46,10 @@ watch(videoInputs, handleVideoDevicesListChange);
 
 <template>
     <ScrollContainer class="grow">
-        <div class="relative flex flex-col grow gap-8 text-gray-100">
+        <div
+            v-if="permissionGranted"
+            class="relative flex flex-col grow gap-8 text-gray-100"
+        >
             <UFormField
                 label="Camera"
                 :ui="{ label: 'flex gap-1 items-center' }"
@@ -59,15 +69,6 @@ watch(videoInputs, handleVideoDevicesListChange);
                     :items="videoDeviceSelectItems"
                     :disabled="!videoInputs.length"
                     v-model="videoDeviceId"
-                />
-
-                <UAlert
-                    v-if="!isLoading && !videoInputs.length"
-                    class="mt-4"
-                    color="error"
-                    description="
-                    No camera found. Check if it is plugged in and you gave the
-                    proper permissions then refresh."
                 />
             </UFormField>
 
@@ -91,26 +92,14 @@ watch(videoInputs, handleVideoDevicesListChange);
                     :disabled="!audioInputs.length"
                     v-model="audioDeviceId"
                 />
-
-                <UAlert
-                    v-if="!isLoading && !audioInputs.length"
-                    class="mt-2"
-                    color="error"
-                    description="No microphone found. Check if it is plugged in and you gave the proper permissions then refresh."
-                />
             </UFormField>
         </div>
+
+        <UAlert
+            v-else
+            color="info"
+            icon="i-mdi-information-outline"
+            description="Awaiting media permissions."
+        />
     </ScrollContainer>
-
-    <div class="flex justify-end gap-4 mt-8">
-        <UButton :disabled="isRefreshing" @click="refetch">
-            <UIcon
-                class="size-4"
-                :class="{ 'animate-spin': isRefreshing }"
-                name="i-mdi-sync"
-            />
-        </UButton>
-
-        <UButton @click="emit('close')">Close</UButton>
-    </div>
 </template>
