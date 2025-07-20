@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { onBeforeUnmount, watch } from 'vue';
+import { computed, onBeforeUnmount, watch } from 'vue';
 import { useVolumeLevel } from '../../composables/use-volume-level';
-import { useMediaStream } from '../../composables/use-media-stream';
+import { useUserMedia } from '@vueuse/core';
 
 const props = defineProps<{ deviceId: string | null }>();
 
-const { stream, enableStream, disableStream } = useMediaStream();
+const { stream, start, stop } = useUserMedia({
+    constraints: computed(() => ({
+        audio: { deviceId: props.deviceId || '' }
+    }))
+});
 
 const volume = useVolumeLevel(stream);
 
@@ -13,15 +17,15 @@ watch(
     () => props.deviceId,
     async (deviceId) => {
         if (deviceId) {
-            enableStream({ audio: { deviceId } });
+            start();
         } else {
-            disableStream();
+            stop();
         }
     },
     { immediate: true }
 );
 
-onBeforeUnmount(disableStream);
+onBeforeUnmount(stop);
 </script>
 
 <template>
