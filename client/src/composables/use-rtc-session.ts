@@ -1,5 +1,4 @@
 import { ref, watch, type Ref } from 'vue';
-import { closeStream } from '../utils/media';
 import { assertIsDefined } from '../utils/assert';
 
 // const configuration = {
@@ -17,6 +16,12 @@ interface RTCSessionOptions {
 interface Peer {
     connection: RTCPeerConnection;
     stream: MediaStream | null;
+}
+
+function closeStream(stream: MediaStream) {
+    for (const track of stream.getTracks()) {
+        track.stop();
+    }
 }
 
 export function useRTCSession(
