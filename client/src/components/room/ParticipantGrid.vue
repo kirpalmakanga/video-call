@@ -11,7 +11,7 @@ interface GridLayout {
 
 const props = defineProps<{ items: ClientParticipant[] }>();
 
-const container = useTemplateRef('container');
+const container = useTemplateRef<HTMLUListElement>('container');
 
 const aspectRatio = 16 / 9;
 
