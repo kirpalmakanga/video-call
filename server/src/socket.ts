@@ -46,7 +46,7 @@ export default function startSocketServer(
         }
 
         socket.on(
-            'joinRoom',
+            'connectParticipant',
             async ({
                 roomId,
                 participant
@@ -79,7 +79,7 @@ export default function startSocketServer(
         );
 
         socket.on(
-            'leaveRoom',
+            'disconnectParticipant',
             ({
                 roomId,
                 participantId

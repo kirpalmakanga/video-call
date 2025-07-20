@@ -95,7 +95,7 @@ export function useRoom(roomId: string) {
         localParticipant.name = displayName;
         localParticipant.stream = stream.value;
 
-        emit('joinRoom', {
+        emit('connectParticipant', {
             roomId,
             participant: omit(localParticipant, 'stream', 'isLocalParticipant')
         });
@@ -110,7 +110,7 @@ export function useRoom(roomId: string) {
 
         participants.value = [];
 
-        emit('leaveRoom', {
+        emit('disconnectParticipant', {
             roomId,
             participantId: localParticipant.id
         });

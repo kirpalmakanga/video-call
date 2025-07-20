@@ -1,11 +1,11 @@
 import { io, Socket } from 'socket.io-client';
 
 interface EmissionsPayloads {
-    joinRoom: {
+    connectParticipant: {
         roomId: string;
         participant: Participant;
     };
-    leaveRoom: {
+    disconnectParticipant: {
         roomId: string;
         participantId: string;
     };
