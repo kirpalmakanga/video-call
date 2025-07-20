@@ -35,15 +35,7 @@ onBeforeUnmount(stop);
 </script>
 
 <template>
-    <div class="relative w-full bg-black">
-        <video ref="video" class="w-full aspect-video" muted autoplay></video>
-
-        <Transition name="fade">
-            <div
-                class="absolute inset-0 bg-gray-800 flex items-center justify-center"
-            >
-                <Loader class="w-6 h-6" />
-            </div>
-        </Transition>
+    <div class="relative w-full bg-gray-800">
+        <video ref="video" class="w-full aspect-video" muted autoplay />
     </div>
 </template>
