@@ -110,10 +110,10 @@ export function useRTCSession(
         }
     }
 
-    watch(localStream, (stream, previousStream) => {
+    watch(localStream, (stream) => {
         if (!hasPeers()) return;
 
-        if (previousStream || !stream) unbindLocalStream();
+        unbindLocalStream();
 
         if (stream) bindLocalStream(stream);
     });
