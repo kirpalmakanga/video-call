@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { throttle } from '../../utils/helpers.js';
-
 import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { useThrottleFn } from '@vueuse/core';
 
 defineProps<{ scrollableClass?: string }>();
 
@@ -14,7 +13,7 @@ const emit = defineEmits<{
     'reached-bottom': [e: void];
 }>();
 
-const handleScroll = throttle((e: Event) => {
+const handleScroll = useThrottleFn((e: Event) => {
     const { currentTarget } = e;
 
     if (!currentTarget) {
