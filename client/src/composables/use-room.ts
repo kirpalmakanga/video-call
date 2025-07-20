@@ -90,7 +90,9 @@ export function useRoom(roomId: string) {
         displayName: string;
         streamOptions: MediaStreamConstraints;
     }) {
-        await enableStream(streamOptions);
+        if (!stream.value) {
+            await enableStream(streamOptions);
+        }
 
         localParticipant.name = displayName;
         localParticipant.stream = stream.value;
@@ -116,16 +118,19 @@ export function useRoom(roomId: string) {
         });
     }
 
-    subscribe('incomingCall', async ({ roomId, senderParticipantId }) => {
-        connectToParticipant(senderParticipantId);
+    subscribe(
+        'participantConnected',
+        async ({ roomId, senderParticipantId }) => {
+            connectToParticipant(senderParticipantId);
 
-        emit('offer', {
-            roomId,
-            senderParticipantId: localParticipant.id,
-            targetParticipantId: senderParticipantId,
-            offer: await createOffer(senderParticipantId)
-        });
-    });
+            emit('offer', {
+                roomId,
+                senderParticipantId: localParticipant.id,
+                targetParticipantId: senderParticipantId,
+                offer: await createOffer(senderParticipantId)
+            });
+        }
+    );
 
     subscribe(
         'incomingOffer',

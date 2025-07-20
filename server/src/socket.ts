@@ -71,7 +71,7 @@ export default function startSocketServer(
                     });
                 }
 
-                socket.to(roomId).emit('incomingCall', {
+                socket.to(roomId).emit('participantConnected', {
                     roomId,
                     senderParticipantId: participant.id
                 });

@@ -42,7 +42,7 @@ interface EmissionsPayloads {
 }
 
 interface SubscriptionPayloads {
-    incomingCall: {
+    participantConnected: {
         roomId: string;
         senderParticipantId: string;
     };
