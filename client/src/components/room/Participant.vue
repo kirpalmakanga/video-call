@@ -11,17 +11,14 @@ import Contain from '../base/Contain.vue';
 import Loader from '../base/Loader.vue';
 import { useVolumeLevel } from '../../composables/use-volume-level';
 
-const props = withDefaults(
-    defineProps<{
-        name: string;
-        isLocalParticipant?: boolean;
-        isActiveParticipant?: boolean;
-        stream: MediaStream | null;
-        isMuted: boolean;
-        useContentRatio?: boolean;
-    }>(),
-    { stream: null }
-);
+const props = defineProps<{
+    name: string;
+    isLocalParticipant?: boolean;
+    isActiveParticipant?: boolean;
+    stream?: MediaStream;
+    isMuted: boolean;
+    useContentRatio?: boolean;
+}>();
 
 const emit = defineEmits<{ 'toggle-mute': [e: void] }>();
 
@@ -36,9 +33,9 @@ const video = ref<HTMLVideoElement>();
 
 const volume = useVolumeLevel(computed(() => props.stream));
 
-async function setVideoSource(stream: MediaStream | null) {
+async function setVideoSource(stream?: MediaStream | null) {
     if (video.value) {
-        video.value.srcObject = stream;
+        video.value.srcObject = stream || null;
     }
 }
 
@@ -70,7 +67,9 @@ onBeforeUnmount(() => setVideoSource(null));
         :aspect-ratio="state.aspectRatio"
         :style="useContentRatio ? { aspectRatio: state.aspectRatio } : null"
     >
-        <div class="relative flex w-full h-full rounded overflow-hidden">
+        <div
+            class="relative flex w-full h-full rounded overflow-hidden bg-gray-700"
+        >
             <video
                 ref="video"
                 class="grow"
