@@ -6,7 +6,7 @@ import VideoPreview from './base/VideoPreview.vue';
 import { useMediaDevices } from '../composables/use-devices-list';
 import { useSettingsStore } from '../composables/store/use-settings-store';
 
-const { displayName, audioDeviceId, videoDeviceId } = useSettingsStore();
+const { audioDeviceId, videoDeviceId } = useSettingsStore();
 
 const emit = defineEmits<{ close: [e: void] }>();
 
@@ -40,15 +40,6 @@ watch(videoInputs, handleVideoDevicesListChange);
 <template>
     <ScrollContainer class="grow">
         <div class="relative flex flex-col grow gap-8 text-gray-100">
-            <UFormField label="Display name">
-                <UInput
-                    class="w-full"
-                    variant="soft"
-                    size="lg"
-                    v-model="displayName"
-                />
-            </UFormField>
-
             <UFormField
                 label="Camera"
                 :ui="{ label: 'flex gap-1 items-center' }"

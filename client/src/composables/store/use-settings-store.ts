@@ -2,16 +2,14 @@ import { reactive, toRefs, watch } from 'vue';
 import { getStorageItem, setStorageItem } from '../../utils/storage';
 
 interface State {
-    displayName: string;
     isAudioEnabled: boolean;
     audioDeviceId: string;
     isVideoEnabled: boolean;
     videoDeviceId: string;
 }
 
-function getInitialState() {
+function getInitialState(): State {
     return {
-        displayName: '',
         isAudioEnabled: true,
         audioDeviceId: '',
         isVideoEnabled: true,
