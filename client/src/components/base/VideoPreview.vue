@@ -1,34 +1,37 @@
 <script setup lang="ts">
-import { onBeforeUnmount, useTemplateRef, watch } from 'vue';
+import { computed, onBeforeUnmount, useTemplateRef, watch } from 'vue';
 import Loader from './Loader.vue';
-import { useMediaStream } from '../../composables/use-media-stream';
-
-const video = useTemplateRef<HTMLVideoElement>('video');
+import { useUserMedia } from '@vueuse/core';
 
 const props = defineProps<{ deviceId: string | null }>();
 
-const { stream, isLoadingStream, enableStream, disableStream } =
-    useMediaStream();
+const video = useTemplateRef<HTMLVideoElement>('video');
+
+const { stream, start, stop } = useUserMedia({
+    constraints: computed(() => ({
+        video: { deviceId: props.deviceId || '' }
+    }))
+});
 
 watch(
     () => props.deviceId,
     async (deviceId) => {
         if (deviceId) {
-            enableStream({ video: { deviceId } });
+            start();
         } else {
-            disableStream();
+            stop();
         }
     },
     { immediate: true }
 );
 
-watch(stream, (stream: MediaStream | null) => {
+watch(stream, (stream) => {
     if (video.value) {
-        video.value.srcObject = stream;
+        video.value.srcObject = stream || null;
     }
 });
 
-onBeforeUnmount(disableStream);
+onBeforeUnmount(stop);
 </script>
 
 <template>
