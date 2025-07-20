@@ -2,7 +2,7 @@ import { onBeforeUnmount, reactive, ref, watch, type Ref } from 'vue';
 
 const audioContext = new AudioContext();
 
-export function useVolumeLevel(stream: Ref<MediaStream | null>) {
+export function useVolumeLevel(stream: Ref<MediaStream | undefined>) {
     interface State {
         source: MediaStreamAudioSourceNode | null;
         analyser: AnalyserNode | null;
