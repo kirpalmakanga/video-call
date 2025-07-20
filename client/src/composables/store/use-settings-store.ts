@@ -1,5 +1,6 @@
 import { reactive, toRefs, watch } from 'vue';
 import { getStorageItem, setStorageItem } from '../../utils/storage';
+import { useStorage } from '@vueuse/core';
 
 interface State {
     isAudioEnabled: boolean;
@@ -17,13 +18,12 @@ function getInitialState(): State {
     };
 }
 
-const state = reactive<State>({
-    ...getInitialState(),
-    ...(getStorageItem('settings') || {})
-});
+const storedState = useStorage<State>('settings', getInitialState());
+
+const state = reactive<State>(storedState.value);
 
 watch(state, () => {
-    setStorageItem('settings', state);
+    storedState.value = state;
 });
 
 export function useSettingsStore() {
