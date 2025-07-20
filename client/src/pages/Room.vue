@@ -73,10 +73,6 @@ const activeParticipant = computed(() => {
     );
 });
 
-const areDevicesReady = computed(
-    () => audioDeviceId.value && videoDeviceId.value
-);
-
 function toggleSettings() {
     state.areSettingsVisible = !state.areSettingsVisible;
 }
@@ -129,8 +125,8 @@ watch(isAudioEnabled, (value) => {
     isSettingsAudioEnabled.value = value;
 });
 
-watch(areDevicesReady, (ready) => {
-    if (ready) {
+watch([audioDeviceId, videoDeviceId], ([audio, video]) => {
+    if (audio && video) {
         connectToRoom();
     }
 });
@@ -149,7 +145,7 @@ onBeforeMount(() => {
 });
 
 onMounted(() => {
-    if (areDevicesReady.value) {
+    if (audioDeviceId.value && videoDeviceId.value) {
         connectToRoom();
     } else {
         toggleSettings();
