@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useTemplateRef, watch } from 'vue';
-import { useResizeObserver } from '@vueuse/core';
-import { debounce } from '../../utils/helpers';
+import { useDebounceFn, useResizeObserver } from '@vueuse/core';
 
 interface GridLayout {
     width: number;
@@ -79,7 +78,7 @@ function recalculateLayout() {
     }
 }
 
-useResizeObserver(container, debounce(recalculateLayout, 50));
+useResizeObserver(container, useDebounceFn(recalculateLayout, 50));
 
 watch(() => props.items, recalculateLayout);
 </script>
