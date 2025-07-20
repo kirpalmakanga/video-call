@@ -19,7 +19,7 @@ declare global {
     }
 
     interface ClientParticipant extends Participant {
-        stream: MediaStream | null;
+        stream?: MediaStream;
         isLocalParticipant?: boolean;
     }
 
