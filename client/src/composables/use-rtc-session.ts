@@ -20,7 +20,7 @@ interface Peer {
 }
 
 export function useRTCSession(
-    localStream: Ref<MediaStream | null>,
+    localStream: Ref<MediaStream | undefined>,
     { onIceCandidate, onDisconnection }: RTCSessionOptions
 ) {
     const peers = ref<Map<string, Peer>>(new Map());
@@ -113,14 +113,10 @@ export function useRTCSession(
     watch(localStream, (stream, previousStream) => {
         if (!hasPeers()) return;
 
-        if (previousStream) unbindLocalStream();
+        if (previousStream || !stream) unbindLocalStream();
 
         if (stream) bindLocalStream(stream);
     });
-
-    // watch(peers, () => console.log('peers:update', [...peers.value.values()]), {
-    //     deep: true
-    // });
 
     return {
         hasPeers,
