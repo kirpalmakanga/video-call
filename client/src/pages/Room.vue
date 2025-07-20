@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-    computed,
-    onBeforeMount,
-    onBeforeUnmount,
-    onMounted,
-    reactive,
-    watch
-} from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import Placeholder from '../components/base/Placeholder.vue';
@@ -15,7 +8,6 @@ import Participant from '../components/room/Participant.vue';
 import ParticipantGrid from '../components/room/ParticipantGrid.vue';
 import { useRoom } from '../composables/use-room';
 import { useSettingsStore } from '../composables/store/use-settings-store';
-import { debounce } from '../utils/helpers';
 
 const viewModeIcons = {
     grid: 'i-mdi-view-grid',
@@ -36,25 +28,28 @@ const {
     params: { roomId }
 } = useRoute();
 
-const {
-    displayName,
-    isVideoEnabled: isSettingsVideoEnabled,
-    isAudioEnabled: isSettingsAudioEnabled,
-    videoDeviceId,
-    audioDeviceId
-} = useSettingsStore();
+const { isVideoEnabled, isAudioEnabled, videoDeviceId, audioDeviceId } =
+    useSettingsStore();
 
 const {
     localParticipant,
     participants,
-    isVideoEnabled,
-    isAudioEnabled,
-    toggleVideo,
-    toggleAudio,
     toggleMuteParticipant,
     connect,
     disconnect
-} = useRoom(roomId as string);
+} = useRoom(roomId as string, {
+    displayName: 'User',
+    streamConfig: computed(() => ({
+        video: {
+            deviceId: videoDeviceId.value
+        },
+        audio: {
+            deviceId: audioDeviceId.value
+        }
+    })),
+    isVideoEnabled,
+    isAudioEnabled
+});
 
 const state = reactive<State>({
     viewMode: 'sidebar',
@@ -93,41 +88,13 @@ function setActiveParticipant(id: string) {
     state.activeParticipantId = id;
 }
 
-async function connectToRoom() {
-    await connect({
-        displayName: displayName.value,
-        streamOptions: {
-            video: {
-                deviceId: videoDeviceId.value
-            },
-            audio: {
-                deviceId: audioDeviceId.value
-            }
-        }
-    });
-}
-
 function leaveRoom() {
     router.push('/');
 }
 
-watch(
-    displayName,
-    debounce((value: string) => {
-        localParticipant.name = value;
-    }, 1000)
-);
-
-watch(isVideoEnabled, (value) => {
-    isSettingsVideoEnabled.value = value;
-});
-watch(isAudioEnabled, (value) => {
-    isSettingsAudioEnabled.value = value;
-});
-
 watch([audioDeviceId, videoDeviceId], ([audio, video]) => {
     if (audio && video) {
-        connectToRoom();
+        connect();
     }
 });
 
@@ -139,14 +106,9 @@ watch(allParticipants, (currentParticipants) => {
     }
 });
 
-onBeforeMount(() => {
-    isVideoEnabled.value = isSettingsVideoEnabled.value;
-    isAudioEnabled.value = isSettingsAudioEnabled.value;
-});
-
 onMounted(() => {
     if (audioDeviceId.value && videoDeviceId.value) {
-        connectToRoom();
+        connect();
     } else {
         toggleSettings();
     }
@@ -201,7 +163,7 @@ onBeforeUnmount(disconnect);
 
             <div
                 v-else-if="isViewMode('grid')"
-                class="flex grow bg-neutral-700 p-4 rounded"
+                class="flex grow bg-neutral-800 p-4 rounded"
             >
                 <ParticipantGrid class="grow" :items="allParticipants">
                     <template #item="{ id, ...participant }">
@@ -221,7 +183,10 @@ onBeforeUnmount(disconnect);
                         isVideoEnabled ? 'Turn camera off' : 'Toggle camera on'
                     "
                 >
-                    <UButton color="neutral" @click="toggleVideo">
+                    <UButton
+                        color="neutral"
+                        @click="isVideoEnabled = !isVideoEnabled"
+                    >
                         <UIcon
                             class="size-5"
                             :name="
@@ -239,7 +204,10 @@ onBeforeUnmount(disconnect);
                             : 'Enable microphone'
                     "
                 >
-                    <UButton color="neutral" @click="toggleAudio">
+                    <UButton
+                        color="neutral"
+                        @click="isAudioEnabled = !isAudioEnabled"
+                    >
                         <UIcon
                             class="size-5"
                             :name="
@@ -286,7 +254,7 @@ onBeforeUnmount(disconnect);
             :ui="{ body: 'flex flex-col' }"
         >
             <template #body>
-                <Settings @close="toggleSettings" />
+                <Settings />
             </template>
         </USlideover>
     </section>

@@ -1,15 +1,35 @@
-import { computed, reactive, ref, watch } from 'vue';
-
-import { useRTCSession } from './use-rtc-session';
+import { computed, reactive, ref, watch, type Ref } from 'vue';
+import { useOnline, useUserMedia } from '@vueuse/core';
 import { useSocket } from './use-socket';
-import { mergeByKey, omit, pick } from '../utils/helpers';
-import { useMediaStream } from './use-media-stream';
+import { useRTCSession } from './use-rtc-session';
+import { mergeByKey, omit } from '../utils/helpers';
 
-export function useRoom(roomId: string) {
+interface RoomConfig {
+    displayName: string;
+    isVideoEnabled: Ref<boolean>;
+    isAudioEnabled: Ref<boolean>;
+    streamConfig: Ref<MediaStreamConstraints>;
+}
+
+export function useRoom(
+    roomId: string,
+    { displayName, isVideoEnabled, isAudioEnabled, streamConfig }: RoomConfig
+) {
+    const isOnline = useOnline();
+
+    const {
+        stream,
+        start: startStream,
+        stop: stopStream
+    } = useUserMedia({
+        constraints: streamConfig
+    });
+
+    const { emit, subscribe, unsubscribe } = useSocket();
+
     const localParticipant = reactive<ClientParticipant>({
         id: crypto.randomUUID(),
-        name: '',
-        stream: null,
+        name: displayName,
         isMuted: false,
         isLocalParticipant: true
     });
@@ -37,18 +57,6 @@ export function useRoom(roomId: string) {
     }
 
     const {
-        stream,
-        isVideoEnabled,
-        isAudioEnabled,
-        enableStream,
-        disableStream,
-        toggleVideo,
-        toggleAudio
-    } = useMediaStream();
-
-    const { emit, subscribe, unsubscribeAll } = useSocket();
-
-    const {
         disconnectFromPeer,
         disconnectFromAllPeers,
         createOffer,
@@ -69,9 +77,9 @@ export function useRoom(roomId: string) {
         }
     });
 
-    function connectToParticipant(participantId: string) {
-        if (localParticipant.stream) {
-            connectToPeer(participantId, localParticipant.stream);
+    function setupPeerConnection(participantId: string) {
+        if (stream.value) {
+            connectToPeer(participantId, stream.value);
         }
     }
 
@@ -83,19 +91,35 @@ export function useRoom(roomId: string) {
         });
     }
 
-    async function connect({
-        displayName,
-        streamOptions
-    }: {
-        displayName: string;
-        streamOptions: MediaStreamConstraints;
-    }) {
-        if (!stream.value) {
-            await enableStream(streamOptions);
+    function setVideoStatus() {
+        const videoTracks = stream.value?.getVideoTracks();
+
+        if (videoTracks?.length) {
+            for (const track of videoTracks) {
+                track.enabled = isVideoEnabled.value;
+            }
+        }
+    }
+
+    function setAudioStatus() {
+        const audioTracks = stream.value?.getAudioTracks();
+
+        if (audioTracks?.length) {
+            for (const track of audioTracks) {
+                track.enabled = isAudioEnabled.value;
+            }
         }
 
-        localParticipant.name = displayName;
-        localParticipant.stream = stream.value;
+        localParticipant.isMuted = !isAudioEnabled.value;
+    }
+
+    async function connect() {
+        if (!stream.value) {
+            await startStream();
+
+            setAudioStatus();
+            setVideoStatus();
+        }
 
         emit('connectParticipant', {
             roomId,
@@ -104,9 +128,9 @@ export function useRoom(roomId: string) {
     }
 
     function disconnect() {
-        disableStream();
+        stopStream();
 
-        unsubscribeAll();
+        unsubscribe();
 
         disconnectFromAllPeers();
 
@@ -121,7 +145,7 @@ export function useRoom(roomId: string) {
     subscribe(
         'participantConnected',
         async ({ roomId, senderParticipantId }) => {
-            connectToParticipant(senderParticipantId);
+            setupPeerConnection(senderParticipantId);
 
             emit('offer', {
                 roomId,
@@ -135,7 +159,7 @@ export function useRoom(roomId: string) {
     subscribe(
         'incomingOffer',
         async ({ roomId, senderParticipantId, offer }) => {
-            connectToParticipant(senderParticipantId);
+            setupPeerConnection(senderParticipantId);
 
             emit('answer', {
                 roomId,
@@ -174,18 +198,28 @@ export function useRoom(roomId: string) {
         removeParticipant(participantId);
     });
 
+    watch(isOnline, (isOnline) => {
+        if (isOnline) {
+            connect();
+        }
+    });
+
     watch(stream, (stream) => {
         localParticipant.stream = stream;
+
+        if (stream) {
+            setAudioStatus();
+            setVideoStatus();
+        }
     });
+
+    watch(isVideoEnabled, setVideoStatus);
 
     watch(isAudioEnabled, () => {
-        localParticipant.isMuted = !isAudioEnabled.value;
-    });
+        setAudioStatus();
 
-    watch(
-        () => pick(localParticipant, 'name', 'isMuted'),
-        syncLocalParticipant
-    );
+        syncLocalParticipant();
+    });
 
     return {
         localParticipant,
@@ -195,10 +229,6 @@ export function useRoom(roomId: string) {
                 stream: getPeerStream(item.id)
             }))
         ),
-        isVideoEnabled,
-        isAudioEnabled,
-        toggleVideo,
-        toggleAudio,
         toggleMuteParticipant,
         connect,
         disconnect

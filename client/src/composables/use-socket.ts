@@ -71,8 +71,6 @@ interface SubscriptionPayloads {
 let socket: Socket;
 
 export function useSocket() {
-    const subscriptions = new Map<string, (...args: any[]) => void>();
-
     function getSocket() {
         if (!socket) {
             socket = io(import.meta.env.VITE_API_URI);
@@ -92,27 +90,18 @@ export function useSocket() {
             event: E,
             callback: (payload: SubscriptionPayloads[E]) => void
         ) {
-            const socket = getSocket();
-
-            socket.on(event, callback);
-
-            subscriptions.set(event, callback);
-
-            return () => {
-                socket.off(event, callback);
-
-                subscriptions.delete(event);
-            };
+            getSocket().on(event, callback);
         },
         unsubscribe<E extends keyof SubscriptionPayloads>(
-            event: E,
-            callback: (payload: SubscriptionPayloads[E]) => void
+            event?: E,
+            callback?: (payload: SubscriptionPayloads[E]) => void
         ) {
-            getSocket().off(event, callback);
-        },
-        unsubscribeAll() {
-            for (const [event, callback] of subscriptions) {
+            const socket = getSocket();
+
+            if (event && callback) {
                 socket.off(event, callback);
+            } else {
+                socket.removeAllListeners(event);
             }
         }
     };
