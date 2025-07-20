@@ -40,7 +40,6 @@ onBeforeUnmount(stop);
 
         <Transition name="fade">
             <div
-                v-if="isLoadingStream"
                 class="absolute inset-0 bg-gray-800 flex items-center justify-center"
             >
                 <Loader class="w-6 h-6" />
