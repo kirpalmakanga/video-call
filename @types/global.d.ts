@@ -13,11 +13,6 @@ declare global {
         isMuted?: boolean;
     }
 
-    interface Device {
-        id: string;
-        label: string;
-    }
-
     interface ClientParticipant extends Participant {
         stream?: MediaStream;
         isLocalParticipant?: boolean;
