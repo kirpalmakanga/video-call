@@ -30,7 +30,7 @@ export function useRTCSession(
     }
 
     function getAllPeerIds() {
-        return peers.value.keys();
+        return [...peers.value.keys()];
     }
 
     function disconnectFromPeer(peerId: string) {
