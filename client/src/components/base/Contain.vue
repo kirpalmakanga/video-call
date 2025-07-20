@@ -4,14 +4,14 @@ import { ref, useTemplateRef, watch } from 'vue';
 
 const props = defineProps<{ aspectRatio: number }>();
 
-const container = useTemplateRef('container');
+const container = useTemplateRef<HTMLDivElement>('container');
 const containerClass = ref<'w-full' | 'h-full'>('w-full');
 
 function calculateLayout() {
     requestAnimationFrame(() => {
         const { aspectRatio } = props;
 
-        if (container.value && aspectRatio) {
+        if (container.value) {
             const hScale = container.value.offsetWidth / aspectRatio;
             const vScale = container.value.offsetHeight;
 
