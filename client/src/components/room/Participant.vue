@@ -92,18 +92,25 @@ onBeforeUnmount(() => setVideoSource(null));
                 </span>
             </span>
 
-            <button
-                class="absolute top-2 right-2 bg-gray-800 text-gray-100 rounded p-1 flex justify-center items-center"
+            <UTooltip
+                :text="isMuted ? `Unmute ${name}` : `Mute ${name}`"
                 :disabled="isLocalParticipant"
-                @click.stop="emit('toggle-mute')"
             >
-                <UIcon
-                    class="w-5 h-5"
-                    :name="
-                        isMuted ? 'i-mdi-microphone-off' : 'i-mdi-microphone'
-                    "
-                />
-            </button>
+                <button
+                    class="absolute top-2 right-2 bg-gray-800 text-gray-100 rounded p-1 flex justify-center items-center"
+                    :disabled="isLocalParticipant"
+                    @click.stop="emit('toggle-mute')"
+                >
+                    <UIcon
+                        class="w-5 h-5"
+                        :name="
+                            isMuted
+                                ? 'i-mdi-microphone-off'
+                                : 'i-mdi-microphone'
+                        "
+                    />
+                </button>
+            </UTooltip>
 
             <Transition name="fade">
                 <span
