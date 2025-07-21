@@ -64,17 +64,19 @@ export function useRTCSession(
         return peers.value.get(peerId);
     }
 
-    function bindStreamToConnection(peerId: string, stream: MediaStream) {
+    function bindLocalStreamToPeer(peerId: string) {
+        assertIsDefined(localStream.value);
+
         const peer = getPeer(peerId);
 
         assertIsDefined(peer);
 
-        for (const track of stream.getTracks()) {
-            peer.connection.addTrack(track, stream);
+        for (const track of localStream.value.getTracks()) {
+            peer.connection.addTrack(track, localStream.value);
         }
     }
 
-    function removeStreamFromConnection(peerId: string) {
+    function unbindLocalStreamFromPeer(peerId: string) {
         const peer = getPeer(peerId);
 
         assertIsDefined(peer);
@@ -101,24 +103,26 @@ export function useRTCSession(
         }
     }
 
-    function unbindLocalStream() {
+    function bindLocalStreamToAllPeers() {
+        assertIsDefined(localStream.value);
+
         for (const peerId of getAllPeerIds()) {
-            removeStreamFromConnection(peerId);
+            bindLocalStreamToPeer(peerId);
         }
     }
 
-    function bindLocalStream(stream: MediaStream) {
+    function unbindLocalStreamFromAllPeers() {
         for (const peerId of getAllPeerIds()) {
-            bindStreamToConnection(peerId, stream);
+            unbindLocalStreamFromPeer(peerId);
         }
     }
 
-    watch(localStream, (stream) => {
-        if (!hasPeers()) return;
+    watch(localStream, () => {
+        if (hasPeers()) {
+            unbindLocalStreamFromAllPeers();
 
-        unbindLocalStream();
-
-        if (stream) bindLocalStream(stream);
+            bindLocalStreamToAllPeers();
+        }
     });
 
     return {
@@ -187,7 +191,7 @@ export function useRTCSession(
                 })
             );
         },
-        connectToPeer(peerId: string, stream: MediaStream) {
+        connectToPeer(peerId: string) {
             const { connection } = createPeer(peerId);
 
             connection.onicecandidate = ({ candidate }) => {
@@ -214,7 +218,7 @@ export function useRTCSession(
                 setPeerStream(peerId, stream);
             };
 
-            bindStreamToConnection(peerId, stream);
+            bindLocalStreamToPeer(peerId);
         },
         disconnectFromPeer,
         getPeerStream(peerId: string) {

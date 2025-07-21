@@ -18,7 +18,7 @@ export function useRoom(
     const isOnline = useOnline();
 
     const {
-        stream,
+        stream: localStream,
         start: startStream,
         stop: stopStream
     } = useUserMedia({
@@ -65,7 +65,7 @@ export function useRoom(
         addIceCandidate,
         connectToPeer,
         getPeerStream
-    } = useRTCSession(stream, {
+    } = useRTCSession(localStream, {
         onIceCandidate(peerId, candidate) {
             emit('iceCandidate', {
                 senderParticipantId: localParticipant.id,
@@ -77,12 +77,6 @@ export function useRoom(
         }
     });
 
-    function setupPeerConnection(participantId: string) {
-        if (stream.value) {
-            connectToPeer(participantId, stream.value);
-        }
-    }
-
     function syncLocalParticipant() {
         emit('updateParticipant', {
             roomId,
@@ -92,7 +86,7 @@ export function useRoom(
     }
 
     function setVideoStatus() {
-        const videoTracks = stream.value?.getVideoTracks();
+        const videoTracks = localStream.value?.getVideoTracks();
 
         if (videoTracks?.length) {
             for (const track of videoTracks) {
@@ -102,7 +96,7 @@ export function useRoom(
     }
 
     function setAudioStatus() {
-        const audioTracks = stream.value?.getAudioTracks();
+        const audioTracks = localStream.value?.getAudioTracks();
 
         if (audioTracks?.length) {
             for (const track of audioTracks) {
@@ -114,7 +108,7 @@ export function useRoom(
     }
 
     async function connect() {
-        if (!stream.value) {
+        if (!localStream.value) {
             await startStream();
 
             setAudioStatus();
@@ -145,7 +139,7 @@ export function useRoom(
     subscribe(
         'participantConnected',
         async ({ roomId, senderParticipantId }) => {
-            setupPeerConnection(senderParticipantId);
+            connectToPeer(senderParticipantId);
 
             emit('offer', {
                 roomId,
@@ -159,7 +153,7 @@ export function useRoom(
     subscribe(
         'incomingOffer',
         async ({ roomId, senderParticipantId, offer }) => {
-            setupPeerConnection(senderParticipantId);
+            connectToPeer(senderParticipantId);
 
             emit('answer', {
                 roomId,
@@ -204,7 +198,7 @@ export function useRoom(
         }
     });
 
-    watch(stream, (stream) => {
+    watch(localStream, (stream) => {
         localParticipant.stream = stream;
 
         if (stream) {
