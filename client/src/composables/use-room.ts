@@ -2,7 +2,7 @@ import { computed, reactive, ref, watch, type Ref } from 'vue';
 import { useOnline, useUserMedia } from '@vueuse/core';
 import { useSocket } from './use-socket';
 import { useRTCSession } from './use-rtc-session';
-import { mergeByKey, omit } from '../utils/helpers';
+import { mergeByKey, omit, pick } from '../utils/helpers';
 
 interface RoomConfig {
     displayName: string;
@@ -77,11 +77,15 @@ export function useRoom(
         }
     });
 
+    function getLocalParticipantForServer(): Participant {
+        return pick(localParticipant, 'id', 'name', 'isMuted');
+    }
+
     function syncLocalParticipant() {
         emit('updateParticipant', {
             roomId,
             senderParticipantId: localParticipant.id,
-            data: omit(localParticipant, 'stream', 'isLocalParticipant')
+            data: getLocalParticipantForServer()
         });
     }
 
@@ -117,7 +121,7 @@ export function useRoom(
 
         emit('connectParticipant', {
             roomId,
-            participant: omit(localParticipant, 'stream', 'isLocalParticipant')
+            participant: getLocalParticipantForServer()
         });
     }
 
