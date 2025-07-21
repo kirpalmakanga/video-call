@@ -17,6 +17,7 @@ const props = defineProps<{
     isActiveParticipant?: boolean;
     stream?: MediaStream;
     isMuted: boolean;
+    isLocallyMuted?: boolean;
     useContentRatio?: boolean;
 }>();
 
@@ -68,13 +69,18 @@ onBeforeUnmount(() => setVideoSource(null));
         :style="useContentRatio ? { aspectRatio: state.aspectRatio } : null"
     >
         <div
-            class="relative flex w-full h-full rounded overflow-hidden bg-gray-700"
+            class="relative flex w-full h-full rounded overflow-hidden bg-gray-700 group"
         >
             <video
                 ref="video"
                 class="grow"
                 autoplay
-                :muted="isLocalParticipant || isActiveParticipant || isMuted"
+                :muted="
+                    isLocalParticipant ||
+                    isActiveParticipant ||
+                    isMuted ||
+                    isLocallyMuted
+                "
                 @loadeddata="onVideoLoaded"
             />
 
@@ -83,40 +89,49 @@ onBeforeUnmount(() => setVideoSource(null));
                 :class="{ 'ring-4 ring-inset ring-blue-600 ': volume > 20 }"
             ></div>
 
-            <span class="absolute left-2 right-2 bottom-2 flex">
-                <span
-                    class="bg-gray-800 text-gray-100 text-sm rounded whitespace-nowrap overflow-hidden text-ellipsis px-2 py-1"
-                >
-                    {{ name }}
+            <span class="absolute right-2 top-2 flex gap-2">
+                <span v-if="isMuted" class="p-1 bg-warning-800/60 rounded">
+                    <UIcon class="size-5" name="i-mdi-microphone-off" />
                 </span>
             </span>
 
-            <UTooltip
-                :text="isMuted ? `Unmute ${name}` : `Mute ${name}`"
-                :disabled="isLocalParticipant"
-            >
-                <button
-                    class="absolute top-2 right-2 bg-gray-800 text-gray-100 rounded p-1 flex justify-center items-center"
-                    :disabled="isLocalParticipant"
-                    @click.stop="emit('toggle-mute')"
+            <span class="absolute left-2 right-2 bottom-2 flex gap-2">
+                <div class="grow overflow-ellipsis overflow-hidden rounded">
+                    <span
+                        class="text-gray-100 text-sm px-2 py-1 whitespace-nowrap bg-gray-800/60 rounded"
+                    >
+                        {{ name }} ioj azaeofj zo azoefjio zaeoif
+                        oioaipergpoergopaergoi
+                    </span>
+                </div>
+
+                <UTooltip
+                    v-if="!isLocalParticipant"
+                    :text="isLocallyMuted ? `Unmute ${name}` : `Mute ${name}`"
                 >
-                    <UIcon
-                        class="w-5 h-5"
-                        :name="
-                            isMuted
-                                ? 'i-mdi-microphone-off'
-                                : 'i-mdi-microphone'
-                        "
-                    />
-                </button>
-            </UTooltip>
+                    <UButton
+                        class="opacity-0 group-hover:opacity-100 transition"
+                        size="xs"
+                        @click.stop="emit('toggle-mute')"
+                    >
+                        <UIcon
+                            class="size-5"
+                            :name="
+                                isLocallyMuted
+                                    ? 'i-mdi-volume-off'
+                                    : 'i-mdi-volume'
+                            "
+                        />
+                    </UButton>
+                </UTooltip>
+            </span>
 
             <Transition name="fade">
                 <span
                     v-if="state.isLoading"
                     class="absolute inset-0 flex justify-center items-center bg-gray-800 text-gray-100"
                 >
-                    <Loader class="w-6 h-6" />
+                    <Loader class="size-6" />
                 </span>
             </Transition>
         </div>

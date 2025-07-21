@@ -16,6 +16,7 @@ declare global {
     interface ClientParticipant extends Participant {
         stream?: MediaStream;
         isLocalParticipant?: boolean;
+        isLocallyMuted?: boolean;
     }
 
     interface Room {

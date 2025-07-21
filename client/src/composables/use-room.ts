@@ -52,7 +52,7 @@ export function useRoom(
         );
 
         if (participant) {
-            participant.isMuted = !participant.isMuted;
+            participant.isLocallyMuted = !participant.isLocallyMuted;
         }
     }
 
