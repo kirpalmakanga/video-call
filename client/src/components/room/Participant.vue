@@ -27,6 +27,12 @@ async function setVideoSource(stream?: MediaStream | null) {
     }
 }
 
+function calculateAspectRatio() {
+    if (video.value) {
+        aspectRatio.value = video.value.videoWidth / video.value.videoHeight;
+    }
+}
+
 watch(() => props.stream, setVideoSource);
 
 onMounted(() => setVideoSource(props.stream));
@@ -53,6 +59,7 @@ onBeforeUnmount(() => setVideoSource(null));
                     isMuted ||
                     isLocallyMuted
                 "
+                @loadeddata="calculateAspectRatio"
             />
 
             <div
