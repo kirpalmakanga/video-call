@@ -15,7 +15,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ 'toggle-mute': [e: void] }>();
 
-const aspectRatio = ref<number>(0);
+const aspectRatio = ref<number>(16 / 9);
 
 const video = ref<HTMLVideoElement>();
 
