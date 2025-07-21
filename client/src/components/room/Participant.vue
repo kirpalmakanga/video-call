@@ -1,14 +1,6 @@
 <script setup lang="ts">
-import {
-    computed,
-    onBeforeUnmount,
-    onMounted,
-    ref,
-    reactive,
-    watch
-} from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import Contain from '../base/Contain.vue';
-import Loader from '../base/Loader.vue';
 import { useVolumeLevel } from '../../composables/use-volume-level';
 
 const props = defineProps<{
@@ -23,13 +15,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{ 'toggle-mute': [e: void] }>();
 
-const state = reactive<{
-    isLoading: boolean;
-    aspectRatio: number;
-}>({
-    isLoading: true,
-    aspectRatio: 0
-});
+const aspectRatio = ref<number>(0);
+
 const video = ref<HTMLVideoElement>();
 
 const volume = useVolumeLevel(computed(() => props.stream));
@@ -40,22 +27,7 @@ async function setVideoSource(stream?: MediaStream | null) {
     }
 }
 
-function onVideoLoaded() {
-    if (video.value) {
-        state.aspectRatio = video.value.videoWidth / video.value.videoHeight;
-    }
-
-    state.isLoading = false;
-}
-
-watch(
-    () => props.stream,
-    (stream) => {
-        state.isLoading = true;
-
-        setVideoSource(stream);
-    }
-);
+watch(() => props.stream, setVideoSource);
 
 onMounted(() => setVideoSource(props.stream));
 
@@ -65,8 +37,8 @@ onBeforeUnmount(() => setVideoSource(null));
 <template>
     <Contain
         class="grow"
-        :aspect-ratio="state.aspectRatio"
-        :style="useContentRatio ? { aspectRatio: state.aspectRatio } : null"
+        :aspect-ratio="aspectRatio"
+        :style="useContentRatio ? { aspectRatio: aspectRatio } : null"
     >
         <div
             class="relative flex w-full h-full rounded overflow-hidden bg-gray-700 group"
@@ -81,7 +53,6 @@ onBeforeUnmount(() => setVideoSource(null));
                     isMuted ||
                     isLocallyMuted
                 "
-                @loadeddata="onVideoLoaded"
             />
 
             <div
@@ -125,15 +96,6 @@ onBeforeUnmount(() => setVideoSource(null));
                     </UButton>
                 </UTooltip>
             </span>
-
-            <Transition name="fade">
-                <span
-                    v-if="state.isLoading"
-                    class="absolute inset-0 flex justify-center items-center bg-gray-800 text-gray-100"
-                >
-                    <Loader class="size-6" />
-                </span>
-            </Transition>
         </div>
     </Contain>
 </template>
