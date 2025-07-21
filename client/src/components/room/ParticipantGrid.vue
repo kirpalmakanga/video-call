@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { useTemplateRef, watch } from 'vue';
-import { useDebounceFn, useResizeObserver } from '@vueuse/core';
+import { useTemplateRef } from 'vue';
+import {
+    useDebounceFn,
+    useMutationObserver,
+    useResizeObserver
+} from '@vueuse/core';
 
 interface GridLayout {
     width: number;
@@ -60,7 +64,7 @@ function calculateLayout(
     return bestLayout;
 }
 
-function recalculateLayout() {
+const recalculateLayout = useDebounceFn(() => {
     if (container.value) {
         const { offsetHeight: containerHeight, offsetWidth: containerWidth } =
             container.value;
@@ -76,15 +80,17 @@ function recalculateLayout() {
         container.value.style.setProperty('--cell-height', `${height}px`);
         container.value.style.setProperty('--cols', cols.toString());
     }
-}
+});
 
-useResizeObserver(container, useDebounceFn(recalculateLayout, 50));
+useResizeObserver(container, recalculateLayout);
 
-watch(() => props.items, recalculateLayout);
+useMutationObserver(container, recalculateLayout, {
+    childList: true
+});
 </script>
 
 <template>
-    <div class="relative">
+    <div class="relative overflow-hidden">
         <ul
             ref="container"
             class="absolute inset-0 flex flex-wrap justify-center items-center"
