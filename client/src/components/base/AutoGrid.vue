@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends Record<string, unknown>">
 import { useTemplateRef } from 'vue';
 import {
     useDebounceFn,
@@ -12,11 +12,13 @@ interface GridLayout {
     cols: number;
 }
 
-const props = defineProps<{ items: ClientParticipant[] }>();
+const props = defineProps<{
+    items: T[];
+    itemKey: keyof T;
+    itemAspectRatio: number;
+}>();
 
 const container = useTemplateRef<HTMLUListElement>('container');
-
-const aspectRatio = 16 / 9;
 
 function calculateLayout(
     containerWidth: number,
@@ -73,7 +75,7 @@ const recalculateLayout = useDebounceFn(() => {
             containerWidth,
             containerHeight,
             props.items.length,
-            aspectRatio
+            props.itemAspectRatio
         );
 
         container.value.style.setProperty('--cell-width', `${width}px`);
@@ -95,7 +97,11 @@ useMutationObserver(container, recalculateLayout, {
             ref="container"
             class="absolute inset-0 flex flex-wrap justify-center items-center"
         >
-            <li v-for="item in items" :key="item.id" class="grid-item flex">
+            <li
+                v-for="item in items"
+                :key="item[itemKey]"
+                class="grid-item flex"
+            >
                 <slot name="item" v-bind="item" />
             </li>
         </ul>

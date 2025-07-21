@@ -5,7 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 import Placeholder from '../components/base/Placeholder.vue';
 import Settings from '../components/Settings.vue';
 import Participant from '../components/room/Participant.vue';
-import ParticipantGrid from '../components/room/ParticipantGrid.vue';
+import AutoGrid from '../components/base/AutoGrid.vue';
 import { useRoom } from '../composables/use-room';
 import { useSettingsStore } from '../composables/store/use-settings-store';
 
@@ -164,14 +164,19 @@ onBeforeUnmount(disconnect);
                 v-else-if="isViewMode('grid')"
                 class="flex grow bg-neutral-800 p-4 rounded"
             >
-                <ParticipantGrid class="grow" :items="allParticipants">
+                <AutoGrid
+                    class="grow"
+                    :items="allParticipants"
+                    :item-key="id"
+                    :item-aspect-ratio="16 / 9"
+                >
                     <template #item="{ id, ...participant }">
                         <Participant
                             v-bind="participant"
                             @toggle-mute="toggleMuteParticipant(id)"
                         />
                     </template>
-                </ParticipantGrid>
+                </AutoGrid>
             </div>
         </div>
 
