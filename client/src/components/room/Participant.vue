@@ -111,10 +111,11 @@ onBeforeUnmount(() => setVideoSource(null));
                     <UButton
                         class="opacity-0 group-hover:opacity-100 transition"
                         size="xs"
+                        color="neutral"
                         @click.stop="emit('toggle-mute')"
                     >
                         <UIcon
-                            class="size-5"
+                            class="size-4"
                             :name="
                                 isLocallyMuted
                                     ? 'i-mdi-volume-off'
