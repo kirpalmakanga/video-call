@@ -100,8 +100,7 @@ onBeforeUnmount(() => setVideoSource(null));
                     <span
                         class="text-gray-100 text-sm px-2 py-1 whitespace-nowrap bg-gray-800/60 rounded"
                     >
-                        {{ name }} ioj azaeofj zo azoefjio zaeoif
-                        oioaipergpoergopaergoi
+                        {{ name }}
                     </span>
                 </div>
 
