@@ -6,7 +6,8 @@ import VideoPreview from './base/VideoPreview.vue';
 import { useSettingsStore } from '../composables/store/use-settings-store';
 import { useDevicesList } from '@vueuse/core';
 
-const { audioDeviceId, videoDeviceId } = useSettingsStore();
+const { audioDeviceId, videoDeviceId, isAudioEnabled, isVideoEnabled } =
+    useSettingsStore();
 
 const { permissionGranted, videoInputs, audioInputs } = useDevicesList({
     requestPermissions: true
@@ -45,59 +46,54 @@ watch(videoInputs, handleVideoDevicesListChange);
 </script>
 
 <template>
-    <ScrollContainer class="grow">
-        <div
-            v-if="permissionGranted"
-            class="relative flex flex-col grow gap-8 text-gray-100"
+    <div
+        v-if="permissionGranted"
+        class="relative flex flex-col gap-4 text-gray-100"
+    >
+        <UFormField label="Camera" :ui="{ label: 'flex gap-1 items-center' }">
+            <template #label="{ label }">
+                <UIcon class="size-6" name="i-mdi-video" />
+                {{ label }}
+            </template>
+
+            <VideoPreview class="rounded" :device-id="videoDeviceId" />
+
+            <USelect
+                class="w-full mt-2"
+                variant="soft"
+                size="lg"
+                :items="videoDeviceSelectItems"
+                :disabled="!videoInputs.length"
+                v-model="videoDeviceId"
+            />
+        </UFormField>
+
+        <UFormField
+            label="Microphone"
+            :ui="{ label: 'flex gap-1 items-center' }"
         >
-            <UFormField
-                label="Camera"
-                :ui="{ label: 'flex gap-1 items-center' }"
-            >
-                <template #label="{ label }">
-                    <UIcon class="size-6" name="i-mdi-video" />
-                    {{ label }}
-                </template>
+            <template #label="{ label }">
+                <UIcon class="size-6" name="i-mdi-microphone" />
+                {{ label }}
+            </template>
 
-                <VideoPreview class="rounded" :device-id="videoDeviceId" />
+            <AudioPreview :device-id="audioDeviceId" />
 
-                <USelect
-                    class="w-full mt-2"
-                    variant="soft"
-                    size="lg"
-                    :items="videoDeviceSelectItems"
-                    :disabled="!videoInputs.length"
-                    v-model="videoDeviceId"
-                />
-            </UFormField>
+            <USelect
+                class="w-full mt-2"
+                variant="soft"
+                size="lg"
+                :items="audioDeviceSelectItems"
+                :disabled="!audioInputs.length"
+                v-model="audioDeviceId"
+            />
+        </UFormField>
+    </div>
 
-            <UFormField
-                label="Microphone"
-                :ui="{ label: 'flex gap-1 items-center' }"
-            >
-                <template #label="{ label }">
-                    <UIcon class="size-6" name="i-mdi-microphone" />
-                    {{ label }}
-                </template>
-
-                <AudioPreview :device-id="audioDeviceId" />
-
-                <USelect
-                    class="w-full mt-2"
-                    variant="soft"
-                    size="lg"
-                    :items="audioDeviceSelectItems"
-                    :disabled="!audioInputs.length"
-                    v-model="audioDeviceId"
-                />
-            </UFormField>
-        </div>
-
-        <UAlert
-            v-else
-            color="info"
-            icon="i-mdi-information-outline"
-            description="Awaiting media permissions."
-        />
-    </ScrollContainer>
+    <UAlert
+        v-else
+        color="info"
+        icon="i-mdi-information-outline"
+        description="Awaiting media permissions."
+    />
 </template>

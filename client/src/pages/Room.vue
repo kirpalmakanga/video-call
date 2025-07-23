@@ -258,7 +258,9 @@ onBeforeUnmount(disconnect);
             :ui="{ body: 'flex flex-col' }"
         >
             <template #body>
-                <Settings />
+                <ScrollContainer class="grow">
+                    <Settings />
+                </ScrollContainer>
             </template>
         </USlideover>
     </section>
