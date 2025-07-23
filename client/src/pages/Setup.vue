@@ -102,6 +102,11 @@ const { data: room, isLoading } = useRoomQuery(roomId as string);
             </div>
         </template>
 
-        <Placeholder v-else icon="i-mdi-alert-circle" text="Room not found." />
+        <Placeholder
+            v-else
+            class="bg-slate-700 text-neutral-100 rounded"
+            icon="i-mdi-alert-circle"
+            text="Room not found."
+        />
     </div>
 </template>

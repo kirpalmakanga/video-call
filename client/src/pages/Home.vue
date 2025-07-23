@@ -30,7 +30,7 @@ Placeholder;
                 <USkeleton class="h-5 w-9" />
             </div>
 
-            <ul v-else-if="rooms.length" class="flex flex-col gap-2">
+            <ul v-else-if="rooms?.length" class="flex flex-col gap-2">
                 <li v-for="{ id, name, participantCount } of rooms">
                     <RouterLink
                         class="group flex items-center p-4 bg-slate-700 hover:bg-slate-600 text-neutral-100 rounded transition-colors"

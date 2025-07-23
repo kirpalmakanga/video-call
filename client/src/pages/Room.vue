@@ -135,7 +135,7 @@ onBeforeUnmount(disconnect);
             </div>
         </template>
 
-        <template v-else="room">
+        <template v-else-if="room">
             <h1 class="text-2xl">{{ room.name }}</h1>
 
             <div class="relative flex grow gap-4">
@@ -287,5 +287,12 @@ onBeforeUnmount(disconnect);
                 </template>
             </USlideover>
         </template>
+
+        <Placeholder
+            v-else
+            class="grow bg-slate-700 text-neutral-100 rounded"
+            icon="i-mdi-alert-circle"
+            text="Room not found."
+        />
     </section>
 </template>
