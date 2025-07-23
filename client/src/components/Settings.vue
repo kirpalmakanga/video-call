@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
-import ScrollContainer from './base/ScrollContainer.vue';
 import AudioPreview from './base/AudioPreview.vue';
 import VideoPreview from './base/VideoPreview.vue';
 import { useSettingsStore } from '../composables/store/use-settings-store';
@@ -50,39 +49,28 @@ watch(videoInputs, handleVideoDevicesListChange);
         v-if="permissionGranted"
         class="relative flex flex-col gap-4 text-gray-100"
     >
-        <UFormField label="Camera" :ui="{ label: 'flex gap-1 items-center' }">
-            <template #label="{ label }">
-                <UIcon class="size-6" name="i-mdi-video" />
-                {{ label }}
-            </template>
-
+        <UFormField>
             <VideoPreview class="rounded" :device-id="videoDeviceId" />
 
             <USelect
                 class="w-full mt-2"
                 variant="soft"
                 size="lg"
+                icon="i-mdi-camera"
                 :items="videoDeviceSelectItems"
                 :disabled="!videoInputs.length"
                 v-model="videoDeviceId"
             />
         </UFormField>
 
-        <UFormField
-            label="Microphone"
-            :ui="{ label: 'flex gap-1 items-center' }"
-        >
-            <template #label="{ label }">
-                <UIcon class="size-6" name="i-mdi-microphone" />
-                {{ label }}
-            </template>
-
+        <UFormField>
             <AudioPreview :device-id="audioDeviceId" />
 
             <USelect
                 class="w-full mt-2"
                 variant="soft"
                 size="lg"
+                icon="i-mdi-microphone"
                 :items="audioDeviceSelectItems"
                 :disabled="!audioInputs.length"
                 v-model="audioDeviceId"
