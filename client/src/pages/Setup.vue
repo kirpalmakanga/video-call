@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router';
-import Settings from '../components/Settings.vue';
-import { useSettingsStore } from '../composables/store/use-settings-store';
-import { onMounted, ref } from 'vue';
-import axios from 'axios';
 import Placeholder from '../components/base/Placeholder.vue';
+import Settings from '../components/Settings.vue';
 import { useRoomQuery } from '../utils/queries';
+import { useSettingsStore } from '../composables/store/use-settings-store';
 
 const {
     params: { roomId }
