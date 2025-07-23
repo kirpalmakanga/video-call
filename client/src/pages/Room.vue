@@ -8,6 +8,7 @@ import Participant from '../components/room/Participant.vue';
 import AutoGrid from '../components/base/AutoGrid.vue';
 import { useRoom } from '../composables/use-room';
 import { useSettingsStore } from '../composables/store/use-settings-store';
+import { useRoomQuery } from '../utils/queries';
 
 const viewModeIcons = {
     grid: 'i-mdi-view-grid',
@@ -27,6 +28,8 @@ const router = useRouter();
 const {
     params: { roomId }
 } = useRoute();
+
+const { data: room, isLoading } = useRoomQuery(roomId as string);
 
 const { isVideoEnabled, isAudioEnabled, videoDeviceId, audioDeviceId } =
     useSettingsStore();
@@ -119,149 +122,170 @@ onBeforeUnmount(disconnect);
 
 <template>
     <section class="flex flex-col grow gap-4 p-4">
-        <div class="relative flex grow gap-4">
-            <div
-                v-if="isViewMode('sidebar')"
-                class="flex flex-col grow gap-4 bg-neutral-800 bg p-4 rounded"
-            >
-                <Participant
-                    v-if="activeParticipant"
-                    v-bind="activeParticipant"
-                    :is-active-participant="true"
-                    @toggle-mute="toggleMuteParticipant(activeParticipant.id)"
-                />
+        <template v-if="isLoading">
+            <USkeleton class="grow" />
 
-                <Placeholder
-                    v-else
-                    class="grow text-gray-100 rounded"
-                    icon="i-mdi-video"
-                    text="Awaiting participants..."
-                />
+            <div class="flex justify-between">
+                <USkeleton class="h-8 w-29" />
+
+                <div class="flex gap-4">
+                    <USkeleton class="h-8 w-10" />
+                    <USkeleton class="h-8 w-10" />
+                </div>
             </div>
+        </template>
 
-            <div
-                v-if="isViewMode('sidebar') && allParticipants.length > 1"
-                class="w-64 relative h-full overflow-y-auto bg-neutral-700 p-4 rounded"
-            >
-                <ul class="flex flex-col gap-4">
-                    <template
-                        v-for="{ id, ...participant } of allParticipants"
-                        :key="id"
+        <template v-else="room">
+            <h1 class="text-2xl">{{ room.name }}</h1>
+
+            <div class="relative flex grow gap-4">
+                <div
+                    v-if="isViewMode('sidebar')"
+                    class="flex flex-col grow gap-4 bg-neutral-800 bg p-4 rounded"
+                >
+                    <Participant
+                        v-if="activeParticipant"
+                        v-bind="activeParticipant"
+                        :is-active-participant="true"
+                        @toggle-mute="
+                            toggleMuteParticipant(activeParticipant.id)
+                        "
+                    />
+
+                    <Placeholder
+                        v-else
+                        class="grow text-gray-100 rounded"
+                        icon="i-mdi-video"
+                        text="Awaiting participants..."
+                    />
+                </div>
+
+                <div
+                    v-if="isViewMode('sidebar') && allParticipants.length > 1"
+                    class="w-64 relative h-full overflow-y-auto bg-neutral-700 p-4 rounded"
+                >
+                    <ul class="flex flex-col gap-4">
+                        <template
+                            v-for="{ id, ...participant } of allParticipants"
+                            :key="id"
+                        >
+                            <li :class="{ hidden: isActiveParticipant(id) }">
+                                <Participant
+                                    v-bind="participant"
+                                    :use-content-ratio="true"
+                                    @toggle-mute="toggleMuteParticipant(id)"
+                                    @click="setActiveParticipant(id)"
+                                />
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+                <div
+                    v-else-if="isViewMode('grid')"
+                    class="flex grow bg-neutral-800 p-4 rounded"
+                >
+                    <AutoGrid
+                        class="grow"
+                        :items="allParticipants"
+                        :item-key="id"
+                        :item-aspect-ratio="16 / 9"
                     >
-                        <li :class="{ hidden: isActiveParticipant(id) }">
+                        <template #item="{ id, ...participant }">
                             <Participant
                                 v-bind="participant"
-                                :use-content-ratio="true"
                                 @toggle-mute="toggleMuteParticipant(id)"
-                                @click="setActiveParticipant(id)"
                             />
-                        </li>
-                    </template>
-                </ul>
+                        </template>
+                    </AutoGrid>
+                </div>
             </div>
 
-            <div
-                v-else-if="isViewMode('grid')"
-                class="flex grow bg-neutral-800 p-4 rounded"
+            <div class="flex justify-between items-end gap-4">
+                <UButtonGroup>
+                    <UTooltip
+                        :text="
+                            isVideoEnabled
+                                ? 'Turn camera off'
+                                : 'Toggle camera on'
+                        "
+                    >
+                        <UButton
+                            color="neutral"
+                            @click="isVideoEnabled = !isVideoEnabled"
+                        >
+                            <UIcon
+                                class="size-5"
+                                :name="
+                                    isVideoEnabled
+                                        ? 'i-mdi-video'
+                                        : 'i-mdi-video-off'
+                                "
+                            />
+                        </UButton>
+                    </UTooltip>
+                    <UTooltip
+                        :text="
+                            isAudioEnabled
+                                ? 'Disable microphone'
+                                : 'Enable microphone'
+                        "
+                    >
+                        <UButton
+                            color="neutral"
+                            @click="isAudioEnabled = !isAudioEnabled"
+                        >
+                            <UIcon
+                                class="size-5"
+                                :name="
+                                    isAudioEnabled
+                                        ? 'i-mdi-microphone'
+                                        : 'i-mdi-microphone-off'
+                                "
+                            />
+                        </UButton>
+                    </UTooltip>
+                    <UTooltip
+                        :text="
+                            state.viewMode === 'sidebar'
+                                ? 'Switch to grid layout'
+                                : 'Switch to sidebar layout'
+                        "
+                    >
+                        <UButton color="neutral" @click="toggleViewMode">
+                            <UIcon
+                                class="size-5"
+                                :name="viewModeIcons[state.viewMode]"
+                            />
+                        </UButton>
+                    </UTooltip>
+                </UButtonGroup>
+
+                <div class="flex gap-4">
+                    <UTooltip text="Settings">
+                        <UButton color="neutral" @click="toggleSettings">
+                            <UIcon class="size-5" name="i-mdi-cog" />
+                        </UButton>
+                    </UTooltip>
+                    <UTooltip text="Leave room">
+                        <UButton color="error" @click="leaveRoom">
+                            <UIcon class="size-5" name="i-mdi-phone-off" />
+                        </UButton>
+                    </UTooltip>
+                </div>
+            </div>
+
+            <USlideover
+                title="Settings"
+                v-model:open="state.areSettingsVisible"
+                :ui="{ body: 'flex flex-col' }"
             >
-                <AutoGrid
-                    class="grow"
-                    :items="allParticipants"
-                    :item-key="id"
-                    :item-aspect-ratio="16 / 9"
-                >
-                    <template #item="{ id, ...participant }">
-                        <Participant
-                            v-bind="participant"
-                            @toggle-mute="toggleMuteParticipant(id)"
-                        />
-                    </template>
-                </AutoGrid>
-            </div>
-        </div>
-
-        <div class="flex justify-between items-end gap-4">
-            <UButtonGroup>
-                <UTooltip
-                    :text="
-                        isVideoEnabled ? 'Turn camera off' : 'Toggle camera on'
-                    "
-                >
-                    <UButton
-                        color="neutral"
-                        @click="isVideoEnabled = !isVideoEnabled"
-                    >
-                        <UIcon
-                            class="size-5"
-                            :name="
-                                isVideoEnabled
-                                    ? 'i-mdi-video'
-                                    : 'i-mdi-video-off'
-                            "
-                        />
-                    </UButton>
-                </UTooltip>
-                <UTooltip
-                    :text="
-                        isAudioEnabled
-                            ? 'Disable microphone'
-                            : 'Enable microphone'
-                    "
-                >
-                    <UButton
-                        color="neutral"
-                        @click="isAudioEnabled = !isAudioEnabled"
-                    >
-                        <UIcon
-                            class="size-5"
-                            :name="
-                                isAudioEnabled
-                                    ? 'i-mdi-microphone'
-                                    : 'i-mdi-microphone-off'
-                            "
-                        />
-                    </UButton>
-                </UTooltip>
-                <UTooltip
-                    :text="
-                        state.viewMode === 'sidebar'
-                            ? 'Switch to grid layout'
-                            : 'Switch to sidebar layout'
-                    "
-                >
-                    <UButton color="neutral" @click="toggleViewMode">
-                        <UIcon
-                            class="size-5"
-                            :name="viewModeIcons[state.viewMode]"
-                        />
-                    </UButton>
-                </UTooltip>
-            </UButtonGroup>
-
-            <div class="flex gap-4">
-                <UTooltip text="Settings">
-                    <UButton color="neutral" @click="toggleSettings">
-                        <UIcon class="size-5" name="i-mdi-cog" />
-                    </UButton>
-                </UTooltip>
-                <UTooltip text="Leave room">
-                    <UButton color="error" @click="leaveRoom">
-                        <UIcon class="size-5" name="i-mdi-phone-off" />
-                    </UButton>
-                </UTooltip>
-            </div>
-        </div>
-
-        <USlideover
-            title="Settings"
-            v-model:open="state.areSettingsVisible"
-            :ui="{ body: 'flex flex-col' }"
-        >
-            <template #body>
-                <ScrollContainer class="grow">
-                    <Settings />
-                </ScrollContainer>
-            </template>
-        </USlideover>
+                <template #body>
+                    <ScrollContainer class="grow">
+                        <Settings />
+                    </ScrollContainer>
+                </template>
+            </USlideover>
+        </template>
     </section>
 </template>

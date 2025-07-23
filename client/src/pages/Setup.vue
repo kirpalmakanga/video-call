@@ -18,12 +18,27 @@ const { data: room, isLoading } = useRoomQuery(roomId as string);
 </script>
 
 <template>
-    <div class="flex flex-col justify-center grow w-1/2 mx-auto">
+    <div class="flex flex-col justify-center grow w-1/2 mx-auto p-4">
         <template v-if="isLoading">
-            <USkeleton />
+            <USkeleton class="h-8 w-full mb-4" />
+
+            <USkeleton class="h-6 w-full mb-4" />
+
+            <USkeleton class="w-full aspect-video" />
+
+            <USkeleton class="h-8 w-full mt-2 mb-4" />
+            <USkeleton class="h-2 w-full mt-2" />
+
+            <USkeleton class="h-8 w-full mt-2 mb-4" />
+
+            <div class="flex justify-between">
+                <USkeleton class="h-8 w-20" />
+
+                <USkeleton class="h-8 w-20" />
+            </div>
         </template>
 
-        <template v-if="room">
+        <template v-else-if="room">
             <h1 class="text-2xl font-bold mb-4">{{ room.name }}</h1>
 
             <p class="mb-4">

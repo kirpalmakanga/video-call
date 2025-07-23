@@ -25,9 +25,12 @@ Placeholder;
         <div class="md:rounded md:bg-slate-800 p-4 w-full md:w-1/2">
             <p class="text-neutral-100 mb-4">Available rooms</p>
 
-            <template v-if="isLoading"></template>
+            <div v-if="isLoading" class="p-4 bg-slate-700 rounded">
+                <USkeleton class="h-5 w-full mb-1" />
+                <USkeleton class="h-5 w-9" />
+            </div>
 
-            <ul v-else-if="rooms" class="flex flex-col gap-2">
+            <ul v-else-if="rooms.length" class="flex flex-col gap-2">
                 <li v-for="{ id, name, participantCount } of rooms">
                     <RouterLink
                         class="group flex items-center p-4 bg-slate-700 hover:bg-slate-600 text-neutral-100 rounded transition-colors"
