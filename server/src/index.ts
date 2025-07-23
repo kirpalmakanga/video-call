@@ -17,8 +17,8 @@ app.get('/rooms', (_, res) => {
     res.json(getAllRooms());
 });
 
-app.get('/rooms/:id', ({ id }, res) => {
-    const room = getRoomById(id);
+app.get('/rooms/:roomId', ({ params: { roomId } }, res) => {
+    const room = getRoomById(roomId);
 
     if (room) {
         return res.json(room);
