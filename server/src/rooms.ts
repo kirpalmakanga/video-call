@@ -21,6 +21,10 @@ export function getAllRooms() {
     ];
 }
 
+export function getRoomById(id: string) {
+    return rooms.get(id);
+}
+
 export function getParticipantsForRoom(roomId: string) {
     return rooms.get(roomId)?.participants || [];
 }

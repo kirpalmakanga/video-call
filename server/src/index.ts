@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import startSocketServer from './socket';
-import { getAllRooms } from './rooms';
+import { getAllRooms, getRoomById } from './rooms';
 
 const { PORT, CLIENT_URI } = process.env;
 
@@ -15,6 +15,16 @@ app.use(
 
 app.get('/rooms', (_, res) => {
     res.json(getAllRooms());
+});
+
+app.get('/rooms/:id', ({ id }, res) => {
+    const room = getRoomById(id);
+
+    if (room) {
+        return res.json(room);
+    }
+
+    res.status(404).json(null);
 });
 
 const server = app.listen(PORT, () => console.log(`Listening on ${PORT}`));
