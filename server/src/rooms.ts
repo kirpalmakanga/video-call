@@ -26,7 +26,13 @@ export function getRoomById(id: string) {
 }
 
 export function getParticipantsForRoom(roomId: string) {
-    return rooms.get(roomId)?.participants || [];
+    const room = getRoomById(roomId);
+
+    if (room) {
+        return room.participants;
+    } else {
+        throw new Error(`Target room doesn't exist.`);
+    }
 }
 
 export function getParticipantIds(roomId: string) {
@@ -54,11 +60,15 @@ export function updateRoom(roomId: string, data: Partial<Room>) {
             ...room,
             ...data
         });
+    } else {
+        throw new Error(`This room doesn't exist.`);
     }
 }
 
 export function addParticipantToRoom(participant: Participant, roomId: string) {
-    if (!isParticipantInRoom(participant.id, roomId)) {
+    if (isParticipantInRoom(participant.id, roomId)) {
+        throw Error('Target user is already in this room.');
+    } else {
         updateRoom(roomId, {
             participants: [...getParticipantsForRoom(roomId), participant]
         });
@@ -78,6 +88,8 @@ export function updateRoomParticipant(
                 data
             )
         });
+    } else {
+        throw Error('Target user is not in the room.');
     }
 }
 
@@ -91,5 +103,7 @@ export function removeParticipantFromRoom(
                 ({ id }) => id !== participantId
             )
         });
+    } else {
+        throw Error('Target user is not in the room.');
     }
 }
