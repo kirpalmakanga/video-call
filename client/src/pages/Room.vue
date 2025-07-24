@@ -9,6 +9,7 @@ import AutoGrid from '../components/base/AutoGrid.vue';
 import { useRoom } from '../composables/use-room';
 import { useSettingsStore } from '../composables/store/use-settings-store';
 import { useRoomQuery } from '../utils/queries';
+import { useFullscreen } from '@vueuse/core';
 
 const viewModeIcons = {
     grid: 'i-mdi-view-grid',
@@ -53,6 +54,8 @@ const {
     isVideoEnabled,
     isAudioEnabled
 });
+
+const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
 
 const state = reactive<State>({
     viewMode: 'sidebar',
@@ -262,6 +265,18 @@ onBeforeUnmount(disconnect);
                 </UButtonGroup>
 
                 <div class="flex gap-4">
+                    <UTooltip text="Settings">
+                        <UButton color="neutral" @click="toggleFullscreen">
+                            <UIcon
+                                class="size-5"
+                                :name="
+                                    isFullscreen
+                                        ? 'i-mdi-fullscreen'
+                                        : 'i-mdi-fullscreen-exit'
+                                "
+                            />
+                        </UButton>
+                    </UTooltip>
                     <UTooltip text="Settings">
                         <UButton color="neutral" @click="toggleSettings">
                             <UIcon class="size-5" name="i-mdi-cog" />
