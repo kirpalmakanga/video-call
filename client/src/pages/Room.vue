@@ -35,41 +35,33 @@ const { data: room, isLoading } = useRoomQuery(roomId as string);
 const { isVideoEnabled, isAudioEnabled, videoDeviceId, audioDeviceId } =
     useSettingsStore();
 
-const {
-    localParticipant,
-    participants,
-    toggleMuteParticipant,
-    connect,
-    disconnect
-} = useRoom(roomId as string, {
-    displayName: 'User',
-    streamConfig: computed(() => ({
-        video: {
-            deviceId: videoDeviceId.value
-        },
-        audio: {
-            deviceId: audioDeviceId.value
-        }
-    })),
-    isVideoEnabled,
-    isAudioEnabled
-});
-
-const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
-
 const state = reactive<State>({
     viewMode: 'sidebar',
     areSettingsVisible: false,
     activeParticipantId: null
 });
 
-const allParticipants = computed(() => [
-    localParticipant,
-    ...participants.value
-]);
+const { participants, toggleMuteParticipant, connect, disconnect } = useRoom(
+    roomId as string,
+    {
+        displayName: 'User',
+        streamConfig: computed(() => ({
+            video: {
+                deviceId: videoDeviceId.value
+            },
+            audio: {
+                deviceId: audioDeviceId.value
+            }
+        })),
+        isVideoEnabled,
+        isAudioEnabled
+    }
+);
+
+const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
 
 const activeParticipant = computed(() => {
-    return allParticipants.value.find(
+    return participants.value.find(
         ({ id }) => id === state.activeParticipantId
     );
 });
@@ -90,7 +82,7 @@ function isActiveParticipant(id: string) {
     return id === state.activeParticipantId;
 }
 
-function setActiveParticipant(id: string) {
+function setActiveParticipant(id: string | null) {
     state.activeParticipantId = id;
 }
 
@@ -104,13 +96,25 @@ watch([audioDeviceId, videoDeviceId], ([audio, video]) => {
     }
 });
 
-watch(allParticipants, (currentParticipants) => {
-    const lastParticipant = currentParticipants.at(-1);
+watch(
+    () => participants.value.length,
+    (count) => {
+        if (count < 2) {
+            setActiveParticipant(null);
 
-    if (lastParticipant) {
-        setActiveParticipant(lastParticipant.id);
+            return;
+        }
+
+        const lastParticipant = participants.value.at(-1);
+
+        if (
+            lastParticipant &&
+            lastParticipant.id !== state.activeParticipantId
+        ) {
+            setActiveParticipant(lastParticipant.id);
+        }
     }
-});
+);
 
 onMounted(() => {
     if (audioDeviceId.value && videoDeviceId.value) {
@@ -164,12 +168,12 @@ onBeforeUnmount(disconnect);
                 </div>
 
                 <div
-                    v-if="isViewMode('sidebar') && allParticipants.length > 1"
+                    v-if="isViewMode('sidebar')"
                     class="w-64 relative h-full overflow-y-auto bg-neutral-700 p-4 rounded"
                 >
                     <ul class="flex flex-col gap-4">
                         <template
-                            v-for="{ id, ...participant } of allParticipants"
+                            v-for="{ id, ...participant } of participants"
                             :key="id"
                         >
                             <li :class="{ hidden: isActiveParticipant(id) }">
@@ -177,7 +181,10 @@ onBeforeUnmount(disconnect);
                                     v-bind="participant"
                                     :use-content-ratio="true"
                                     @toggle-mute="toggleMuteParticipant(id)"
-                                    @click="setActiveParticipant(id)"
+                                    @click="
+                                        participants.length > 1 &&
+                                            setActiveParticipant(id)
+                                    "
                                 />
                             </li>
                         </template>
@@ -190,7 +197,7 @@ onBeforeUnmount(disconnect);
                 >
                     <AutoGrid
                         class="grow"
-                        :items="allParticipants"
+                        :items="participants"
                         :item-key="id"
                         :item-aspect-ratio="16 / 9"
                     >

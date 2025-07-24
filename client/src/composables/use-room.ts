@@ -220,13 +220,13 @@ export function useRoom(
     });
 
     return {
-        localParticipant,
-        participants: computed(() =>
-            participants.value.map((item) => ({
+        participants: computed(() => [
+            localParticipant,
+            ...participants.value.map((item) => ({
                 ...item,
                 stream: getPeerStream(item.id)
             }))
-        ),
+        ]),
         toggleMuteParticipant,
         connect,
         disconnect
