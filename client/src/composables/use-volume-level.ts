@@ -1,4 +1,11 @@
-import { onBeforeUnmount, reactive, ref, watch, type Ref } from 'vue';
+import {
+    computed,
+    onBeforeUnmount,
+    reactive,
+    readonly,
+    watch,
+    type Ref
+} from 'vue';
 
 const audioContext = new AudioContext();
 
@@ -6,13 +13,14 @@ export function useVolumeLevel(stream: Ref<MediaStream | undefined>) {
     interface State {
         source: MediaStreamAudioSourceNode | null;
         analyser: AnalyserNode | null;
+        volume: number;
     }
 
     const state = reactive<State>({
         source: null,
-        analyser: null
+        analyser: null,
+        volume: 0
     });
-    const volume = ref<number>(0);
 
     function stopRecording() {
         state.analyser?.disconnect();
@@ -21,6 +29,7 @@ export function useVolumeLevel(stream: Ref<MediaStream | undefined>) {
 
         state.analyser = null;
         state.source = null;
+        state.volume = 0;
     }
 
     function startRecording() {
@@ -50,7 +59,7 @@ export function useVolumeLevel(stream: Ref<MediaStream | undefined>) {
                     100
                 );
 
-                volume.value = v > 100 ? 100 : v;
+                state.volume = v > 100 ? 100 : v;
 
                 requestAnimationFrame(onFrame);
             }
@@ -75,5 +84,5 @@ export function useVolumeLevel(stream: Ref<MediaStream | undefined>) {
 
     onBeforeUnmount(stopRecording);
 
-    return volume;
+    return computed(() => state.volume);
 }
