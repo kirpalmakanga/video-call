@@ -49,32 +49,72 @@ watch(videoInputs, handleVideoDevicesListChange);
         v-if="permissionGranted"
         class="relative flex flex-col gap-4 text-gray-100"
     >
-        <UFormField>
-            <VideoPreview class="rounded" :device-id="videoDeviceId" />
-
-            <USelect
-                class="w-full mt-2"
-                variant="soft"
-                size="lg"
-                icon="i-mdi-camera"
-                :items="videoDeviceSelectItems"
-                :disabled="!videoInputs.length"
-                v-model="videoDeviceId"
+        <UFormField label="Camera">
+            <VideoPreview
+                class="rounded"
+                :is-enabled="isVideoEnabled"
+                :device-id="videoDeviceId"
             />
+            <div class="flex gap-2 items-center mt-2">
+                <UTooltip
+                    :text="
+                        isVideoEnabled ? 'Turn camera off' : 'Toggle camera on'
+                    "
+                >
+                    <UButton
+                        variant="soft"
+                        color="neutral"
+                        :icon="
+                            isVideoEnabled ? 'i-mdi-video' : 'i-mdi-video-off'
+                        "
+                        @click="isVideoEnabled = !isVideoEnabled"
+                    />
+                </UTooltip>
+
+                <USelect
+                    class="w-full"
+                    variant="soft"
+                    :items="videoDeviceSelectItems"
+                    :disabled="!videoInputs.length"
+                    v-model="videoDeviceId"
+                />
+            </div>
         </UFormField>
 
-        <UFormField>
-            <AudioPreview :device-id="audioDeviceId" />
-
-            <USelect
-                class="w-full mt-2"
-                variant="soft"
-                size="lg"
-                icon="i-mdi-microphone"
-                :items="audioDeviceSelectItems"
-                :disabled="!audioInputs.length"
-                v-model="audioDeviceId"
+        <UFormField label="Microphone">
+            <AudioPreview
+                :is-enabled="isAudioEnabled"
+                :device-id="audioDeviceId"
             />
+
+            <div class="flex gap-2 items-center mt-2">
+                <UTooltip
+                    :text="
+                        isAudioEnabled
+                            ? 'Disable microphone'
+                            : 'Enable microphone'
+                    "
+                >
+                    <UButton
+                        variant="soft"
+                        color="neutral"
+                        :icon="
+                            isAudioEnabled
+                                ? 'i-mdi-microphone'
+                                : 'i-mdi-microphone-off'
+                        "
+                        @click="isAudioEnabled = !isAudioEnabled"
+                    />
+                </UTooltip>
+
+                <USelect
+                    class="w-full"
+                    variant="soft"
+                    :items="audioDeviceSelectItems"
+                    :disabled="!audioInputs.length"
+                    v-model="audioDeviceId"
+                />
+            </div>
         </UFormField>
     </div>
 

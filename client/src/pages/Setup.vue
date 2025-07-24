@@ -3,14 +3,11 @@ import { useRoute, useRouter } from 'vue-router';
 import Placeholder from '../components/base/Placeholder.vue';
 import Settings from '../components/Settings.vue';
 import { useRoomQuery } from '../utils/queries';
-import { useSettingsStore } from '../composables/store/use-settings-store';
 
 const {
     params: { roomId }
 } = useRoute();
 const router = useRouter();
-
-const { isVideoEnabled, isAudioEnabled } = useSettingsStore();
 
 const { data: room, isLoading } = useRoomQuery(roomId as string);
 </script>
@@ -45,54 +42,7 @@ const { data: room, isLoading } = useRoomQuery(roomId as string);
 
             <Settings />
 
-            <div class="flex gap-2 mt-4 justify-between">
-                <div class="flex gap-2">
-                    <UButtonGroup>
-                        <UTooltip
-                            :text="
-                                isVideoEnabled
-                                    ? 'Turn camera off'
-                                    : 'Toggle camera on'
-                            "
-                        >
-                            <UButton
-                                color="neutral"
-                                @click="isVideoEnabled = !isVideoEnabled"
-                            >
-                                <UIcon
-                                    class="size-5"
-                                    :name="
-                                        isVideoEnabled
-                                            ? 'i-mdi-video'
-                                            : 'i-mdi-video-off'
-                                    "
-                                />
-                            </UButton>
-                        </UTooltip>
-                        <UTooltip
-                            :text="
-                                isAudioEnabled
-                                    ? 'Disable microphone'
-                                    : 'Enable microphone'
-                            "
-                        >
-                            <UButton
-                                color="neutral"
-                                @click="isAudioEnabled = !isAudioEnabled"
-                            >
-                                <UIcon
-                                    class="size-5"
-                                    :name="
-                                        isAudioEnabled
-                                            ? 'i-mdi-microphone'
-                                            : 'i-mdi-microphone-off'
-                                    "
-                                />
-                            </UButton>
-                        </UTooltip>
-                    </UButtonGroup>
-                </div>
-
+            <div class="flex gap-2 mt-4 justify-center">
                 <UButton
                     icon="i-mdi-phone"
                     @click="router.replace(`/room/${roomId}`)"
