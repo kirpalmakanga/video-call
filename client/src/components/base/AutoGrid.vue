@@ -9,7 +9,6 @@ import {
 interface GridLayout {
     width: number;
     height: number;
-    cols: number;
 }
 
 const props = defineProps<{
@@ -28,22 +27,22 @@ function calculateLayout(
 ): GridLayout {
     let bestLayout = {
         area: 0,
-        cols: 0,
+        columns: 0,
         rows: 0,
         width: 0,
         height: 0
     };
 
-    for (let cols = 1; cols <= videoCount; cols++) {
-        const rows = Math.ceil(videoCount / cols);
-        const hScale = containerWidth / (cols * aspectRatio);
+    for (let columns = 1; columns <= videoCount; columns++) {
+        const rows = Math.ceil(videoCount / columns);
+        const hScale = containerWidth / (columns * aspectRatio);
         const vScale = containerHeight / rows;
 
         let width;
         let height;
 
         if (hScale <= vScale) {
-            width = Math.floor(containerWidth / cols);
+            width = Math.floor(containerWidth / columns);
             height = Math.floor(width / aspectRatio);
         } else {
             height = Math.floor(containerHeight / rows);
@@ -58,7 +57,7 @@ function calculateLayout(
                 width,
                 height,
                 rows,
-                cols
+                columns
             };
         }
     }
@@ -71,16 +70,21 @@ const recalculateLayout = useDebounceFn(() => {
         const { offsetHeight: containerHeight, offsetWidth: containerWidth } =
             container.value;
 
-        const { width, height, cols } = calculateLayout(
+        const { width, height } = calculateLayout(
             containerWidth,
             containerHeight,
             props.items.length,
             props.itemAspectRatio
         );
 
-        container.value.style.setProperty('--cell-width', `${width}px`);
-        container.value.style.setProperty('--cell-height', `${height}px`);
-        container.value.style.setProperty('--cols', cols.toString());
+        container.value.style.setProperty(
+            '--autogrid-cell-width',
+            `${width}px`
+        );
+        container.value.style.setProperty(
+            '--autogrid-cell-height',
+            `${height}px`
+        );
     }
 });
 
@@ -100,17 +104,10 @@ useMutationObserver(container, recalculateLayout, {
             <li
                 v-for="item in items"
                 :key="item[itemKey]"
-                class="grid-item flex"
+                class="flex w-[var(--autogrid-cell-width)] h-[var(--autogrid-cell-height)]"
             >
                 <slot name="item" v-bind="item" />
             </li>
         </ul>
     </div>
 </template>
-
-<style lang="scss" scoped>
-.grid-item {
-    width: var(--cell-width);
-    height: var(--cell-height);
-}
-</style>
