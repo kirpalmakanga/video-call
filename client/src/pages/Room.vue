@@ -99,7 +99,7 @@ watch([audioDeviceId, videoDeviceId], ([audio, video]) => {
 watch(
     () => participants.value.length,
     (count) => {
-        if (count < 2) {
+        if (count === 1) {
             setActiveParticipant(null);
 
             return;

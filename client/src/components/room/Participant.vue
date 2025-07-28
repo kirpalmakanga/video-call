@@ -65,15 +65,15 @@ onBeforeUnmount(() => setVideoSource(null));
             <div
                 class="absolute inset-0 transition-opacity"
                 :class="{ 'ring-4 ring-inset ring-blue-600 ': volume > 20 }"
-            ></div>
+            />
 
-            <span class="absolute right-2 top-2 flex gap-2">
+            <div class="absolute right-2 top-2 flex gap-2">
                 <span v-if="isMuted" class="p-1 bg-warning-800/60 rounded">
                     <UIcon class="size-5" name="i-mdi-microphone-off" />
                 </span>
-            </span>
+            </div>
 
-            <span class="absolute left-2 right-2 bottom-2 flex gap-2">
+            <div class="absolute left-2 right-2 bottom-2 flex gap-2">
                 <div class="grow overflow-ellipsis overflow-hidden rounded">
                     <span
                         class="text-gray-100 text-sm px-2 py-1 whitespace-nowrap bg-gray-800/60 rounded"
@@ -102,7 +102,7 @@ onBeforeUnmount(() => setVideoSource(null));
                         />
                     </UButton>
                 </UTooltip>
-            </span>
+            </div>
         </div>
     </Contain>
 </template>
