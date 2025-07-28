@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import {
+    computed,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    useTemplateRef,
+    watch
+} from 'vue';
 import Contain from '../base/Contain.vue';
 import { useVolumeLevel } from '../../composables/use-volume-level';
 
@@ -15,9 +22,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{ 'toggle-mute': [e: void] }>();
 
-const aspectRatio = ref<number>(16 / 9);
+const video = useTemplateRef<HTMLVideoElement>('video');
 
-const video = ref<HTMLVideoElement>();
+const aspectRatio = ref<number>(16 / 9);
 
 const volume = useVolumeLevel(computed(() => props.stream));
 
