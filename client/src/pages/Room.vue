@@ -41,7 +41,7 @@ const state = reactive<State>({
     activeParticipantId: null
 });
 
-const { participants, toggleMuteParticipant, connect, disconnect } = useRoom(
+const { participants, toggleMuteParticipant, connect } = useRoom(
     roomId as string,
     {
         displayName: 'User',
@@ -123,8 +123,6 @@ onMounted(() => {
         toggleSettings();
     }
 });
-
-onBeforeUnmount(disconnect);
 </script>
 
 <template>

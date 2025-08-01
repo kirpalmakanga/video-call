@@ -1,4 +1,4 @@
-import { computed, reactive, ref, watch, type Ref } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref, watch, type Ref } from 'vue';
 import { useOnline, useUserMedia } from '@vueuse/core';
 import { useSocket } from './use-socket';
 import { useRTCSession } from './use-rtc-session';
@@ -218,6 +218,8 @@ export function useRoom(
 
         syncLocalParticipant();
     });
+
+    onBeforeUnmount(disconnect);
 
     return {
         participants: computed(() => [
