@@ -21,8 +21,8 @@ Placeholder;
 </script>
 
 <template>
-    <div class="flex grow md:justify-center md:items-center">
-        <div class="md:rounded md:bg-slate-800 p-4 w-full md:w-1/2">
+    <div class="flex grow md:justify-center">
+        <div class="md:rounded p-4 w-full md:w-1/2">
             <p class="text-neutral-100 mb-4">Available rooms</p>
 
             <div v-if="isLoading" class="p-4 bg-slate-700 rounded">
