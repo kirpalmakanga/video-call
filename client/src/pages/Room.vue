@@ -90,12 +90,6 @@ function leaveRoom() {
     router.push('/');
 }
 
-watch([audioDeviceId, videoDeviceId], ([audio, video]) => {
-    if (audio && video) {
-        connect();
-    }
-});
-
 watch(
     () => participants.value.length,
     (count) => {
@@ -115,6 +109,12 @@ watch(
         }
     }
 );
+
+watch([audioDeviceId, videoDeviceId], ([audio, video]) => {
+    if (audio && video) {
+        connect();
+    }
+});
 
 onMounted(() => {
     if (audioDeviceId.value && videoDeviceId.value) {
