@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted } from 'vue';
 import Placeholder from '../components/base/Placeholder.vue';
-import RoomsGrid from '../components/room/RoomsGrid.vue';
+import RoomsGrid from '../components/RoomsGrid.vue';
 import { useSocket } from '../composables/use-socket';
 import { useRoomsListQuery } from '../utils/queries';
-import RoomsGridSkeleton from '../components/room/RoomsGridSkeleton.vue';
+import RoomsGridSkeleton from '../components/RoomsGridSkeleton.vue';
 
 const { subscribe, unsubscribe } = useSocket();
 
