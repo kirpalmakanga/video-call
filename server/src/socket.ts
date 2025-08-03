@@ -11,7 +11,7 @@ import {
     isParticipantInRoom,
     removeParticipantFromRoom,
     updateRoomParticipant
-} from './rooms';
+} from './controllers/rooms';
 
 export default function startSocketServer(
     httpServer: Server,
@@ -95,14 +95,14 @@ export default function startSocketServer(
 
         socket.on(
             'offer',
-            (event: {
+            async (event: {
                 roomId: string;
                 senderParticipantId: string;
                 targetParticipantId: string;
                 offer: RTCSessionDescriptionInit;
             }) => {
                 if (
-                    areParticipantsInRoom(
+                    await areParticipantsInRoom(
                         [event.senderParticipantId, event.targetParticipantId],
                         event.roomId
                     )
@@ -116,14 +116,14 @@ export default function startSocketServer(
 
         socket.on(
             'answer',
-            (event: {
+            async (event: {
                 roomId: string;
                 senderParticipantId: string;
                 targetParticipantId: string;
                 answer: RTCSessionDescriptionInit;
             }) => {
                 if (
-                    areParticipantsInRoom(
+                    await areParticipantsInRoom(
                         [event.senderParticipantId, event.targetParticipantId],
                         event.roomId
                     )
@@ -137,7 +137,7 @@ export default function startSocketServer(
 
         socket.on(
             'iceCandidate',
-            (event: {
+            async (event: {
                 senderParticipantId: string;
                 targetParticipantId: string;
                 roomId: string;
@@ -145,7 +145,7 @@ export default function startSocketServer(
                 candidate: string;
             }) => {
                 if (
-                    areParticipantsInRoom(
+                    await areParticipantsInRoom(
                         [event.senderParticipantId, event.targetParticipantId],
                         event.roomId
                     )
@@ -159,7 +159,7 @@ export default function startSocketServer(
 
         socket.on(
             'updateParticipant',
-            ({
+            async ({
                 roomId,
                 senderParticipantId,
                 data
@@ -168,7 +168,7 @@ export default function startSocketServer(
                 senderParticipantId: string;
                 data: Omit<Partial<ClientParticipant>, 'stream'>;
             }) => {
-                if (isParticipantInRoom(senderParticipantId, roomId)) {
+                if (await isParticipantInRoom(senderParticipantId, roomId)) {
                     updateRoomParticipant(senderParticipantId, roomId, data);
 
                     syncRoomParticipants(roomId);

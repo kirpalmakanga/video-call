@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { useOnline } from '@vueuse/core';
 import { RouterView } from 'vue-router';
+import useInterceptors from './composables/use-interceptors';
 
 const isOnline = useOnline();
+
+useInterceptors();
 </script>
 
 <template>

@@ -11,3 +11,18 @@ export function update<T extends object>(
 
     return arr;
 }
+
+export function omit<T extends object, K extends keyof T>(
+    base: T,
+    ...keys: K[]
+): Omit<T, K> {
+    if (keys.length) {
+        const result = { ...base };
+
+        for (const key of keys) delete result[key];
+
+        return result;
+    }
+
+    return base;
+}
