@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted } from 'vue';
-import { RouterLink } from 'vue-router';
-import { useSocket } from '../composables/use-socket';
 import Placeholder from '../components/base/Placeholder.vue';
+import RoomsGrid from '../components/room/RoomsGrid.vue';
+import { useSocket } from '../composables/use-socket';
 import { useRoomsListQuery } from '../utils/queries';
+import RoomsGridSkeleton from '../components/room/RoomsGridSkeleton.vue';
 
 const { subscribe, unsubscribe } = useSocket();
 
@@ -22,39 +23,12 @@ Placeholder;
 
 <template>
     <div class="flex grow md:justify-center">
-        <div class="md:rounded p-4 w-full md:w-1/2">
+        <div class="md:rounded p-4 w-full">
             <p class="text-neutral-100 mb-4">Available rooms</p>
 
-            <div v-if="isLoading" class="p-4 bg-slate-700 rounded">
-                <USkeleton class="h-5 w-full mb-1" />
-                <USkeleton class="h-5 w-9" />
-            </div>
+            <RoomsGridSkeleton v-if="isLoading" />
 
-            <ul v-else-if="rooms?.length" class="flex flex-col gap-2">
-                <li v-for="{ id, name, participantCount } of rooms">
-                    <RouterLink
-                        class="group flex items-center p-4 bg-slate-700 hover:bg-slate-600 text-neutral-100 rounded transition-colors"
-                        :to="`/room/${id}/start`"
-                    >
-                        <span class="flex flex-col grow">
-                            <span>{{ name }}</span>
-                            <span class="flex items-center opacity-70">
-                                <UIcon
-                                    class="size-5 mr-1"
-                                    name="i-mdi-user"
-                                    aria-label="participants"
-                                />
-                                {{ participantCount }}
-                            </span>
-                        </span>
-
-                        <UIcon
-                            class="size-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            name="i-mdi-arrow-right"
-                        />
-                    </RouterLink>
-                </li>
-            </ul>
+            <RoomsGrid v-else-if="rooms?.length" :rooms="rooms" />
 
             <Placeholder
                 v-else
