@@ -81,11 +81,11 @@ onBeforeUnmount(() => setVideoSource(null));
             </div>
 
             <div class="absolute left-2 right-2 bottom-2 flex gap-2">
-                <div class="grow overflow-ellipsis overflow-hidden rounded">
+                <div class="flex grow overflow-hidden">
                     <span
-                        class="text-gray-100 text-sm px-2 py-1 whitespace-nowrap bg-gray-800/60 rounded"
+                        class="inline-block text-gray-100 text-sm px-2 py-1 whitespace-nowrap overflow-hidden overflow-ellipsis bg-gray-800/60 rounded"
                     >
-                        {{ name }}
+                        {{ name }} epokezrg pezoererpog pozerkger gpergk
                     </span>
                 </div>
 
