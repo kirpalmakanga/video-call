@@ -85,7 +85,7 @@ onBeforeUnmount(() => setVideoSource(null));
                     <span
                         class="inline-block text-gray-100 text-sm px-2 py-1 whitespace-nowrap overflow-hidden overflow-ellipsis bg-gray-800/60 rounded"
                     >
-                        {{ name }} epokezrg pezoererpog pozerkger gpergk
+                        {{ name }}
                     </span>
                 </div>
 
