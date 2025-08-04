@@ -9,11 +9,11 @@ const Register = () => import('./pages/Register.vue');
 const router = createRouter({
     history: createWebHistory(),
     routes: [
-        { path: '/', component: Home },
-        { path: '/room/:roomId/start', component: Setup },
-        { path: '/room/:roomId', component: Room },
-        { path: '/login', component: Login },
-        { path: '/register', component: Register }
+        { path: '/', component: Home, name: 'home' },
+        { path: '/room/:roomId/start', component: Setup, name: 'room-start' },
+        { path: '/room/:roomId', component: Room, name: 'room' },
+        { path: '/login', component: Login, name: 'login' },
+        { path: '/register', component: Register, name: 'register' }
     ]
 });
 

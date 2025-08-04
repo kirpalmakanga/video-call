@@ -9,6 +9,9 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 const toast = useToast();
 
+const authStore = useAuthStore();
+const { logIn } = authStore;
+
 const schema = object({
     email: string().email('Invalid email').required('Required'),
     password: string()
@@ -23,13 +26,9 @@ const state = reactive<Schema>({
     password: ''
 });
 
-const { logIn } = useAuthStore();
-
 async function onSubmit({ data }: FormSubmitEvent<Schema>) {
     try {
         await logIn(data);
-
-        router.replace('/');
     } catch (error) {
         console.error(error);
 

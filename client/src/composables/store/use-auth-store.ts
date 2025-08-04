@@ -8,7 +8,7 @@ import {
 } from '../../utils/api';
 
 interface State {
-    userId: string;
+    id: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -17,7 +17,7 @@ interface State {
 }
 
 const getDefaultState = (): State => ({
-    userId: '',
+    id: '',
     firstName: '',
     lastName: '',
     email: '',
@@ -39,6 +39,11 @@ export const useAuthStore = defineStore(
         return {
             ...toRefs(state),
             isLoggedIn: computed(() => !!state.accessToken),
+            initials: computed(() => {
+                const { firstName, lastName } = state;
+
+                return `${firstName.at(0) || ''}${lastName.at(0) || ''}`;
+            }),
             async refreshAccessToken() {
                 const tokens = await refreshAccessToken(state.refreshToken);
 
