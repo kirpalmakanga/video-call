@@ -54,6 +54,8 @@ watch(isLoggedIn, () => {
     <UApp>
         <Header />
 
-        <RouterView />
+        <div class="container mx-auto flex flex-col grow">
+            <RouterView />
+        </div>
     </UApp>
 </template>

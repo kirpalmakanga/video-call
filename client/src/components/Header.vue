@@ -28,16 +28,20 @@ const menuItems: DropdownMenuItem[] = [
 </script>
 
 <template>
-    <header class="flex items-center justify-between h-12 px-4 bg-gray-900">
-        <div>VCall</div>
-
-        <UDropdownMenu
-            :items="menuItems"
-            :content="{ align: 'end', side: 'bottom' }"
+    <header class="bg-gray-900">
+        <div
+            class="container mx-auto flex items-center justify-between h-12 px-4"
         >
-            <button>
-                <UAvatar :text="initials" />
-            </button>
-        </UDropdownMenu>
+            <div>VCall</div>
+
+            <UDropdownMenu
+                :items="menuItems"
+                :content="{ align: 'end', side: 'bottom' }"
+            >
+                <button>
+                    <UAvatar :text="initials" />
+                </button>
+            </UDropdownMenu>
+        </div>
     </header>
 </template>
