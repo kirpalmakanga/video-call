@@ -1,4 +1,6 @@
 import { io, Socket } from 'socket.io-client';
+import { storeToRefs } from 'pinia';
+import { useAuthStore } from './store/use-auth-store';
 
 interface EmissionsPayloads {
     connectParticipant: {
@@ -71,9 +73,14 @@ interface SubscriptionPayloads {
 let socket: Socket;
 
 export function useSocket() {
+    const authStore = useAuthStore();
+    const { accessToken } = storeToRefs(authStore);
+
     function getSocket() {
         if (!socket) {
-            socket = io(import.meta.env.VITE_API_URI);
+            socket = io(import.meta.env.VITE_API_URI, {
+                auth: (cb) => cb({ token: accessToken.value })
+            });
         }
 
         return socket;

@@ -140,19 +140,19 @@ export function useRoom(
         });
     }
 
-    subscribe(
-        'participantConnected',
-        async ({ roomId, senderParticipantId }) => {
-            connectToPeer(senderParticipantId);
+    subscribe('participantConnected', async ({ participant }) => {
+        const { id: targetParticipantId } = participant;
+        connectToPeer(targetParticipantId);
 
-            emit('offer', {
-                roomId,
-                senderParticipantId: localParticipant.id,
-                targetParticipantId: senderParticipantId,
-                offer: await createOffer(senderParticipantId)
-            });
-        }
-    );
+        participants.value.push(participant);
+
+        emit('offer', {
+            roomId,
+            senderParticipantId: localParticipant.id,
+            targetParticipantId,
+            offer: await createOffer(targetParticipantId)
+        });
+    });
 
     subscribe(
         'incomingOffer',

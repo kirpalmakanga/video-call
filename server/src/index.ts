@@ -35,8 +35,8 @@ const server = app.listen(PORT, () => {
     console.log(`Listening: http://localhost:${PORT}`);
 });
 
-// startSocket(server, {
-//     cors: {
-//         origin: CLIENT_URI
-//     }
-// });
+startSocket(server, {
+    cors: {
+        origin: CLIENT_URI
+    }
+});

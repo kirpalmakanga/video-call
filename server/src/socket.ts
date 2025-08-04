@@ -3,15 +3,8 @@ import {
     Server as SocketServer,
     type ServerOptions as SocketServerOptions
 } from 'socket.io';
-import {
-    addParticipantToRoom,
-    areParticipantsInRoom,
-    getAllRooms,
-    getParticipantsForRoom,
-    isParticipantInRoom,
-    removeParticipantFromRoom,
-    updateRoomParticipant
-} from './services/rooms';
+import { getUserIdForToken } from './utils/jwt';
+import { getUserById } from './services/users';
 
 export default function startSocketServer(
     httpServer: Server,
@@ -19,161 +12,168 @@ export default function startSocketServer(
 ) {
     const io = new SocketServer(httpServer, socketOptions);
 
-    function syncRoomsList() {
-        io.sockets.emit('roomsListSync', {
-            items: getAllRooms()
-        });
-    }
+    io.on('connection', async (socket) => {
+        try {
+            const { token } = socket.handshake.auth;
 
-    function syncRoomParticipants(roomId: string) {
-        io.in(roomId).emit('participantsListUpdated', {
-            participants: getParticipantsForRoom(roomId)
-        });
-    }
+            if (!token) {
+                throw new Error('Unauthorized.');
+            }
 
-    io.on('connection', (socket) => {
-        function removeParticipant(participantId: string, roomId: string) {
-            socket.leave(roomId);
-            socket.leave(`${roomId}_${participantId}`);
+            const userId = getUserIdForToken(socket.handshake.auth.token);
+            const user = await getUserById(userId);
 
-            removeParticipantFromRoom(participantId, roomId);
+            if (!user) {
+                throw new Error('Unauthorized.');
+            }
 
-            syncRoomsList();
-
-            socket
-                .to(roomId)
-                .emit('participantDisconnected', { participantId });
-        }
-
-        socket.on(
-            'connectParticipant',
-            async ({
-                roomId,
-                participant
-            }: {
-                roomId: string;
-                participant: Participant;
-            }) => {
-                if (!isParticipantInRoom(participant.id, roomId)) {
+            socket.on(
+                'connectParticipant',
+                async ({
+                    roomId,
+                    participant
+                }: {
+                    roomId: string;
+                    participant: Participant;
+                }) => {
                     await Promise.all([
                         socket.join(roomId),
                         socket.join(`${roomId}_${participant.id}`)
                     ]);
+                    // if (!isParticipantInRoom(participant.id, roomId)) {
 
-                    addParticipantToRoom(participant, roomId);
+                    //     addParticipantToRoom(participant, roomId);
 
-                    syncRoomParticipants(roomId);
+                    //     syncRoomParticipants(roomId);
 
-                    syncRoomsList();
+                    //     syncRoomsList();
 
-                    socket.on('disconnect', () => {
-                        removeParticipant(participant.id, roomId);
+                    //     socket.on('disconnect', () => {
+                    //         removeParticipant(participant.id, roomId);
+                    //     });
+                    // }
+
+                    socket.to(roomId).emit('participantConnected', {
+                        participant: {
+                            id: user.id,
+                            name: `${user.firstName} ${user.lastName}`
+                        }
                     });
                 }
+            );
 
-                socket.to(roomId).emit('participantConnected', {
+            socket.on(
+                'disconnectParticipant',
+                ({
                     roomId,
-                    senderParticipantId: participant.id
-                });
-            }
-        );
-
-        socket.on(
-            'disconnectParticipant',
-            ({
-                roomId,
-                participantId
-            }: {
-                roomId: string;
-                participantId: string;
-            }) => {
-                removeParticipant(participantId, roomId);
-
-                socket.removeAllListeners('disconnect');
-            }
-        );
-
-        socket.on(
-            'offer',
-            async (event: {
-                roomId: string;
-                senderParticipantId: string;
-                targetParticipantId: string;
-                offer: RTCSessionDescriptionInit;
-            }) => {
-                if (
-                    await areParticipantsInRoom(
-                        [event.senderParticipantId, event.targetParticipantId],
-                        event.roomId
-                    )
-                ) {
-                    socket
-                        .to(`${event.roomId}_${event.targetParticipantId}`)
-                        .emit('incomingOffer', event);
+                    participantId
+                }: {
+                    roomId: string;
+                    participantId: string;
+                }) => {
+                    // removeParticipant(participantId, roomId);
+                    // socket.removeAllListeners('disconnect');
                 }
-            }
-        );
+            );
 
-        socket.on(
-            'answer',
-            async (event: {
-                roomId: string;
-                senderParticipantId: string;
-                targetParticipantId: string;
-                answer: RTCSessionDescriptionInit;
-            }) => {
-                if (
-                    await areParticipantsInRoom(
-                        [event.senderParticipantId, event.targetParticipantId],
-                        event.roomId
-                    )
-                ) {
-                    socket
-                        .to(`${event.roomId}_${event.targetParticipantId}`)
-                        .emit('incomingAnswer', event);
+            socket.on(
+                'offer',
+                async (event: {
+                    roomId: string;
+                    senderParticipantId: string;
+                    targetParticipantId: string;
+                    offer: RTCSessionDescriptionInit;
+                }) => {
+                    // if (
+                    //     await areParticipantsInRoom(
+                    //         [
+                    //             event.senderParticipantId,
+                    //             event.targetParticipantId
+                    //         ],
+                    //         event.roomId
+                    //     )
+                    // ) {
+                    //     socket
+                    //         .to(`${event.roomId}_${event.targetParticipantId}`)
+                    //         .emit('incomingOffer', event);
+                    // }
                 }
-            }
-        );
+            );
 
-        socket.on(
-            'iceCandidate',
-            async (event: {
-                senderParticipantId: string;
-                targetParticipantId: string;
-                roomId: string;
-                sdpMLineIndex: number;
-                candidate: string;
-            }) => {
-                if (
-                    await areParticipantsInRoom(
-                        [event.senderParticipantId, event.targetParticipantId],
-                        event.roomId
-                    )
-                ) {
-                    socket
-                        .to(`${event.roomId}_${event.targetParticipantId}`)
-                        .emit('incomingIceCandidate', event);
+            socket.on(
+                'answer',
+                async (event: {
+                    roomId: string;
+                    senderParticipantId: string;
+                    targetParticipantId: string;
+                    answer: RTCSessionDescriptionInit;
+                }) => {
+                    // if (
+                    //     await areParticipantsInRoom(
+                    //         [
+                    //             event.senderParticipantId,
+                    //             event.targetParticipantId
+                    //         ],
+                    //         event.roomId
+                    //     )
+                    // ) {
+                    //     socket
+                    //         .to(`${event.roomId}_${event.targetParticipantId}`)
+                    //         .emit('incomingAnswer', event);
+                    // }
                 }
-            }
-        );
+            );
 
-        socket.on(
-            'updateParticipant',
-            async ({
-                roomId,
-                senderParticipantId,
-                data
-            }: {
-                roomId: string;
-                senderParticipantId: string;
-                data: Omit<Partial<ClientParticipant>, 'stream'>;
-            }) => {
-                if (await isParticipantInRoom(senderParticipantId, roomId)) {
-                    updateRoomParticipant(senderParticipantId, roomId, data);
-
-                    syncRoomParticipants(roomId);
+            socket.on(
+                'iceCandidate',
+                async (event: {
+                    senderParticipantId: string;
+                    targetParticipantId: string;
+                    roomId: string;
+                    sdpMLineIndex: number;
+                    candidate: string;
+                }) => {
+                    // if (
+                    //     await areParticipantsInRoom(
+                    //         [
+                    //             event.senderParticipantId,
+                    //             event.targetParticipantId
+                    //         ],
+                    //         event.roomId
+                    //     )
+                    // ) {
+                    //     socket
+                    //         .to(`${event.roomId}_${event.targetParticipantId}`)
+                    //         .emit('incomingIceCandidate', event);
+                    // }
                 }
-            }
-        );
+            );
+
+            socket.on(
+                'updateParticipant',
+                async ({
+                    roomId,
+                    senderParticipantId,
+                    data
+                }: {
+                    roomId: string;
+                    senderParticipantId: string;
+                    data: Omit<Partial<ClientParticipant>, 'stream'>;
+                }) => {
+                    // if (
+                    //     await isParticipantInRoom(senderParticipantId, roomId)
+                    // ) {
+                    //     updateRoomParticipant(
+                    //         senderParticipantId,
+                    //         roomId,
+                    //         data
+                    //     );
+                    //     syncRoomParticipants(roomId);
+                    // }
+                }
+            );
+        } catch (error) {
+            socket.emit('connection:unauthorized');
+        }
     });
 }
