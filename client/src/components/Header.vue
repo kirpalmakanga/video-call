@@ -1,0 +1,43 @@
+<script setup lang="ts">
+import { storeToRefs } from 'pinia';
+import { useAuthStore } from '../composables/store/use-auth-store';
+import type { DropdownMenuItem } from '@nuxt/ui/runtime/components/DropdownMenu.vue.js';
+
+const authStore = useAuthStore();
+const { logOut } = authStore;
+const { initials } = storeToRefs(authStore);
+
+const menuItems: DropdownMenuItem[] = [
+    {
+        label: 'Settings',
+        icon: 'i-mdi-settings',
+        onSelect() {}
+    },
+    {
+        type: 'separator'
+    },
+    {
+        label: 'Log out',
+        icon: 'i-mdi-logout',
+        color: 'error',
+        onSelect() {
+            logOut();
+        }
+    }
+];
+</script>
+
+<template>
+    <header class="flex items-center justify-between h-12 px-4 bg-gray-900">
+        <div>VCall</div>
+
+        <UDropdownMenu
+            :items="menuItems"
+            :content="{ align: 'end', side: 'bottom' }"
+        >
+            <button>
+                <UAvatar :text="initials" />
+            </button>
+        </UDropdownMenu>
+    </header>
+</template>
