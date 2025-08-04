@@ -43,8 +43,8 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
 
 <template>
     <div class="flex grow items-center justify-center">
-        <div class="bg-gray-700 rounded p-4">
-            <h1 class="mb-6">Log in</h1>
+        <div class="bg-gray-900 rounded p-4 md:w-sm shadow">
+            <h1 class="mb-6 font-bold text-center">Log in</h1>
 
             <UForm
                 :schema="schema"
@@ -53,11 +53,17 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
                 @submit="onSubmit"
             >
                 <UFormField label="Email" name="email">
-                    <UInput variant="soft" v-model="state.email" type="email" />
+                    <UInput
+                        class="w-full"
+                        variant="soft"
+                        v-model="state.email"
+                        type="email"
+                    />
                 </UFormField>
 
                 <UFormField label="Password" name="password">
                     <UInput
+                        class="w-full"
                         variant="soft"
                         v-model="state.password"
                         type="password"
@@ -66,6 +72,13 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
 
                 <UButton class="self-end" type="submit">Submit</UButton>
             </UForm>
+
+            <USeparator class="my-4" />
+
+            <p class="text-sm">
+                Don't have an account ?
+                <ULink class="font-bold" href="/register">Register here</ULink>
+            </p>
         </div>
     </div>
 </template>
