@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-
-const jwt = require('jsonwebtoken');
+import { getUserIdForToken } from '../utils/jwt';
 
 export function isAuthenticated(
     req: Request,
@@ -16,9 +15,10 @@ export function isAuthenticated(
 
     try {
         const token = authorization.split(' ')[1];
-        const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 
-        req.userId = payload.userId;
+        if (token) {
+            req.userId = getUserIdForToken(token);
+        }
     } catch (err) {
         res.status(401);
 
