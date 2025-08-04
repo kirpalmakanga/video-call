@@ -1,21 +1,58 @@
-const { db } = require('../../utils/db');
+import type { NextFunction, Request, Response } from 'express';
+import {
+    createRoom,
+    getAllRooms,
+    getRoomById,
+    updateRoom
+} from '../services/rooms';
 
-export function getAllRooms() {
-    return db.room.findMany();
+export async function index(_: Request, res: Response) {
+    const rooms = await getAllRooms();
+
+    res.json(rooms);
 }
 
-export function createRoom(data: { name: string; creatorId: string }) {
-    return db.room.create({ data });
+export async function show({ params: { roomId } }: Request, res: Response) {
+    const room = await getRoomById(roomId as string);
+
+    if (room) {
+        return res.json(room);
+    }
+
+    res.status(404).json(null);
 }
 
-export function updateRoom(id: string, data: { name: string }) {
-    return db.room.update({ where: { id }, data });
-}
+type CreateRoomBody = { name: string };
 
-export function getRoomById(id: string) {
-    return db.room.findUnique({
-        where: {
-            id
-        }
+export async function insert(
+    {
+        userId: creatorId,
+        body: { name }
+    }: Request<{}, { userId: string }, CreateRoomBody>,
+    res: Response
+) {
+    const room = await createRoom({
+        name,
+        creatorId
     });
+
+    res.status(200).json();
+}
+
+export async function update(
+    {
+        userId: creatorId,
+        params: { roomId },
+        body
+    }: Request<{}, { userId: string }, CreateRoomBody>,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const updatedRoom = await updateRoom({ id: roomId, creatorId }, body);
+
+        res.status(200).json(updatedRoom);
+    } catch (error) {
+        next(error);
+    }
 }

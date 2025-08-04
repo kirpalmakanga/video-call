@@ -1,32 +1,21 @@
-import bcrypt from 'bcrypt';
-import db from '../utils/db';
+import type { NextFunction, Request, Response } from 'express';
+import { getUserById } from '../services/users';
+import { omit } from '../utils/helpers';
 
-export function getUserByEmail(email: string) {
-    return db.user.findUnique({
-        where: {
-            email
-        }
-    });
-}
+export async function profile(
+    { userId }: Request,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const user = await getUserById(userId);
 
-export function createUserByEmailAndPassword(user: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-}) {
-    return db.user.create({
-        data: {
-            ...user,
-            password: bcrypt.hashSync(user.password, 12)
+        if (user) {
+            return res.json(omit(user, 'password', 'createdAt', 'updatedAt'));
         }
-    });
-}
 
-export function getUserById(id: string) {
-    return db.user.findUnique({
-        where: {
-            id
-        }
-    });
+        res.status(404);
+    } catch (err) {
+        next(err);
+    }
 }

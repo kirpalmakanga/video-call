@@ -1,28 +1,16 @@
-import axios from 'axios';
-import { useMutation, useQuery, useQueryCache } from '@pinia/colada';
-
-const axiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_URI
-});
+import { useQuery } from '@pinia/colada';
+import { getAllRooms, getRoomById } from './api';
 
 export function useRoomsListQuery() {
     return useQuery({
         key: () => ['rooms'],
-        query: async () => {
-            const { data } = await axiosInstance.get('/rooms');
-
-            return data as ClientRoom[];
-        }
+        query: getAllRooms
     });
 }
 
 export function useRoomQuery(roomId: string) {
     return useQuery({
         key: () => ['room', roomId],
-        query: async () => {
-            const { data } = await axiosInstance.get(`/rooms/${roomId}`);
-
-            return data as ClientRoom[];
-        }
+        query: () => getRoomById(roomId)
     });
 }

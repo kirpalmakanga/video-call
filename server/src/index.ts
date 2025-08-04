@@ -4,8 +4,10 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
 import authRoutes from './routes/auth';
-import { errorHandler, notFound } from './middlewares';
+import usersRoutes from './routes/users';
+import roomsRoutes from './routes/rooms';
 import startSocket from './socket';
+import { errorHandler, notFound } from './middlewares/errors';
 
 const { PORT, CLIENT_URI } = process.env;
 
@@ -21,6 +23,8 @@ app.use(
 );
 
 app.use('/auth', authRoutes);
+app.use('/users', usersRoutes);
+app.use('/rooms', roomsRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

@@ -1,15 +1,10 @@
 import { object, string, type InferType } from 'yup';
 
-export const registerSchema = object({
-    firstName: string().required('Required'),
-    lastName: string().required('Required'),
-    email: string().email('Invalid email').required('Required'),
-    password: string()
-        .min(8, 'Must be at least 8 characters')
-        .required('Required')
+export const createRoomSchema = object({
+    name: string().required('Required')
 }).exact();
 
-export type RegisterSchema = InferType<typeof registerSchema>;
+export type CreateRoomSchema = InferType<typeof createRoomSchema>;
 
 export const loginSchema = object({
     email: string().email('Invalid email').required('Required'),

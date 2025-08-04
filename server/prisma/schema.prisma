@@ -22,6 +22,15 @@ model RefreshToken {
   expireAt    DateTime
 }
 
+model Room {
+  id        String   @id @unique @default(uuid())
+  name      String   @unique
+  creator   User     @relation(fields: [creatorId], references: [id])
+  creatorId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model User {
   id            String         @id @unique @default(uuid())
   email         String         @unique
@@ -32,13 +41,4 @@ model User {
   rooms         Room[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-}
-
-model Room {
-  id        String   @id @unique @default(uuid())
-  name      String   @unique
-  creator   User     @relation(fields: [creatorId], references: [id])
-  creatorId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }

@@ -11,7 +11,7 @@ import {
     isParticipantInRoom,
     removeParticipantFromRoom,
     updateRoomParticipant
-} from './controllers/rooms';
+} from './services/rooms';
 
 export default function startSocketServer(
     httpServer: Server,

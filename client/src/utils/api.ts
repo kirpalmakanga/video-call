@@ -13,7 +13,7 @@ export async function logIn(credentials: LoginFormData) {
 }
 
 export async function getCurrentUserProfile() {
-    const { data } = await axios.get('/auth/profile');
+    const { data } = await axios.get('/users/profile');
 
     return data as User;
 }
@@ -22,4 +22,16 @@ export async function refreshAccessToken(refreshToken: string) {
     const { data } = await axios.post('/auth/refresh', { refreshToken });
 
     return data as { accessToken: string; refreshToken: string };
+}
+
+export async function getAllRooms() {
+    const { data } = await axios.get('/rooms');
+
+    return data as ClientRoom[];
+}
+
+export async function getRoomById(roomId: string) {
+    const { data } = await axios.get(`/rooms/${roomId}`);
+
+    return data as ClientRoom;
 }

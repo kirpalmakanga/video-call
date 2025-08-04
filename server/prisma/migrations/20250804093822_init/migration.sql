@@ -11,6 +11,16 @@ CREATE TABLE "RefreshToken" (
 );
 
 -- CreateTable
+CREATE TABLE "Room" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "creatorId" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "Room_creatorId_fkey" FOREIGN KEY ("creatorId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "email" TEXT NOT NULL,
@@ -21,16 +31,6 @@ CREATE TABLE "User" (
     "updatedAt" DATETIME NOT NULL
 );
 
--- CreateTable
-CREATE TABLE "Room" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "name" TEXT NOT NULL,
-    "creatorId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "Room_creatorId_fkey" FOREIGN KEY ("creatorId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "RefreshToken_id_key" ON "RefreshToken"("id");
 
@@ -38,13 +38,13 @@ CREATE UNIQUE INDEX "RefreshToken_id_key" ON "RefreshToken"("id");
 CREATE UNIQUE INDEX "RefreshToken_hashedToken_key" ON "RefreshToken"("hashedToken");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Room_id_key" ON "Room"("id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Room_name_key" ON "Room"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");

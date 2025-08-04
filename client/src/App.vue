@@ -1,11 +1,23 @@
 <script setup lang="ts">
 import { useOnline } from '@vueuse/core';
-import { RouterView } from 'vue-router';
+import { RouterView, useRouter } from 'vue-router';
 import useInterceptors from './composables/use-interceptors';
+import { useAuthStore } from './composables/store/use-auth-store';
+import { onBeforeMount, onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
 
+const router = useRouter();
 const isOnline = useOnline();
+const authStore = useAuthStore();
+const { isLoggedIn } = storeToRefs(authStore);
 
 useInterceptors();
+
+onMounted(() => {
+    if (!isLoggedIn.value) {
+        router.replace('/login');
+    }
+});
 </script>
 
 <template>

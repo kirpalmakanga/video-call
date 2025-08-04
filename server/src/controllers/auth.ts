@@ -1,48 +1,156 @@
-import db from '../utils/db';
-import { hashToken } from '../utils/hash';
+import type { NextFunction, Request, Response } from 'express';
+import bcrypt from 'bcrypt';
+import { generateTokens } from '../utils/jwt';
+import {
+    addRefreshTokenToWhitelist,
+    getRefreshToken,
+    deleteRefreshTokenById,
+    revokeTokens
+} from '../services/auth';
+import {
+    getUserByEmail,
+    createUserByEmailAndPassword,
+    getUserById
+} from '../services/users';
 
-export function addRefreshTokenToWhitelist({
-    refreshToken,
-    userId
-}: {
-    refreshToken: string;
-    userId: string;
-}) {
-    return db.refreshToken.create({
-        data: {
-            hashedToken: hashToken(refreshToken),
-            userId,
-            expireAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30) // 30 days
+interface RegisterRequest {}
+
+export async function register(
+    { body }: Request,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const { email, password } = body;
+
+        if (!email || !password) {
+            res.status(400);
+
+            throw new Error('You must provide an email and a password.');
         }
-    });
+
+        const existingUser = await getUserByEmail(email);
+
+        if (existingUser) {
+            res.status(400);
+
+            throw new Error('Email already in use.');
+        }
+
+        const user = await createUserByEmailAndPassword(body);
+
+        const { accessToken, refreshToken } = generateTokens(user);
+
+        await addRefreshTokenToWhitelist({ refreshToken, userId: user.id });
+
+        res.json({
+            accessToken,
+            refreshToken
+        });
+    } catch (err) {
+        next(err);
+    }
 }
 
-export function getRefreshToken(token: string) {
-    return db.refreshToken.findUnique({
-        where: {
-            hashedToken: hashToken(token)
+export async function login(
+    { body }: Request,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const { email, password } = body;
+
+        if (!email || !password) {
+            res.status(400);
+
+            throw new Error('You must provide an email and a password.');
         }
-    });
+
+        const existingUser = await getUserByEmail(email);
+
+        if (!existingUser) {
+            res.status(403);
+
+            throw new Error('Invalid login credentials.');
+        }
+
+        const validPassword = await bcrypt.compare(
+            password,
+            existingUser.password
+        );
+
+        if (!validPassword) {
+            res.status(403);
+
+            throw new Error('Invalid login credentials.');
+        }
+
+        const { accessToken, refreshToken } = generateTokens(existingUser);
+
+        await addRefreshTokenToWhitelist({
+            refreshToken,
+            userId: existingUser.id
+        });
+
+        res.json({
+            accessToken,
+            refreshToken
+        });
+    } catch (err) {
+        next(err);
+    }
 }
 
-export function deleteRefreshTokenById(id: string) {
-    return db.refreshToken.update({
-        where: {
-            id
-        },
-        data: {
-            revoked: true
-        }
-    });
-}
+export async function refreshAccessToken(
+    { body }: Request,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const { refreshToken } = body;
 
-export function revokeTokens(userId: string) {
-    return db.refreshToken.updateMany({
-        where: {
-            userId
-        },
-        data: {
-            revoked: true
+        const savedRefreshToken = await getRefreshToken(refreshToken);
+
+        if (savedRefreshToken) {
+            console.log({
+                expireAt: savedRefreshToken.expireAt,
+                now: new Date(),
+                isExpired: Date.now() >= savedRefreshToken.expireAt.getTime()
+            });
         }
-    });
+
+        if (
+            !savedRefreshToken ||
+            savedRefreshToken.revoked === true ||
+            Date.now() >= savedRefreshToken.expireAt.getTime()
+        ) {
+            res.status(401);
+
+            throw new Error('Unauthorized');
+        }
+
+        const user = await getUserById(savedRefreshToken.userId);
+
+        if (user) {
+            await deleteRefreshTokenById(savedRefreshToken.id);
+
+            const { accessToken, refreshToken } = generateTokens(user);
+
+            await addRefreshTokenToWhitelist({
+                refreshToken,
+                userId: user.id
+            });
+
+            res.json({
+                accessToken,
+                refreshToken
+            });
+        } else {
+            res.status(401);
+
+            throw new Error('Unauthorized');
+        }
+    } catch (err) {
+        next(err);
+    }
 }
