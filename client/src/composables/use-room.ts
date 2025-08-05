@@ -3,50 +3,13 @@ import { useOnline, useUserMedia } from '@vueuse/core';
 import { useSocket } from './use-socket';
 import { useRTCSession } from './use-rtc-session';
 import { pick, update } from '../utils/helpers';
+import { useParticipantsList } from './use-participants-list';
 
 interface RoomConfig {
     displayName: string;
     isVideoEnabled: Ref<boolean>;
     isAudioEnabled: Ref<boolean>;
     streamConfig: Ref<MediaStreamConstraints>;
-}
-
-function useParticipantsList() {
-    const participants = ref<ClientParticipant[]>([]);
-
-    return {
-        participants,
-        hasParticipant(participantId: string) {
-            return participants.value.some(({ id }) => id === participantId);
-        },
-        addParticipant(participant: ClientParticipant) {
-            participants.value.push(participant);
-        },
-        updateParticipant(participant: ClientParticipant) {
-            participants.value = update(
-                participants.value,
-                ({ id }) => id === participant.id,
-                participant
-            );
-        },
-        removeParticipant(participantId: string) {
-            participants.value = participants.value.filter(
-                ({ id }) => id !== participantId
-            );
-        },
-        toggleMuteParticipant(participantId: string) {
-            const participant = participants.value.find(
-                ({ id }) => id === participantId
-            );
-
-            if (participant) {
-                participant.isLocallyMuted = !participant.isLocallyMuted;
-            }
-        },
-        clearParticipants() {
-            participants.value = [];
-        }
-    };
 }
 
 export function useRoom(
@@ -177,9 +140,9 @@ export function useRoom(
     });
 
     subscribe('participantConnected', async ({ senderParticipantId }) => {
-        connectToPeer(senderParticipantId);
-
         syncLocalParticipant();
+
+        connectToPeer(senderParticipantId);
 
         emit('offer', {
             roomId,
@@ -190,9 +153,9 @@ export function useRoom(
     });
 
     subscribe('incomingOffer', async ({ senderParticipantId, offer }) => {
-        connectToPeer(senderParticipantId);
-
         syncLocalParticipant();
+
+        connectToPeer(senderParticipantId);
 
         emit('answer', {
             roomId,
