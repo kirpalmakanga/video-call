@@ -146,7 +146,7 @@ onMounted(() => {
         </template>
 
         <template v-else-if="room">
-            <h1 class="text-2xl">{{ room.name }}</h1>
+            <h1 class="text-xl font-bold">{{ room.name }}</h1>
 
             <div class="relative flex grow gap-4">
                 <div
