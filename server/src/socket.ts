@@ -4,7 +4,6 @@ import {
     type ServerOptions as SocketServerOptions
 } from 'socket.io';
 import { getUserFromToken } from './utils/jwt';
-import { getUserById } from './services/users';
 
 export default function startSocketServer(
     httpServer: Server,
