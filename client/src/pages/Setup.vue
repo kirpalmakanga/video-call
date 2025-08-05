@@ -14,7 +14,10 @@ const { data: room, isLoading } = useRoomQuery(roomId as string);
 
 <template>
     <div class="flex flex-col md:justify-center md:items-center grow p-4">
-        <template v-if="isLoading">
+        <div
+            v-if="isLoading"
+            class="w-full md:w-md bg-gray-900 rounded p-4 shadow"
+        >
             <USkeleton class="h-8 w-full mb-4" />
 
             <USkeleton class="h-6 w-full mb-4" />
@@ -31,7 +34,7 @@ const { data: room, isLoading } = useRoomQuery(roomId as string);
 
                 <USkeleton class="h-8 w-20" />
             </div>
-        </template>
+        </div>
 
         <div
             v-else-if="room"
