@@ -1,8 +1,8 @@
-import { computed, onBeforeUnmount, reactive, ref, watch, type Ref } from 'vue';
+import { computed, onBeforeUnmount, reactive, watch, type Ref } from 'vue';
 import { useOnline, useUserMedia } from '@vueuse/core';
 import { useSocket } from './use-socket';
 import { useRTCSession } from './use-rtc-session';
-import { pick, update } from '../utils/helpers';
+import { pick } from '../utils/helpers';
 import { useParticipantsList } from './use-participants-list';
 
 interface RoomConfig {
