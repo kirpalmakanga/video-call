@@ -105,8 +105,10 @@ export function useSocket() {
 
             if (event && callback) {
                 socket.off(event, callback);
-            } else {
+            } else if (event) {
                 socket.removeAllListeners(event);
+            } else {
+                socket.removeAllListeners();
             }
         }
     };
