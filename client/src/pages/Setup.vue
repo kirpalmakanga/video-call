@@ -13,7 +13,7 @@ const { data: room, isLoading } = useRoomQuery(roomId as string);
 </script>
 
 <template>
-    <div class="flex flex-col justify-center grow w-1/2 mx-auto p-4">
+    <div class="flex flex-col md:justify-center md:items-center grow p-4">
         <template v-if="isLoading">
             <USkeleton class="h-8 w-full mb-4" />
 
@@ -33,10 +33,13 @@ const { data: room, isLoading } = useRoomQuery(roomId as string);
             </div>
         </template>
 
-        <template v-else-if="room">
-            <h1 class="text-2xl font-bold mb-4">{{ room.name }}</h1>
+        <div
+            v-else-if="room"
+            class="w-full md:w-md bg-gray-900 rounded p-4 shadow"
+        >
+            <h1 class="text-xl font-bold mb-4">{{ room.name }}</h1>
 
-            <p class="mb-4">
+            <p class="mb-4 text-sm">
                 Verify your camera and microphone setup before joining the room.
             </p>
 
@@ -50,7 +53,7 @@ const { data: room, isLoading } = useRoomQuery(roomId as string);
                     Start
                 </UButton>
             </div>
-        </template>
+        </div>
 
         <Placeholder
             v-else
