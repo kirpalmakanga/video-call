@@ -39,7 +39,7 @@ export default function startSocketServer(
                         socket.join(`${roomId}_${participant.id}`)
                     ]);
 
-                    socket.on('disconnect', () => {
+                    socket.once('disconnect', () => {
                         socket.to(roomId).emit('participantDisconnected', {
                             participantId: participant.id
                         });
