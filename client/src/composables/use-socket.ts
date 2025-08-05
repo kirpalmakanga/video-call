@@ -35,19 +35,19 @@ interface EmissionsPayloads {
         senderParticipantId: string;
         isMuted: boolean;
     };
-    updateParticipant: {
+    syncParticipant: {
         roomId: string;
-        senderParticipantId: string;
-        data: Omit<Partial<ClientParticipant>, 'stream'>;
+        participant: Omit<Partial<ClientParticipant>, 'stream'>;
     };
     requestRoomsList: null;
 }
 
 interface SubscriptionPayloads {
+    participantSynced: { participant: ClientParticipant };
     participantConnected: {
-        roomId: string;
         senderParticipantId: string;
     };
+    participantDisconnected: { participantId: string };
     incomingOffer: {
         roomId: string;
         senderParticipantId: string;
@@ -65,8 +65,6 @@ interface SubscriptionPayloads {
         sdpMLineIndex: number;
         candidate: string;
     };
-    participantsListUpdated: { participants: ClientParticipant[] };
-    participantDisconnected: { participantId: string };
     roomsListSync: { items: ClientRoom[] };
 }
 

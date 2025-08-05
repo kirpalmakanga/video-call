@@ -10,6 +10,8 @@ import { useRoom } from '../composables/use-room';
 import { useSettingsStore } from '../composables/store/use-settings-store';
 import { useRoomQuery } from '../utils/queries';
 import { useFullscreen } from '@vueuse/core';
+import { useAuthStore } from '../composables/store/use-auth-store';
+import { storeToRefs } from 'pinia';
 
 const viewModeIcons = {
     grid: 'i-mdi-view-grid',
@@ -32,6 +34,9 @@ const {
 
 const { data: room, isLoading } = useRoomQuery(roomId as string);
 
+const authStore = useAuthStore();
+const { fullName } = storeToRefs(authStore);
+
 const { isVideoEnabled, isAudioEnabled, videoDeviceId, audioDeviceId } =
     useSettingsStore();
 
@@ -44,7 +49,7 @@ const state = reactive<State>({
 const { participants, toggleMuteParticipant, connect } = useRoom(
     roomId as string,
     {
-        displayName: 'User',
+        displayName: fullName.value,
         streamConfig: computed(() => ({
             video: {
                 deviceId: videoDeviceId.value

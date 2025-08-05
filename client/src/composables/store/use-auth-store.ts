@@ -44,6 +44,11 @@ export const useAuthStore = defineStore(
 
                 return `${firstName.at(0) || ''}${lastName.at(0) || ''}`;
             }),
+            fullName: computed(() => {
+                const { firstName, lastName } = state;
+
+                return `${firstName} ${lastName}`;
+            }),
             async refreshAccessToken() {
                 const tokens = await refreshAccessToken(state.refreshToken);
 

@@ -30,6 +30,10 @@ export function useRTCSession(
 ) {
     const peers = ref<Map<string, Peer>>(new Map());
 
+    function hasPeer(peerId: string) {
+        return peers.value.has(peerId);
+    }
+
     function hasPeers() {
         return !!peers.value.size;
     }
@@ -126,6 +130,7 @@ export function useRTCSession(
     });
 
     return {
+        hasPeer,
         hasPeers,
         disconnectFromAllPeers() {
             for (const { connection, stream } of peers.value.values()) {

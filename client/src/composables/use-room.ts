@@ -2,13 +2,51 @@ import { computed, onBeforeUnmount, reactive, ref, watch, type Ref } from 'vue';
 import { useOnline, useUserMedia } from '@vueuse/core';
 import { useSocket } from './use-socket';
 import { useRTCSession } from './use-rtc-session';
-import { mergeByKey, omit, pick } from '../utils/helpers';
+import { pick, update } from '../utils/helpers';
 
 interface RoomConfig {
     displayName: string;
     isVideoEnabled: Ref<boolean>;
     isAudioEnabled: Ref<boolean>;
     streamConfig: Ref<MediaStreamConstraints>;
+}
+
+function useParticipantsList() {
+    const participants = ref<ClientParticipant[]>([]);
+
+    return {
+        participants,
+        hasParticipant(participantId: string) {
+            return participants.value.some(({ id }) => id === participantId);
+        },
+        addParticipant(participant: ClientParticipant) {
+            participants.value.push(participant);
+        },
+        updateParticipant(participant: ClientParticipant) {
+            participants.value = update(
+                participants.value,
+                ({ id }) => id === participant.id,
+                participant
+            );
+        },
+        removeParticipant(participantId: string) {
+            participants.value = participants.value.filter(
+                ({ id }) => id !== participantId
+            );
+        },
+        toggleMuteParticipant(participantId: string) {
+            const participant = participants.value.find(
+                ({ id }) => id === participantId
+            );
+
+            if (participant) {
+                participant.isLocallyMuted = !participant.isLocallyMuted;
+            }
+        },
+        clearParticipants() {
+            participants.value = [];
+        }
+    };
 }
 
 export function useRoom(
@@ -34,29 +72,18 @@ export function useRoom(
         isLocalParticipant: true
     });
 
-    function isRemoteParticipant({ id }: ClientParticipant) {
-        return id !== localParticipant.id;
-    }
-
-    const participants = ref<ClientParticipant[]>([]);
-
-    function removeParticipant(participantId: string) {
-        participants.value = participants.value.filter(
-            ({ id }) => id !== participantId
-        );
-    }
-
-    function toggleMuteParticipant(participantId: string) {
-        const participant = participants.value.find(
-            ({ id }) => id === participantId
-        );
-
-        if (participant) {
-            participant.isLocallyMuted = !participant.isLocallyMuted;
-        }
-    }
+    const {
+        participants,
+        hasParticipant,
+        addParticipant,
+        updateParticipant,
+        removeParticipant,
+        toggleMuteParticipant,
+        clearParticipants
+    } = useParticipantsList();
 
     const {
+        hasPeer,
         disconnectFromPeer,
         disconnectFromAllPeers,
         createOffer,
@@ -82,10 +109,9 @@ export function useRoom(
     }
 
     function syncLocalParticipant() {
-        emit('updateParticipant', {
+        emit('syncParticipant', {
             roomId,
-            senderParticipantId: localParticipant.id,
-            data: getLocalParticipantForServer()
+            participant: getLocalParticipantForServer()
         });
     }
 
@@ -132,7 +158,7 @@ export function useRoom(
 
         disconnectFromAllPeers();
 
-        participants.value = [];
+        clearParticipants();
 
         emit('disconnectParticipant', {
             roomId,
@@ -140,53 +166,50 @@ export function useRoom(
         });
     }
 
-    subscribe('participantConnected', async ({ participant }) => {
+    subscribe('participantSynced', async ({ participant }) => {
         const { id: targetParticipantId } = participant;
-        connectToPeer(targetParticipantId);
 
-        participants.value.push(participant);
+        if (hasParticipant(targetParticipantId)) {
+            updateParticipant(participant);
+        } else {
+            addParticipant(participant);
+        }
+    });
+
+    subscribe('participantConnected', async ({ senderParticipantId }) => {
+        connectToPeer(senderParticipantId);
+
+        syncLocalParticipant();
 
         emit('offer', {
             roomId,
             senderParticipantId: localParticipant.id,
-            targetParticipantId,
-            offer: await createOffer(targetParticipantId)
+            targetParticipantId: senderParticipantId,
+            offer: await createOffer(senderParticipantId)
         });
     });
 
-    subscribe(
-        'incomingOffer',
-        async ({ roomId, senderParticipantId, offer }) => {
-            connectToPeer(senderParticipantId);
+    subscribe('incomingOffer', async ({ senderParticipantId, offer }) => {
+        connectToPeer(senderParticipantId);
 
-            emit('answer', {
-                roomId,
-                senderParticipantId: localParticipant.id,
-                targetParticipantId: senderParticipantId,
-                answer: await createAnswer(senderParticipantId, offer)
-            });
-        }
-    );
+        syncLocalParticipant();
 
-    subscribe('incomingAnswer', ({ senderParticipantId, answer }) => {
-        processAnswer(senderParticipantId, answer);
+        emit('answer', {
+            roomId,
+            senderParticipantId: localParticipant.id,
+            targetParticipantId: senderParticipantId,
+            answer: await createAnswer(senderParticipantId, offer)
+        });
+    });
+
+    subscribe('incomingAnswer', async ({ senderParticipantId, answer }) => {
+        await processAnswer(senderParticipantId, answer);
     });
 
     subscribe(
         'incomingIceCandidate',
         ({ senderParticipantId, sdpMLineIndex, candidate }) => {
             addIceCandidate(senderParticipantId, sdpMLineIndex, candidate);
-        }
-    );
-
-    subscribe(
-        'participantsListUpdated',
-        ({ participants: updatedParticipantsList }) => {
-            participants.value = mergeByKey(
-                participants.value,
-                updatedParticipantsList.filter(isRemoteParticipant),
-                'id'
-            );
         }
     );
 
