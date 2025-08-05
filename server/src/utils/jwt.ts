@@ -3,8 +3,8 @@ import crypto from 'crypto';
 
 const { JWT_ACCESS_SECRET } = process.env;
 
-export function generateAccessToken(userId: string) {
-    return jwt.sign({ userId }, JWT_ACCESS_SECRET as string, {
+export function generateAccessToken(user: User) {
+    return jwt.sign(user, JWT_ACCESS_SECRET as string, {
         expiresIn: '1h'
     });
 }
@@ -15,18 +15,18 @@ export function generateRefreshToken() {
     return token;
 }
 
-export function generateTokens(userId: string) {
+export function generateTokens(user: User) {
     return {
-        accessToken: generateAccessToken(userId),
+        accessToken: generateAccessToken(user),
         refreshToken: generateRefreshToken()
     };
 }
 
-export function getUserIdForToken(accessToken: string) {
-    const { userId } = jwt.verify(
+export function getUserFromToken(accessToken: string) {
+    const user = jwt.verify(
         accessToken,
         JWT_ACCESS_SECRET as string
     ) as JwtPayload;
 
-    return userId as string;
+    return user as User;
 }

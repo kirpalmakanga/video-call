@@ -12,6 +12,7 @@ import {
     createUserByEmailAndPassword,
     getUserById
 } from '../services/users';
+import { omit } from '../utils/helpers';
 
 interface RegisterRequest {}
 
@@ -39,7 +40,9 @@ export async function register(
 
         const user = await createUserByEmailAndPassword(body);
 
-        const { accessToken, refreshToken } = generateTokens(user);
+        const { accessToken, refreshToken } = generateTokens(
+            omit(user, 'password')
+        );
 
         await addRefreshTokenToWhitelist({ refreshToken, userId: user.id });
 
@@ -85,7 +88,9 @@ export async function login(
             throw new Error('Invalid login credentials.');
         }
 
-        const { accessToken, refreshToken } = generateTokens(existingUser);
+        const { accessToken, refreshToken } = generateTokens(
+            omit(existingUser, 'password')
+        );
 
         await addRefreshTokenToWhitelist({
             refreshToken,

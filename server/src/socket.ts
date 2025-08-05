@@ -3,7 +3,7 @@ import {
     Server as SocketServer,
     type ServerOptions as SocketServerOptions
 } from 'socket.io';
-import { getUserIdForToken } from './utils/jwt';
+import { getUserFromToken } from './utils/jwt';
 import { getUserById } from './services/users';
 
 export default function startSocketServer(
@@ -20,8 +20,7 @@ export default function startSocketServer(
                 throw new Error('Unauthorized.');
             }
 
-            const userId = getUserIdForToken(socket.handshake.auth.token);
-            const user = await getUserById(userId);
+            const user = getUserFromToken(socket.handshake.auth.token);
 
             if (!user) {
                 throw new Error('Unauthorized.');
@@ -40,24 +39,15 @@ export default function startSocketServer(
                         socket.join(roomId),
                         socket.join(`${roomId}_${participant.id}`)
                     ]);
-                    // if (!isParticipantInRoom(participant.id, roomId)) {
 
-                    //     addParticipantToRoom(participant, roomId);
-
-                    //     syncRoomParticipants(roomId);
-
-                    //     syncRoomsList();
-
-                    //     socket.on('disconnect', () => {
-                    //         removeParticipant(participant.id, roomId);
-                    //     });
-                    // }
+                    socket.on('disconnect', () => {
+                        socket.to(roomId).emit('participantDisconnected', {
+                            participantId: participant.id
+                        });
+                    });
 
                     socket.to(roomId).emit('participantConnected', {
-                        participant: {
-                            id: user.id,
-                            name: `${user.firstName} ${user.lastName}`
-                        }
+                        senderParticipantId: participant.id
                     });
                 }
             );
@@ -71,108 +61,85 @@ export default function startSocketServer(
                     roomId: string;
                     participantId: string;
                 }) => {
-                    // removeParticipant(participantId, roomId);
-                    // socket.removeAllListeners('disconnect');
+                    socket
+                        .to(roomId)
+                        .emit('participantDisconnected', { participantId });
                 }
             );
 
             socket.on(
                 'offer',
-                async (event: {
+                async ({
+                    roomId,
+                    targetParticipantId,
+                    ...data
+                }: {
                     roomId: string;
                     senderParticipantId: string;
                     targetParticipantId: string;
                     offer: RTCSessionDescriptionInit;
                 }) => {
-                    // if (
-                    //     await areParticipantsInRoom(
-                    //         [
-                    //             event.senderParticipantId,
-                    //             event.targetParticipantId
-                    //         ],
-                    //         event.roomId
-                    //     )
-                    // ) {
-                    //     socket
-                    //         .to(`${event.roomId}_${event.targetParticipantId}`)
-                    //         .emit('incomingOffer', event);
-                    // }
+                    socket
+                        .to(`${roomId}_${targetParticipantId}`)
+                        .emit('incomingOffer', data);
                 }
             );
 
             socket.on(
                 'answer',
-                async (event: {
+                async ({
+                    roomId,
+                    targetParticipantId,
+                    ...data
+                }: {
                     roomId: string;
                     senderParticipantId: string;
                     targetParticipantId: string;
                     answer: RTCSessionDescriptionInit;
                 }) => {
-                    // if (
-                    //     await areParticipantsInRoom(
-                    //         [
-                    //             event.senderParticipantId,
-                    //             event.targetParticipantId
-                    //         ],
-                    //         event.roomId
-                    //     )
-                    // ) {
-                    //     socket
-                    //         .to(`${event.roomId}_${event.targetParticipantId}`)
-                    //         .emit('incomingAnswer', event);
-                    // }
+                    socket
+                        .to(`${roomId}_${targetParticipantId}`)
+                        .emit('incomingAnswer', data);
                 }
             );
 
             socket.on(
                 'iceCandidate',
-                async (event: {
+                async ({
+                    roomId,
+                    targetParticipantId,
+                    ...data
+                }: {
+                    roomId: string;
                     senderParticipantId: string;
                     targetParticipantId: string;
-                    roomId: string;
                     sdpMLineIndex: number;
                     candidate: string;
                 }) => {
-                    // if (
-                    //     await areParticipantsInRoom(
-                    //         [
-                    //             event.senderParticipantId,
-                    //             event.targetParticipantId
-                    //         ],
-                    //         event.roomId
-                    //     )
-                    // ) {
-                    //     socket
-                    //         .to(`${event.roomId}_${event.targetParticipantId}`)
-                    //         .emit('incomingIceCandidate', event);
-                    // }
+                    socket
+                        .to(`${roomId}_${targetParticipantId}`)
+                        .emit('incomingIceCandidate', data);
                 }
             );
 
             socket.on(
-                'updateParticipant',
+                'syncParticipant',
                 async ({
                     roomId,
-                    senderParticipantId,
-                    data
+                    participant
                 }: {
                     roomId: string;
                     senderParticipantId: string;
-                    data: Omit<Partial<ClientParticipant>, 'stream'>;
+                    participant: Omit<Partial<ClientParticipant>, 'stream'>;
                 }) => {
-                    // if (
-                    //     await isParticipantInRoom(senderParticipantId, roomId)
-                    // ) {
-                    //     updateRoomParticipant(
-                    //         senderParticipantId,
-                    //         roomId,
-                    //         data
-                    //     );
-                    //     syncRoomParticipants(roomId);
-                    // }
+                    socket
+                        .to(roomId)
+                        .emit('participantSynced', { participant });
                 }
             );
         } catch (error) {
+            console.error(error);
+
             socket.emit('connection:unauthorized');
         }
     });
