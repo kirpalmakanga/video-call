@@ -37,8 +37,9 @@ const { data: room, isLoading } = useRoomQuery(roomId as string);
 const authStore = useAuthStore();
 const { fullName } = storeToRefs(authStore);
 
-const { isVideoEnabled, isAudioEnabled, videoDeviceId, audioDeviceId } =
-    useSettingsStore();
+const settingsStore = useSettingsStore();
+const { audioDeviceId, videoDeviceId, isAudioEnabled, isVideoEnabled } =
+    storeToRefs(settingsStore);
 
 const state = reactive<State>({
     viewMode: 'sidebar',

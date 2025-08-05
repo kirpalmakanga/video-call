@@ -1,6 +1,5 @@
 import { reactive, toRefs, watch } from 'vue';
-import { getStorageItem, setStorageItem } from '../../utils/storage';
-import { useStorage } from '@vueuse/core';
+import { defineStore } from 'pinia';
 
 interface State {
     isAudioEnabled: boolean;
@@ -18,16 +17,17 @@ function getInitialState(): State {
     };
 }
 
-const storedState = useStorage<State>('settings', getInitialState());
+export const useSettingsStore = defineStore(
+    'settings',
+    () => {
+        const state = reactive<State>(getInitialState());
 
-const state = reactive<State>(storedState.value);
-
-watch(state, () => {
-    storedState.value = state;
-});
-
-export function useSettingsStore() {
-    return {
-        ...toRefs(state)
-    };
-}
+        return {
+            ...toRefs(state),
+            clearSettings() {
+                Object.assign(state, getInitialState());
+            }
+        };
+    },
+    { persist: true }
+);

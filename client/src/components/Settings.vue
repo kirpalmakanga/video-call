@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
+import { useDevicesList } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
 import AudioPreview from './base/AudioPreview.vue';
 import VideoPreview from './base/VideoPreview.vue';
 import { useSettingsStore } from '../composables/store/use-settings-store';
-import { useDevicesList } from '@vueuse/core';
 
+const settingsStore = useSettingsStore();
 const { audioDeviceId, videoDeviceId, isAudioEnabled, isVideoEnabled } =
-    useSettingsStore();
+    storeToRefs(settingsStore);
 
 const { permissionGranted, videoInputs, audioInputs } = useDevicesList({
     requestPermissions: true
