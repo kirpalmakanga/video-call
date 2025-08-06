@@ -43,17 +43,17 @@ export function useRTCSession(
     }
 
     function disconnectFromPeer(peerId: string) {
-        const entry = peers.value.get(peerId);
+        const peer = peers.value.get(peerId);
 
-        if (!entry) {
+        if (!peer) {
             throw new Error(
                 'Peer connection does not exist or has already been closed.'
             );
         }
 
-        entry.connection.close();
+        peer.connection.close();
 
-        if (entry.stream) closeStream(entry.stream);
+        if (peer.stream) closeStream(peer.stream);
 
         peers.value.delete(peerId);
     }
@@ -134,8 +134,6 @@ export function useRTCSession(
             }
 
             peers.value.clear();
-        } else {
-            throw new Error('No peer connections to close.');
         }
     }
 
@@ -152,6 +150,7 @@ export function useRTCSession(
     return {
         hasPeer,
         hasPeers,
+        disconnectFromPeer,
         disconnectFromAllPeers,
         async createOffer(peerId: string) {
             const { connection } = getPeer(peerId);
@@ -229,7 +228,6 @@ export function useRTCSession(
 
             bindLocalStreamToPeer(peerId);
         },
-        disconnectFromPeer,
         getPeerStream(peerId: string) {
             return hasPeer(peerId) ? getPeer(peerId).stream : null;
         }
