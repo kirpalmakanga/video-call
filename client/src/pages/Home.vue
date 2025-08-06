@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted } from 'vue';
+import { watch } from 'vue';
 import Placeholder from '../components/base/Placeholder.vue';
 import RoomsGrid from '../components/RoomsGrid.vue';
+import RoomsGridSkeleton from '../components/RoomsGridSkeleton.vue';
 import { useSocket } from '../composables/use-socket';
 import { useRoomsListQuery } from '../utils/queries';
-import RoomsGridSkeleton from '../components/RoomsGridSkeleton.vue';
 
-const { subscribe, unsubscribe } = useSocket();
+const { subscribe } = useSocket();
 
 const { data: rooms, isLoading } = useRoomsListQuery();
 
@@ -14,11 +14,11 @@ function onRoomsListSync({ items }: { items: ClientRoom[] }) {
     rooms.value = items;
 }
 
-onMounted(() => subscribe('roomsListSync', onRoomsListSync));
-
-onBeforeUnmount(() => unsubscribe('roomsListSync', onRoomsListSync));
-
-Placeholder;
+watch(rooms, (rooms, previousRooms) => {
+    if (rooms?.length && !previousRooms) {
+        subscribe('roomsListSync', onRoomsListSync);
+    }
+});
 </script>
 
 <template>

@@ -1,5 +1,6 @@
-import { io, Socket } from 'socket.io-client';
+import { onBeforeUnmount } from 'vue';
 import { storeToRefs } from 'pinia';
+import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from './store/use-auth-store';
 
 interface EmissionsPayloads {
@@ -42,6 +43,8 @@ interface EmissionsPayloads {
     requestRoomsList: null;
 }
 
+type EmittedEvent = keyof EmissionsPayloads;
+
 interface SubscriptionPayloads {
     participantSynced: { participant: ClientParticipant };
     participantConnected: {
@@ -68,11 +71,15 @@ interface SubscriptionPayloads {
     roomsListSync: { items: ClientRoom[] };
 }
 
+type SubscriptionEvent = keyof SubscriptionPayloads;
+
 let socket: Socket;
 
 export function useSocket() {
     const authStore = useAuthStore();
     const { accessToken } = storeToRefs(authStore);
+
+    const subscriptions = new Map<SubscriptionEvent, Function>();
 
     function getSocket() {
         if (!socket) {
@@ -84,31 +91,66 @@ export function useSocket() {
         return socket;
     }
 
+    function removeSubscription(event: SubscriptionEvent) {
+        const unsubscribe = subscriptions.get(event);
+
+        if (unsubscribe) {
+            unsubscribe();
+
+            subscriptions.delete(event);
+        } else {
+            throw new Error(
+                `Subscription for event "${event}" does not exist or has already been removed.`
+            );
+        }
+    }
+
+    function removeAllSubscriptions() {
+        if (subscriptions.size) {
+            for (const [_, unsubscribe] of subscriptions) {
+                unsubscribe();
+            }
+
+            subscriptions.clear();
+        } else {
+            throw new Error('No current subscriptions.');
+        }
+    }
+
+    onBeforeUnmount(removeAllSubscriptions);
+
     return {
-        emit<E extends keyof EmissionsPayloads>(
-            event: E,
-            data: EmissionsPayloads[E]
-        ) {
+        reconnect() {
+            const socket = getSocket();
+
+            if (socket.disconnected) {
+                socket.connect();
+            }
+        },
+        emit<E extends EmittedEvent>(event: E, data: EmissionsPayloads[E]) {
             getSocket().emit(event, data);
         },
-        subscribe<E extends keyof SubscriptionPayloads>(
+        subscribe<E extends SubscriptionEvent>(
             event: E,
             callback: (payload: SubscriptionPayloads[E]) => void
         ) {
-            getSocket().on(event, callback);
-        },
-        unsubscribe<E extends keyof SubscriptionPayloads>(
-            event?: E,
-            callback?: (payload: SubscriptionPayloads[E]) => void
-        ) {
-            const socket = getSocket();
-
-            if (event && callback) {
-                socket.off(event, callback);
-            } else if (event) {
-                socket.removeAllListeners(event);
+            if (subscriptions.has(event)) {
+                throw new Error(
+                    `Subscription for event "${event}" already exists`
+                );
             } else {
-                socket.removeAllListeners();
+                const socket = getSocket();
+
+                socket.on(event, callback);
+
+                subscriptions.set(event, () => socket.off(event, callback));
+            }
+        },
+        unsubscribe(event?: SubscriptionEvent) {
+            if (event) {
+                removeSubscription(event);
+            } else {
+                removeAllSubscriptions();
             }
         }
     };
