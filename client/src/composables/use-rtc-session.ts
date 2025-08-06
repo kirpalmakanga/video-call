@@ -1,5 +1,5 @@
-import { onBeforeMount, onBeforeUnmount, ref, watch, type Ref } from 'vue';
-import { assertIsDefined } from '../utils/assert';
+import { onBeforeUnmount, ref, watch, type Ref } from 'vue';
+import { assertIsDefined } from '../../../utils/assert';
 
 // const configuration = {
 //     iceServers: [
