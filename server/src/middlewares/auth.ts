@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
-import { getUserFromToken } from '../utils/jwt';
+import { getUserIdFromToken } from '../utils/jwt';
 
-export function isAuthenticated(
+export async function isAuthenticated(
     req: Request,
     res: Response,
     next: NextFunction
@@ -17,7 +17,7 @@ export function isAuthenticated(
         const token = authorization.split(' ')[1];
 
         if (token) {
-            req.userId = getUserFromToken(token).id;
+            req.userId = await getUserIdFromToken(token);
         }
     } catch (err) {
         res.status(401);

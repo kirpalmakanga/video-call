@@ -40,7 +40,7 @@ export async function register(
 
         const user = await createUserByEmailAndPassword(body);
 
-        const { accessToken, refreshToken } = generateTokens(
+        const { accessToken, refreshToken } = await generateTokens(
             omit(user, 'password')
         );
 
@@ -88,7 +88,7 @@ export async function login(
             throw new Error('Invalid login credentials.');
         }
 
-        const { accessToken, refreshToken } = generateTokens(
+        const { accessToken, refreshToken } = await generateTokens(
             omit(existingUser, 'password')
         );
 
@@ -116,14 +116,6 @@ export async function refreshAccessToken(
 
         const savedRefreshToken = await getRefreshToken(refreshToken);
 
-        if (savedRefreshToken) {
-            console.log({
-                expireAt: savedRefreshToken.expireAt,
-                now: new Date(),
-                isExpired: Date.now() >= savedRefreshToken.expireAt.getTime()
-            });
-        }
-
         if (
             !savedRefreshToken ||
             savedRefreshToken.revoked === true ||
@@ -139,7 +131,7 @@ export async function refreshAccessToken(
         if (user) {
             await deleteRefreshTokenById(savedRefreshToken.id);
 
-            const { accessToken, refreshToken } = generateTokens(user);
+            const { accessToken, refreshToken } = await generateTokens(user);
 
             await addRefreshTokenToWhitelist({
                 refreshToken,

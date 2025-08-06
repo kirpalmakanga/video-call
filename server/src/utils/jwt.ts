@@ -1,32 +1,56 @@
-import jwt, { type JwtPayload } from 'jsonwebtoken';
+import { jwtVerify, SignJWT } from 'jose';
 import crypto from 'crypto';
+import { assertIsDefined } from '../../../utils/assert';
 
-const { JWT_ACCESS_SECRET } = process.env;
+const { JWT_ACCESS_SECRET, JWT_ISSUER, JWT_AUDIENCE } = process.env;
 
-export function generateAccessToken(user: User) {
-    return jwt.sign(user, JWT_ACCESS_SECRET as string, {
-        expiresIn: '1h'
-    });
+function getSecretKey(secret: string) {
+    return new TextEncoder().encode(secret);
+}
+
+export async function generateAccessToken(user: User) {
+    assertIsDefined(JWT_ACCESS_SECRET);
+    assertIsDefined(JWT_ISSUER);
+    assertIsDefined(JWT_AUDIENCE);
+
+    const jwt = await new SignJWT({ id: user.id })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('2h')
+        .setIssuer(JWT_ISSUER)
+        .setAudience(JWT_AUDIENCE)
+        .sign(getSecretKey(JWT_ACCESS_SECRET));
+
+    return jwt;
 }
 
 export function generateRefreshToken() {
-    const token = crypto.randomBytes(16).toString('base64url');
-
-    return token;
+    return crypto.randomBytes(16).toString('base64url');
 }
 
-export function generateTokens(user: User) {
+export async function generateTokens(user: User): Promise<{
+    accessToken: string;
+    refreshToken: string;
+}> {
     return {
-        accessToken: generateAccessToken(user),
+        accessToken: await generateAccessToken(user),
         refreshToken: generateRefreshToken()
     };
 }
 
-export function getUserFromToken(accessToken: string) {
-    const user = jwt.verify(
-        accessToken,
-        JWT_ACCESS_SECRET as string
-    ) as JwtPayload;
+export async function authenticate(accessToken: string) {
+    assertIsDefined(JWT_ACCESS_SECRET);
+    assertIsDefined(JWT_ISSUER);
+    assertIsDefined(JWT_AUDIENCE);
 
-    return user as User;
+    return await jwtVerify(accessToken, getSecretKey(JWT_ACCESS_SECRET), {
+        issuer: JWT_ISSUER,
+        audience: JWT_AUDIENCE
+    });
+}
+
+export async function getUserIdFromToken(accessToken: string) {
+    const { payload } = await authenticate(accessToken);
+
+    return payload.id as string;
 }
