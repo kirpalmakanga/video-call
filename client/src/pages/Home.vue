@@ -1,24 +1,28 @@
 <script setup lang="ts">
-import { watch } from 'vue';
+import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import Placeholder from '../components/base/Placeholder.vue';
 import RoomsGrid from '../components/RoomsGrid.vue';
 import RoomsGridSkeleton from '../components/RoomsGridSkeleton.vue';
 import { useSocket } from '../composables/use-socket';
 import { useRoomsListQuery } from '../utils/queries';
 
-const { subscribe } = useSocket();
+const { emit, subscribe } = useSocket();
 
 const { data: rooms, isLoading } = useRoomsListQuery();
 
-function onRoomsListSync({ items }: { items: ClientRoom[] }) {
-    rooms.value = items;
+const userCounts = ref<Record<string, number>>({});
+
+function onUserCountsSynced(data: Record<string, number>) {
+    userCounts.value = data;
 }
 
-watch(rooms, (rooms, previousRooms) => {
-    if (rooms?.length && !previousRooms) {
-        subscribe('roomsListSync', onRoomsListSync);
-    }
+onMounted(() => {
+    subscribe('syncUserCounts', onUserCountsSynced);
+
+    emit('joinUserCounts');
 });
+
+onBeforeUnmount(() => emit('leaveUserCounts'));
 </script>
 
 <template>
@@ -28,7 +32,11 @@ watch(rooms, (rooms, previousRooms) => {
 
             <RoomsGridSkeleton v-if="isLoading" />
 
-            <RoomsGrid v-else-if="rooms?.length" :rooms="rooms" />
+            <RoomsGrid
+                v-else-if="rooms?.length"
+                :rooms="rooms"
+                :user-counts="userCounts"
+            />
 
             <Placeholder
                 v-else

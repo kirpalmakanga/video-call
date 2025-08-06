@@ -17,6 +17,27 @@ export default function startSocketServer(
 ) {
     const io = new SocketServer(httpServer, socketOptions);
 
+    function syncUserCounts() {
+        const counts = [...io.sockets.adapter.rooms].reduce(
+            (obj, [key, socketIds]) => {
+                if (!key.startsWith('room:')) {
+                    return obj;
+                }
+
+                const roomId = key.split(':')[1];
+
+                if (roomId) {
+                    obj[roomId] = socketIds.size;
+                }
+
+                return obj;
+            },
+            {} as Record<string, number>
+        );
+
+        io.in('userCounts').emit('syncUserCounts', counts);
+    }
+
     io.use(async (socket, next) => {
         try {
             const token = getAccessToken(socket);
@@ -40,6 +61,16 @@ export default function startSocketServer(
 
         const userId = await getUserIdFromToken(token);
 
+        socket.on('joinUserCounts', async () => {
+            await socket.join('userCounts');
+
+            syncUserCounts();
+        });
+
+        socket.on('leaveUserCounts', () => {
+            socket.leave('userCounts');
+        });
+
         socket.on(
             'connectParticipant',
             async ({
@@ -50,21 +81,27 @@ export default function startSocketServer(
                 participant: Participant;
             }) => {
                 await Promise.all([
-                    socket.join(roomId),
-                    socket.join(`${roomId}_${participant.id}`)
+                    socket.join(`room:${roomId}`),
+                    socket.join(`participant:${participant.id}:room:${roomId}`)
                 ]);
 
                 socket.once('disconnect', () => {
-                    socket.to(roomId).emit('participantDisconnected', {
-                        participantId: participant.id
-                    });
+                    socket
+                        .to(`room:${roomId}`)
+                        .emit('participantDisconnected', {
+                            participantId: participant.id
+                        });
+
+                    syncUserCounts();
                 });
 
                 socket.emit('connectedToRoom');
 
-                socket.to(roomId).emit('participantConnected', {
+                socket.to(`room:${roomId}`).emit('participantConnected', {
                     senderParticipantId: participant.id
                 });
+
+                syncUserCounts();
             }
         );
 
@@ -78,13 +115,15 @@ export default function startSocketServer(
                 participantId: string;
             }) => {
                 await Promise.all([
-                    socket.leave(roomId),
-                    socket.leave(`${roomId}_${participantId}`)
+                    socket.leave(`room:${roomId}`),
+                    socket.leave(`participant:${participantId}:room:${roomId}`)
                 ]);
 
                 socket
-                    .to(roomId)
+                    .to(`room:${roomId}`)
                     .emit('participantDisconnected', { participantId });
+
+                syncUserCounts();
             }
         );
 
@@ -101,7 +140,7 @@ export default function startSocketServer(
                 offer: RTCSessionDescriptionInit;
             }) => {
                 socket
-                    .to(`${roomId}_${targetParticipantId}`)
+                    .to(`participant:${targetParticipantId}:room:${roomId}`)
                     .emit('incomingOffer', data);
             }
         );
@@ -119,7 +158,7 @@ export default function startSocketServer(
                 answer: RTCSessionDescriptionInit;
             }) => {
                 socket
-                    .to(`${roomId}_${targetParticipantId}`)
+                    .to(`participant:${targetParticipantId}:room:${roomId}`)
                     .emit('incomingAnswer', data);
             }
         );
@@ -138,7 +177,7 @@ export default function startSocketServer(
                 candidate: string;
             }) => {
                 socket
-                    .to(`${roomId}_${targetParticipantId}`)
+                    .to(`participant:${targetParticipantId}:room:${roomId}`)
                     .emit('incomingIceCandidate', data);
             }
         );
@@ -153,7 +192,9 @@ export default function startSocketServer(
                 senderParticipantId: string;
                 participant: Omit<Partial<ClientParticipant>, 'stream'>;
             }) => {
-                socket.to(roomId).emit('participantSynced', { participant });
+                socket
+                    .to(`room:${roomId}`)
+                    .emit('participantSynced', { participant });
             }
         );
     });

@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from './store/use-auth-store';
 
-interface EmissionsPayloads {
+export interface EmissionsPayloads {
     connectParticipant: {
         roomId: string;
         participant: Participant;
@@ -40,7 +40,8 @@ interface EmissionsPayloads {
         roomId: string;
         participant: Omit<Partial<ClientParticipant>, 'stream'>;
     };
-    requestRoomsList: null;
+    joinUserCounts: never;
+    leaveUserCounts: never;
 }
 
 type EmittedEvent = keyof EmissionsPayloads;
@@ -69,7 +70,7 @@ interface SubscriptionPayloads {
         sdpMLineIndex: number;
         candidate: string;
     };
-    roomsListSync: { items: ClientRoom[] };
+    syncUserCounts: Record<string, number>;
 }
 
 type SubscriptionEvent = keyof SubscriptionPayloads;
@@ -87,7 +88,7 @@ export function useSocket() {
         if (!socket) {
             socket = io(import.meta.env.VITE_API_URI, {
                 reconnectionDelay: 5000,
-                auth: { token: accessToken }
+                auth: { token: accessToken.value }
             });
 
             let reconnectionAttempts = socket.on(
@@ -143,7 +144,7 @@ export function useSocket() {
                 socket.connect();
             }
         },
-        emit<E extends EmittedEvent>(event: E, data: EmissionsPayloads[E]) {
+        emit<E extends EmittedEvent>(event: E, data?: EmissionsPayloads[E]) {
             getSocket().emit(event, data);
         },
         subscribe<E extends SubscriptionEvent>(
