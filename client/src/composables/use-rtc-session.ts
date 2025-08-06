@@ -1,4 +1,4 @@
-import { ref, watch, type Ref } from 'vue';
+import { onBeforeMount, onBeforeUnmount, ref, watch, type Ref } from 'vue';
 import { assertIsDefined } from '../utils/assert';
 
 // const configuration = {
@@ -45,7 +45,11 @@ export function useRTCSession(
     function disconnectFromPeer(peerId: string) {
         const entry = peers.value.get(peerId);
 
-        if (!entry) return;
+        if (!entry) {
+            throw new Error(
+                'Peer connection does not exist or has already been closed.'
+            );
+        }
 
         entry.connection.close();
 
@@ -55,7 +59,9 @@ export function useRTCSession(
     }
 
     function createPeer(peerId: string) {
-        disconnectFromPeer(peerId);
+        if (hasPeer(peerId)) {
+            throw new Error('Peer connection already exists.');
+        }
 
         const entry = { connection: new RTCPeerConnection(), stream: null };
 
@@ -121,6 +127,20 @@ export function useRTCSession(
         }
     }
 
+    function disconnectFromAllPeers() {
+        if (peers.value.size) {
+            for (const { connection, stream } of peers.value.values()) {
+                if (stream) closeStream(stream);
+
+                connection.close();
+            }
+
+            peers.value.clear();
+        } else {
+            throw new Error('No peer connections to close.');
+        }
+    }
+
     watch(localStream, () => {
         if (hasPeers()) {
             unbindLocalStreamFromAllPeers();
@@ -129,18 +149,12 @@ export function useRTCSession(
         }
     });
 
+    onBeforeUnmount(disconnectFromAllPeers);
+
     return {
         hasPeer,
         hasPeers,
-        disconnectFromAllPeers() {
-            for (const { connection, stream } of peers.value.values()) {
-                if (stream) closeStream(stream);
-
-                connection.close();
-            }
-
-            peers.value.clear();
-        },
+        disconnectFromAllPeers,
         async createOffer(peerId: string) {
             const peer = getPeer(peerId);
 
