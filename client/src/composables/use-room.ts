@@ -67,6 +67,8 @@ export function useRoom(
     });
 
     const isConnecting = ref<boolean>(true);
+    const isConnected = ref<boolean>(false);
+    const isReconnecting = ref<boolean>(false);
 
     function getLocalParticipantForServer(): Participant {
         return pick(localParticipant, 'id', 'name', 'isMuted');
@@ -132,8 +134,19 @@ export function useRoom(
         }
     }
 
+    subscribe('disconnect', () => {
+        isConnected.value = false;
+    });
+
+    subscribe('connect', () => {
+        if (!isConnecting.value) {
+            connect();
+        }
+    });
+
     subscribe('connectedToRoom', () => {
         isConnecting.value = false;
+        isConnected.value = true;
     });
 
     subscribe('participantSynced', async ({ participant }) => {

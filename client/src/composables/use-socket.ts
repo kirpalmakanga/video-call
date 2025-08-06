@@ -47,6 +47,8 @@ export interface EmissionsPayloads {
 type EmittedEvent = keyof EmissionsPayloads;
 
 interface SubscriptionPayloads {
+    disconnect: never;
+    connect: never;
     participantSynced: { participant: ClientParticipant };
     participantConnected: {
         participantId: string;
