@@ -71,44 +71,42 @@ export function useRTCSession(
     }
 
     function getPeer(peerId: string) {
-        return peers.value.get(peerId);
+        const peer = peers.value.get(peerId);
+
+        assertIsDefined(peer);
+
+        return peer;
     }
 
     function bindLocalStreamToPeer(peerId: string) {
         assertIsDefined(localStream.value);
 
-        const peer = getPeer(peerId);
-
-        assertIsDefined(peer);
+        const { connection } = getPeer(peerId);
 
         for (const track of localStream.value.getTracks()) {
-            peer.connection.addTrack(track, localStream.value);
+            connection.addTrack(track, localStream.value);
         }
     }
 
     function unbindLocalStreamFromPeer(peerId: string) {
-        const peer = getPeer(peerId);
+        const { connection } = getPeer(peerId);
 
-        assertIsDefined(peer);
-
-        const senders = peer.connection.getSenders();
+        const senders = connection.getSenders();
 
         if (senders.length) {
             for (const sender of senders) {
-                peer.connection.removeTrack(sender);
+                connection.removeTrack(sender);
             }
         }
     }
 
-    function setPeerStream(peerId: string, stream: MediaStream | null) {
-        const peer = getPeer(peerId);
+    function setPeerStream(peerId: string, peerStream: MediaStream | null) {
+        const { stream, ...peer } = getPeer(peerId);
 
-        assertIsDefined(peer);
-
-        if (peer.stream?.id !== stream?.id) {
+        if (stream?.id !== peerStream?.id) {
             peers.value.set(peerId, {
                 ...peer,
-                stream
+                stream: peerStream
             });
         }
     }
@@ -156,41 +154,35 @@ export function useRTCSession(
         hasPeers,
         disconnectFromAllPeers,
         async createOffer(peerId: string) {
-            const peer = getPeer(peerId);
+            const { connection } = getPeer(peerId);
 
-            assertIsDefined(peer);
+            const offer = await connection.createOffer();
 
-            const offer = await peer.connection.createOffer();
-
-            await peer.connection.setLocalDescription(
+            await connection.setLocalDescription(
                 new RTCSessionDescription(offer)
             );
 
             return offer;
         },
         async createAnswer(peerId: string, offer: RTCSessionDescriptionInit) {
-            const peer = getPeer(peerId);
+            const { connection } = getPeer(peerId);
 
-            assertIsDefined(peer);
-
-            await peer.connection.setRemoteDescription(
+            await connection.setRemoteDescription(
                 new RTCSessionDescription(offer)
             );
 
-            const answer = await peer.connection.createAnswer();
+            const answer = await connection.createAnswer();
 
-            await peer.connection.setLocalDescription(
+            await connection.setLocalDescription(
                 new RTCSessionDescription(answer)
             );
 
             return answer;
         },
         async processAnswer(peerId: string, answer: RTCSessionDescriptionInit) {
-            const peer = getPeer(peerId);
+            const { connection } = getPeer(peerId);
 
-            assertIsDefined(peer);
-
-            await peer.connection.setRemoteDescription(
+            await connection.setRemoteDescription(
                 new RTCSessionDescription(answer)
             );
         },
@@ -200,8 +192,6 @@ export function useRTCSession(
             candidate: string
         ) {
             const peer = getPeer(peerId);
-
-            assertIsDefined(peer);
 
             await peer.connection.addIceCandidate(
                 new RTCIceCandidate({
@@ -241,7 +231,7 @@ export function useRTCSession(
         },
         disconnectFromPeer,
         getPeerStream(peerId: string) {
-            return getPeer(peerId)?.stream || null;
+            return hasPeer(peerId) ? getPeer(peerId).stream : null;
         }
     };
 }
