@@ -26,7 +26,7 @@ export function useRoom(
         constraints: streamConfig
     });
 
-    const { emit, subscribe, unsubscribe } = useSocket();
+    const { emit, subscribe } = useSocket();
 
     const localParticipant = reactive<ClientParticipant>({
         id: crypto.randomUUID(),
@@ -46,7 +46,6 @@ export function useRoom(
     } = useParticipantsList();
 
     const {
-        hasPeer,
         disconnectFromPeer,
         disconnectFromAllPeers,
         createOffer,
@@ -117,16 +116,16 @@ export function useRoom(
     function disconnect() {
         stopStream();
 
-        unsubscribe();
-
         disconnectFromAllPeers();
 
         clearParticipants();
 
-        emit('disconnectParticipant', {
-            roomId,
-            participantId: localParticipant.id
-        });
+        if (isOnline.value) {
+            emit('disconnectParticipant', {
+                roomId,
+                participantId: localParticipant.id
+            });
+        }
     }
 
     subscribe('participantSynced', async ({ participant }) => {
@@ -182,9 +181,11 @@ export function useRoom(
         removeParticipant(participantId);
     });
 
-    watch(isOnline, (isOnline) => {
-        if (isOnline) {
+    watch(isOnline, (value) => {
+        if (value) {
             connect();
+        } else {
+            disconnect();
         }
     });
 
