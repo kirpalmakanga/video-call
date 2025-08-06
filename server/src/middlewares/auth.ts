@@ -6,18 +6,21 @@ export async function isAuthenticated(
     res: Response,
     next: NextFunction
 ) {
-    const { authorization } = req.headers;
-
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-        res.status(401);
-        throw new Error('Unauthorized.');
-    }
-
     try {
+        const {
+            headers: { authorization }
+        } = req;
+
+        if (!authorization || !authorization.startsWith('Bearer ')) {
+            throw new Error('Invalid authorization');
+        }
+
         const token = authorization.split(' ')[1];
 
         if (token) {
             req.userId = await getUserIdFromToken(token);
+        } else {
+            throw new Error('Invalid token');
         }
     } catch (err) {
         res.status(401);
