@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useFullscreen } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
 
 import Placeholder from '../components/base/Placeholder.vue';
 import Settings from '../components/Settings.vue';
@@ -8,10 +10,8 @@ import Participant from '../components/room/Participant.vue';
 import AutoGrid from '../components/base/AutoGrid.vue';
 import { useRoom } from '../composables/use-room';
 import { useSettingsStore } from '../composables/store/use-settings-store';
-import { useRoomQuery } from '../utils/queries';
-import { useFullscreen } from '@vueuse/core';
 import { useAuthStore } from '../composables/store/use-auth-store';
-import { storeToRefs } from 'pinia';
+import { useRoomQuery } from '../utils/queries';
 
 const viewModeIcons = {
     grid: 'i-mdi-view-grid',
