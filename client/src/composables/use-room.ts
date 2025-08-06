@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, reactive, watch, type Ref } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref, watch, type Ref } from 'vue';
 import { useOnline, useUserMedia } from '@vueuse/core';
 import { useSocket } from './use-socket';
 import { useRTCSession } from './use-rtc-session';
@@ -66,6 +66,8 @@ export function useRoom(
         }
     });
 
+    const isConnecting = ref<boolean>(true);
+
     function getLocalParticipantForServer(): Participant {
         return pick(localParticipant, 'id', 'name', 'isMuted');
     }
@@ -100,6 +102,8 @@ export function useRoom(
     }
 
     async function connect() {
+        isConnecting.value = true;
+
         if (!localStream.value) {
             await startStream();
 
@@ -127,6 +131,10 @@ export function useRoom(
             });
         }
     }
+
+    subscribe('connectedToRoom', () => {
+        isConnecting.value = false;
+    });
 
     subscribe('participantSynced', async ({ participant }) => {
         const { id: targetParticipantId } = participant;
@@ -209,6 +217,7 @@ export function useRoom(
     onBeforeUnmount(disconnect);
 
     return {
+        isConnecting,
         participants: computed(() => [
             localParticipant,
             ...participants.value.map((item) => ({

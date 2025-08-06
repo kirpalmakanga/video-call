@@ -45,6 +45,8 @@ export default function startSocketServer(
                         });
                     });
 
+                    socket.emit('connectedToRoom');
+
                     socket.to(roomId).emit('participantConnected', {
                         senderParticipantId: participant.id
                     });

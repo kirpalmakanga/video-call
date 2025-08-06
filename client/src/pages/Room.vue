@@ -49,7 +49,7 @@ const state = reactive<State>({
     activeParticipantId: null
 });
 
-const { participants, toggleMuteParticipant, connect } = useRoom(
+const { isConnecting, participants, toggleMuteParticipant, connect } = useRoom(
     roomId as string,
     {
         displayName: fullName.value,
@@ -163,8 +163,15 @@ onMounted(() => {
                     v-if="isViewMode('sidebar')"
                     class="flex flex-col grow gap-4 bg-neutral-800 bg p-4 rounded"
                 >
+                    <Placeholder
+                        v-if="isConnecting"
+                        class="grow text-gray-100 rounded"
+                        icon="svg-spinners:90-ring-with-bg"
+                        text="Joining room..."
+                    />
+
                     <Participant
-                        v-if="activeParticipant"
+                        v-else-if="activeParticipant"
                         v-bind="activeParticipant"
                         :is-active-participant="true"
                         @toggle-mute="

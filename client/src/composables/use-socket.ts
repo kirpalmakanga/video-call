@@ -51,6 +51,7 @@ interface SubscriptionPayloads {
         senderParticipantId: string;
     };
     participantDisconnected: { participantId: string };
+    connectedToRoom: never;
     incomingOffer: {
         roomId: string;
         senderParticipantId: string;
