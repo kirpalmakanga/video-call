@@ -5,6 +5,7 @@ import {
     getRoomById,
     updateRoom
 } from '../services/rooms';
+import { assertIsDefined } from '../../../utils/assert';
 
 export async function index(_: Request, res: Response) {
     const rooms = await getAllRooms();
@@ -22,37 +23,36 @@ export async function show({ params: { roomId } }: Request, res: Response) {
     res.status(404).json(null);
 }
 
-type CreateRoomBody = { name: string };
+interface CreateRoomRequest extends Request {
+    body: { name: string };
+}
+
+interface UpdateRoomRequest extends CreateRoomRequest {
+    params: { roomId: string };
+}
 
 export async function insert(
-    {
-        userId: creatorId,
-        body: { name }
-    }: Request<{}, { userId: string }, CreateRoomBody>,
+    { userId: creatorId, body: { name } }: CreateRoomRequest,
     res: Response
 ) {
+    assertIsDefined(creatorId);
+
     const room = await createRoom({
         name,
         creatorId
     });
 
-    res.status(200).json();
+    res.status(200).json(room);
 }
 
 export async function update(
-    {
-        userId: creatorId,
-        params: { roomId },
-        body
-    }: Request<{}, { userId: string }, CreateRoomBody>,
-    res: Response,
-    next: NextFunction
+    { userId: creatorId, params: { roomId }, body }: UpdateRoomRequest,
+    res: Response
 ) {
-    try {
-        const updatedRoom = await updateRoom({ id: roomId, creatorId }, body);
+    assertIsDefined(creatorId);
+    assertIsDefined(roomId);
 
-        res.status(200).json(updatedRoom);
-    } catch (error) {
-        next(error);
-    }
+    const updatedRoom = await updateRoom({ id: roomId, creatorId }, body);
+
+    res.status(200).json(updatedRoom);
 }

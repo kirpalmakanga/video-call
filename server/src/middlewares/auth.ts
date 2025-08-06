@@ -8,7 +8,7 @@ export async function isAuthenticated(
 ) {
     const { authorization } = req.headers;
 
-    if (!authorization) {
+    if (!authorization || !authorization.startsWith('Bearer ')) {
         res.status(401);
         throw new Error('Unauthorized.');
     }
@@ -21,10 +21,6 @@ export async function isAuthenticated(
         }
     } catch (err) {
         res.status(401);
-
-        if (err.name === 'TokenExpiredError') {
-            throw new Error(err.name);
-        }
 
         throw new Error('Unauthorized.');
     }
