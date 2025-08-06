@@ -22,14 +22,14 @@ export default function startSocketServer(
             const token = getAccessToken(socket);
 
             if (!token) {
-                throw new Error('Unauthorized.');
+                throw new Error('unauthorized');
             }
 
             await authenticate(socket.handshake.auth.token);
 
             next();
         } catch (error) {
-            next(error as Error);
+            next(new Error('unauthorized'));
         }
     });
 

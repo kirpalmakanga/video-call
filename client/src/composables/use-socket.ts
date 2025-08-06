@@ -2,6 +2,7 @@ import { onBeforeUnmount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from './store/use-auth-store';
+import { delay } from '../utils/helpers';
 
 interface EmissionsPayloads {
     connectParticipant: {
@@ -78,6 +79,7 @@ let socket: Socket;
 
 export function useSocket() {
     const authStore = useAuthStore();
+    const { refreshAccessToken } = authStore;
     const { accessToken } = storeToRefs(authStore);
 
     const subscriptions = new Map<SubscriptionEvent, Function>();
@@ -85,8 +87,22 @@ export function useSocket() {
     function getSocket() {
         if (!socket) {
             socket = io(import.meta.env.VITE_API_URI, {
-                auth: (cb) => cb({ token: accessToken.value })
+                reconnectionDelay: 5000,
+                auth: { token: accessToken }
             });
+
+            let reconnectionAttempts = socket.on(
+                'connect_error',
+                async (err) => {
+                    if (err.message === 'unauthorized') {
+                        const accessToken = await refreshAccessToken();
+
+                        socket.auth = { token: accessToken };
+
+                        socket.connect();
+                    }
+                }
+            );
         }
 
         return socket;
