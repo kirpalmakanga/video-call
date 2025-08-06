@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useFullscreen } from '@vueuse/core';
+import { useFullscreen, useOnline } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 
 import Placeholder from '../components/base/Placeholder.vue';
@@ -40,6 +40,8 @@ const { fullName } = storeToRefs(authStore);
 const settingsStore = useSettingsStore();
 const { audioDeviceId, videoDeviceId, isAudioEnabled, isVideoEnabled } =
     storeToRefs(settingsStore);
+
+const isOnline = useOnline();
 
 const state = reactive<State>({
     viewMode: 'sidebar',
@@ -133,6 +135,13 @@ onMounted(() => {
 
 <template>
     <section class="flex flex-col grow gap-4 p-4">
+        <UAlert
+            v-if="!isOnline"
+            color="error"
+            title="Offline: please check your internet connection."
+            icon="i-mdi-wifi-strength-off-outline"
+        />
+
         <template v-if="isLoading">
             <USkeleton class="grow" />
 
