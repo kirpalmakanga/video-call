@@ -2,7 +2,6 @@ import { onBeforeUnmount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from './store/use-auth-store';
-import { delay } from '../utils/helpers';
 
 interface EmissionsPayloads {
     connectParticipant: {
