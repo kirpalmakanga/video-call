@@ -53,13 +53,18 @@ export default function startSocketServer(
 
             socket.on(
                 'disconnectParticipant',
-                ({
+                async ({
                     roomId,
                     participantId
                 }: {
                     roomId: string;
                     participantId: string;
                 }) => {
+                    await Promise.all([
+                        socket.leave(roomId),
+                        socket.leave(`${roomId}_${participantId}`)
+                    ]);
+
                     socket
                         .to(roomId)
                         .emit('participantDisconnected', { participantId });
