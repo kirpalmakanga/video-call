@@ -49,7 +49,7 @@ type EmittedEvent = keyof EmissionsPayloads;
 interface SubscriptionPayloads {
     participantSynced: { participant: ClientParticipant };
     participantConnected: {
-        senderParticipantId: string;
+        participantId: string;
     };
     participantDisconnected: { participantId: string };
     connectedToRoom: never;

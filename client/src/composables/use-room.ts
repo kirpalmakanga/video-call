@@ -146,16 +146,16 @@ export function useRoom(
         }
     });
 
-    subscribe('participantConnected', async ({ senderParticipantId }) => {
+    subscribe('participantConnected', async ({ participantId }) => {
         syncLocalParticipant();
 
-        connectToPeer(senderParticipantId);
+        connectToPeer(participantId);
 
         emit('offer', {
             roomId,
             senderParticipantId: localParticipant.id,
-            targetParticipantId: senderParticipantId,
-            offer: await createOffer(senderParticipantId)
+            targetParticipantId: participantId,
+            offer: await createOffer(participantId)
         });
     });
 

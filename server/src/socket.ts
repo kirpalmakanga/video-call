@@ -61,6 +61,17 @@ export default function startSocketServer(
 
         const userId = await getUserIdFromToken(token);
 
+        function handleParticipantDisconnected(
+            participantId: string,
+            roomId: string
+        ) {
+            socket
+                .to(`room:${roomId}`)
+                .emit('participantDisconnected', { participantId });
+
+            syncUserCounts();
+        }
+
         socket.on('joinUserCounts', async () => {
             await socket.join('userCounts');
 
@@ -86,19 +97,13 @@ export default function startSocketServer(
                 ]);
 
                 socket.once('disconnect', () => {
-                    socket
-                        .to(`room:${roomId}`)
-                        .emit('participantDisconnected', {
-                            participantId: participant.id
-                        });
-
-                    syncUserCounts();
+                    handleParticipantDisconnected(participant.id, roomId);
                 });
 
                 socket.emit('connectedToRoom');
 
                 socket.to(`room:${roomId}`).emit('participantConnected', {
-                    senderParticipantId: participant.id
+                    participantId: participant.id
                 });
 
                 syncUserCounts();
@@ -119,11 +124,7 @@ export default function startSocketServer(
                     socket.leave(`participant:${participantId}:room:${roomId}`)
                 ]);
 
-                socket
-                    .to(`room:${roomId}`)
-                    .emit('participantDisconnected', { participantId });
-
-                syncUserCounts();
+                handleParticipantDisconnected(participantId, roomId);
             }
         );
 
