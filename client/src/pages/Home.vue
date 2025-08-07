@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import Placeholder from '../components/base/Placeholder.vue';
 import RoomsGrid from '../components/RoomsGrid.vue';
 import RoomsGridSkeleton from '../components/RoomsGridSkeleton.vue';
