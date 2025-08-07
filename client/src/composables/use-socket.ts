@@ -93,18 +93,15 @@ export function useSocket() {
                 auth: { token: accessToken.value }
             });
 
-            let reconnectionAttempts = socket.on(
-                'connect_error',
-                async (err) => {
-                    if (err.message === 'unauthorized') {
-                        const accessToken = await refreshAccessToken();
+            socket.on('connect_error', async (err) => {
+                if (err.message === 'unauthorized') {
+                    const accessToken = await refreshAccessToken();
 
-                        socket.auth = { token: accessToken };
+                    socket.auth = { token: accessToken };
 
-                        socket.connect();
-                    }
+                    socket.connect();
                 }
-            );
+            });
         }
 
         return socket;
