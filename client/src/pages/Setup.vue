@@ -55,6 +55,14 @@ const { data: room, isLoading } = useRoomQuery(roomId as string);
                 >
                     Start
                 </UButton>
+
+                <UButton
+                    color="error"
+                    icon="i-mdi-phone-off"
+                    @click="router.replace('/')"
+                >
+                    Leave
+                </UButton>
             </div>
         </div>
 
