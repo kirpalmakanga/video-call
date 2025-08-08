@@ -27,7 +27,7 @@ const currentRooms = computed(() => {
 <template>
     <div class="flex grow md:justify-center">
         <div class="md:rounded p-4 w-full">
-            <h1 class="text-neutral-100 mb-4">Available rooms</h1>
+            <h1 class="font-bold text-neutral-100 mb-4">Available rooms</h1>
 
             <RoomsGridSkeleton v-if="isLoading" />
 

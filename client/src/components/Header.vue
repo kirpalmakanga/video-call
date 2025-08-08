@@ -32,7 +32,7 @@ const menuItems: DropdownMenuItem[] = [
         <div
             class="container mx-auto flex items-center justify-between h-12 px-4"
         >
-            <div>VCall</div>
+            <div class="font-bold">VCall</div>
 
             <UDropdownMenu
                 :items="menuItems"
