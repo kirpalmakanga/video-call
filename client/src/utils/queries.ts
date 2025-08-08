@@ -1,5 +1,7 @@
-import { useQuery } from '@pinia/colada';
-import { getAllRooms, getRoomById } from './api';
+import { useMutation, useQuery, useQueryCache } from '@pinia/colada';
+import { createRoom, getAllRooms, getRoomById } from './api';
+
+const queryCache = useQueryCache();
 
 export function useRoomsListQuery() {
     return useQuery({
@@ -12,5 +14,14 @@ export function useRoomQuery(roomId: string) {
     return useQuery({
         key: () => ['room', roomId],
         query: () => getRoomById(roomId)
+    });
+}
+
+export function useCreateRoomMutation() {
+    return useMutation({
+        mutation: (body: RoomFormData) => createRoom(body),
+        onSettled: async () => {
+            await queryCache.invalidateQueries({ key: ['rooms'], exact: true });
+        }
     });
 }

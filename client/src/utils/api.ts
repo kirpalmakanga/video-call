@@ -27,11 +27,23 @@ export async function refreshAccessToken(refreshToken: string) {
 export async function getAllRooms() {
     const { data } = await axios.get('/rooms');
 
-    return data as ClientRoom[];
+    return data as Room[];
 }
 
 export async function getRoomById(roomId: string) {
     const { data } = await axios.get(`/rooms/${roomId}`);
 
-    return data as ClientRoom;
+    return data as Room;
+}
+
+export async function createRoom(body: RoomFormData) {
+    const { data } = await axios.post('/rooms', body);
+
+    return data as Room;
+}
+
+export async function updateRoom(roomId: string, body: RoomFormData) {
+    const { data } = await axios.put(`/rooms/${roomId}`, body);
+
+    return data as Room;
 }

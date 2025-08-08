@@ -4,6 +4,7 @@ import Placeholder from '../components/base/Placeholder.vue';
 import RoomsGrid from '../components/RoomsGrid.vue';
 import RoomsGridSkeleton from '../components/RoomsGridSkeleton.vue';
 import { useRoomsListQuery } from '../utils/queries';
+import CreateRoomButton from '../components/CreateRoomButton.vue';
 
 const { data: rooms, isLoading } = useRoomsListQuery();
 
@@ -27,8 +28,11 @@ const currentRooms = computed(() => {
 <template>
     <div class="flex grow md:justify-center">
         <div class="md:rounded p-4 w-full">
-            <h1 class="font-bold text-neutral-100 mb-4">Available rooms</h1>
+            <div class="flex items-center gap-2 mb-4">
+                <h1 class="grow font-bold text-neutral-100">Available rooms</h1>
 
+                <CreateRoomButton />
+            </div>
             <RoomsGridSkeleton v-if="isLoading" />
 
             <template v-else-if="rooms?.length">
