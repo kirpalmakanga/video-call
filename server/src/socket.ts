@@ -153,7 +153,7 @@ export default function startSocketServer(
             }: {
                 roomId: string;
                 senderParticipantId: string;
-                participant: Omit<Partial<ClientParticipant>, 'stream'>;
+                participant: Participant;
             }) => {
                 socket
                     .to(`room:${roomId}`)
