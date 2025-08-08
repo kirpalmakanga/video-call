@@ -13,7 +13,7 @@ export type RegisterSchema = InferType<typeof registerSchema>;
 
 export const loginSchema = object({
     email: string().email('Invalid email').required('Email is required'),
-    password: string().required('Required')
+    password: string().required('Password is required')
 }).exact();
 
 export type LoginSchema = InferType<typeof loginSchema>;
