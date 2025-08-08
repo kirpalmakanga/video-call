@@ -5,7 +5,6 @@ import {
     getRoomById,
     updateRoom
 } from '../services/rooms';
-import { assertIsDefined } from '../../../utils/assert';
 
 export async function index(_: Request, res: Response) {
     const rooms = await getAllRooms();
@@ -24,35 +23,42 @@ export async function show({ params: { roomId } }: Request, res: Response) {
 }
 
 interface CreateRoomRequest extends Request {
+    userId: string;
     body: { name: string };
 }
 
 interface UpdateRoomRequest extends CreateRoomRequest {
+    userId: string;
     params: { roomId: string };
 }
 
 export async function insert(
     { userId: creatorId, body: { name } }: CreateRoomRequest,
-    res: Response
+    res: Response,
+    next: NextFunction
 ) {
-    assertIsDefined(creatorId);
+    try {
+        const room = await createRoom({
+            name,
+            creatorId
+        });
 
-    const room = await createRoom({
-        name,
-        creatorId
-    });
-
-    res.status(200).json(room);
+        res.status(200).json(room);
+    } catch (error) {
+        next(error);
+    }
 }
 
 export async function update(
     { userId: creatorId, params: { roomId }, body }: UpdateRoomRequest,
-    res: Response
+    res: Response,
+    next: NextFunction
 ) {
-    assertIsDefined(creatorId);
-    assertIsDefined(roomId);
+    try {
+        const updatedRoom = await updateRoom({ id: roomId, creatorId }, body);
 
-    const updatedRoom = await updateRoom({ id: roomId, creatorId }, body);
-
-    res.status(200).json(updatedRoom);
+        res.status(200).json(updatedRoom);
+    } catch (error) {
+        next(error);
+    }
 }

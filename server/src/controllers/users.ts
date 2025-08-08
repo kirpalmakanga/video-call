@@ -1,16 +1,21 @@
-import type { Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { getUserById } from '../services/users';
 import { omit } from '../utils/helpers';
-import { assertIsDefined } from '../../../utils/assert';
 
-export async function profile({ userId }: Request, res: Response) {
-    assertIsDefined(userId);
+export async function profile(
+    { userId }: Request,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const user = await getUserById(userId as string);
 
-    const user = await getUserById(userId);
+        if (user) {
+            return res.json(omit(user, 'password', 'createdAt', 'updatedAt'));
+        }
 
-    if (user) {
-        return res.json(omit(user, 'password', 'createdAt', 'updatedAt'));
+        res.status(404);
+    } catch (error) {
+        next(error);
     }
-
-    res.status(404);
 }

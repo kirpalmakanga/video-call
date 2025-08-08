@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-export function notFound(req: Request, res: Response, next: NextFunction) {
+export function notFound(_: Request, res: Response, next: NextFunction) {
     const error = new Error(`Not found.`);
 
     res.status(404);
@@ -9,18 +9,26 @@ export function notFound(req: Request, res: Response, next: NextFunction) {
 }
 
 export function errorHandler(
-    { message, stack }: Error,
-    req: Request,
-    res: Response
+    error: Error,
+    _: Request,
+    res: Response,
+    next: NextFunction
 ) {
-    const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+    if (error) {
+        const { message, stack } = error;
+        const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
 
-    res.status(statusCode);
+        console.error(stack);
 
-    res.json({
-        message,
-        ...(process.env.NODE_ENV !== 'production' && {
-            stack
-        })
-    });
+        res.status(statusCode);
+
+        res.json({
+            error: message,
+            ...(process.env.NODE_ENV !== 'production' && {
+                stack
+            })
+        });
+    }
+
+    next();
 }
