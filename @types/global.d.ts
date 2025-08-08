@@ -48,8 +48,12 @@ declare global {
     interface Room {
         id: string;
         name: string;
-        participants: Participant[];
+        creatorId: string;
+        createdAt: Date;
+        updatedAt: Date;
     }
 
-    type ClientRoom = Pick<Room, 'id' | 'name'> & { participantCount: number };
+    interface RoomFormData {
+        name: string;
+    }
 }
