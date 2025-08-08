@@ -1,27 +1,25 @@
 import { object, string, type InferType } from 'yup';
 
 export const registerSchema = object({
-    firstName: string().required('Required'),
-    lastName: string().required('Required'),
-    email: string().email('Invalid email').required('Required'),
+    firstName: string().required('First name is required'),
+    lastName: string().required('Last name is required'),
+    email: string().email('Invalid email').required('Email is required'),
     password: string()
-        .min(8, 'Must be at least 8 characters')
-        .required('Required')
+        .min(8, 'Password must be at least 8 characters')
+        .required('Password is required')
 }).exact();
 
 export type RegisterSchema = InferType<typeof registerSchema>;
 
 export const loginSchema = object({
-    email: string().email('Invalid email').required('Required'),
-    password: string()
-        .min(8, 'Must be at least 8 characters')
-        .required('Required')
+    email: string().email('Invalid email').required('Email is required'),
+    password: string().required('Required')
 }).exact();
 
 export type LoginSchema = InferType<typeof loginSchema>;
 
 export const refreshTokenSchema = object({
-    refreshToken: string().required('Required')
+    refreshToken: string().required('Refresh token required')
 }).exact();
 
 export type RefreshTokenSchema = InferType<typeof refreshTokenSchema>;

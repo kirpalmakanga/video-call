@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { getUserIdFromToken } from '../utils/jwt';
+import { getAuthToken } from '../utils/helpers';
 
 export async function isAuthenticated(
     req: Request,
@@ -7,21 +8,9 @@ export async function isAuthenticated(
     next: NextFunction
 ) {
     try {
-        const {
-            headers: { authorization }
-        } = req;
+        const token = getAuthToken(req);
 
-        if (!authorization || !authorization.startsWith('Bearer ')) {
-            throw new Error('Invalid authorization');
-        }
-
-        const token = authorization.split(' ')[1];
-
-        if (token) {
-            req.userId = await getUserIdFromToken(token);
-        } else {
-            throw new Error('Invalid token');
-        }
+        req.userId = await getUserIdFromToken(token);
     } catch (err) {
         res.status(401);
 

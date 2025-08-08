@@ -1,10 +1,21 @@
-import type { RequestHandler } from 'express';
-import { type AnySchema } from 'yup';
+import type { Request, RequestHandler } from 'express';
+import { object, type AnySchema } from 'yup';
 
-export function validate(schema: AnySchema): RequestHandler {
-    return async ({ body }, res, next) => {
+type ValidateOptions = {
+    [key in keyof Request]?: AnySchema;
+};
+
+export function validateRequest(options: ValidateOptions): RequestHandler {
+    return async (req, res, next) => {
         try {
-            await schema.validate(body, { strict: true, abortEarly: false });
+            if (!Object.keys(options).length) {
+                throw new Error('Invalid request validation schema.');
+            }
+
+            await object(options).validate(req, {
+                strict: true,
+                abortEarly: false
+            });
 
             next();
         } catch (error) {
