@@ -4,9 +4,8 @@ import type { InferType } from 'yup';
 import { reactive } from 'vue';
 import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
 import { useAuthStore } from '../composables/store/use-auth-store';
-import { useRouter } from 'vue-router';
+import type { AxiosError } from 'axios';
 
-const router = useRouter();
 const toast = useToast();
 
 const authStore = useAuthStore();
@@ -29,12 +28,12 @@ const state = reactive<Schema>({
 async function onSubmit({ data }: FormSubmitEvent<Schema>) {
     try {
         await logIn(data);
-    } catch (error) {
-        console.error(error);
-
+    } catch (error: any) {
         toast.add({
-            title: 'Error',
-            description: `Couldn't log in, check your credentials.`,
+            title: 'Failed signing in.',
+            description:
+                error?.response?.data.error ||
+                `Couldn't log in, verify your email and password.`,
             color: 'error'
         });
     }
@@ -44,7 +43,7 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
 <template>
     <div class="flex grow items-center justify-center">
         <div class="bg-gray-900 rounded p-4 md:w-sm shadow">
-            <h1 class="mb-6 font-bold text-center">Log in</h1>
+            <h1 class="mb-6 font-bold text-center">Sign in</h1>
 
             <UForm
                 :schema="schema"

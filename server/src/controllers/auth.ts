@@ -74,7 +74,7 @@ export async function login(
         if (!existingUser) {
             res.status(403);
 
-            throw new Error('Invalid login credentials.');
+            throw new Error('Unknown user email.');
         }
 
         const validPassword = await bcrypt.compare(
@@ -85,7 +85,7 @@ export async function login(
         if (!validPassword) {
             res.status(403);
 
-            throw new Error('Invalid login credentials.');
+            throw new Error('Invalid password.');
         }
 
         const { accessToken, refreshToken } = await generateTokens(

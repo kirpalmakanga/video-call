@@ -33,12 +33,12 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
         await register(data);
 
         router.replace('/');
-    } catch (error) {
-        console.error(error);
-
+    } catch (error: any) {
         toast.add({
-            title: 'Error',
-            description: `Couldn't register, check your credentials.`,
+            title: 'Registering failed',
+            description:
+                error?.response?.data.error ||
+                `Couldn't register, check your credentials.`,
             color: 'error'
         });
     }
