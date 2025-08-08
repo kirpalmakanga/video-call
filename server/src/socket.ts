@@ -17,27 +17,6 @@ export default function startSocketServer(
 ) {
     const io = new SocketServer(httpServer, socketOptions);
 
-    function syncUserCounts() {
-        const counts = [...io.sockets.adapter.rooms].reduce(
-            (obj, [key, socketIds]) => {
-                if (!key.startsWith('room:')) {
-                    return obj;
-                }
-
-                const roomId = key.split(':')[1];
-
-                if (roomId) {
-                    obj[roomId] = socketIds.size;
-                }
-
-                return obj;
-            },
-            {} as Record<string, number>
-        );
-
-        io.in('userCounts').emit('syncUserCounts', counts);
-    }
-
     io.use(async (socket, next) => {
         try {
             const token = getAccessToken(socket);
@@ -61,27 +40,6 @@ export default function startSocketServer(
 
         const userId = await getUserIdFromToken(token);
 
-        function handleParticipantDisconnected(
-            participantId: string,
-            roomId: string
-        ) {
-            socket
-                .to(`room:${roomId}`)
-                .emit('participantDisconnected', { participantId });
-
-            syncUserCounts();
-        }
-
-        socket.on('joinUserCounts', async () => {
-            await socket.join('userCounts');
-
-            syncUserCounts();
-        });
-
-        socket.on('leaveUserCounts', () => {
-            socket.leave('userCounts');
-        });
-
         socket.on(
             'connectParticipant',
             async ({
@@ -97,7 +55,11 @@ export default function startSocketServer(
                 ]);
 
                 socket.once('disconnect', () => {
-                    handleParticipantDisconnected(participant.id, roomId);
+                    socket
+                        .to(`room:${roomId}`)
+                        .emit('participantDisconnected', {
+                            participantId: participant.id
+                        });
                 });
 
                 socket.emit('connectedToRoom');
@@ -105,8 +67,6 @@ export default function startSocketServer(
                 socket.to(`room:${roomId}`).emit('participantConnected', {
                     participantId: participant.id
                 });
-
-                syncUserCounts();
             }
         );
 
@@ -124,7 +84,9 @@ export default function startSocketServer(
                     socket.leave(`participant:${participantId}:room:${roomId}`)
                 ]);
 
-                handleParticipantDisconnected(participantId, roomId);
+                socket.to(`room:${roomId}`).emit('participantDisconnected', {
+                    participantId
+                });
             }
         );
 

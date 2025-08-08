@@ -11,16 +11,14 @@ import { errorHandler, notFound } from './middlewares/errors';
 
 const { PORT, CLIENT_URI } = process.env;
 
+const corsOptions = { origin: [CLIENT_URI as string] };
+
 const app = express();
 
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(helmet());
-app.use(
-    cors({
-        origin: [CLIENT_URI as string]
-    })
-);
+app.use(cors(corsOptions));
 
 app.use('/auth', authRoutes);
 app.use('/users', usersRoutes);
@@ -36,7 +34,5 @@ const server = app.listen(PORT, () => {
 });
 
 startSocket(server, {
-    cors: {
-        origin: CLIENT_URI
-    }
+    cors: corsOptions
 });

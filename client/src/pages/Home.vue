@@ -1,28 +1,10 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
 import Placeholder from '../components/base/Placeholder.vue';
 import RoomsGrid from '../components/RoomsGrid.vue';
 import RoomsGridSkeleton from '../components/RoomsGridSkeleton.vue';
-import { useSocket } from '../composables/use-socket';
 import { useRoomsListQuery } from '../utils/queries';
 
-const { emit, subscribe } = useSocket();
-
 const { data: rooms, isLoading } = useRoomsListQuery();
-
-const userCounts = ref<Record<string, number>>({});
-
-function onUserCountsSynced(data: Record<string, number>) {
-    userCounts.value = data;
-}
-
-onMounted(() => {
-    subscribe('syncUserCounts', onUserCountsSynced);
-
-    emit('joinUserCounts');
-});
-
-onBeforeUnmount(() => emit('leaveUserCounts'));
 </script>
 
 <template>
@@ -32,11 +14,7 @@ onBeforeUnmount(() => emit('leaveUserCounts'));
 
             <RoomsGridSkeleton v-if="isLoading" />
 
-            <RoomsGrid
-                v-else-if="rooms?.length"
-                :rooms="rooms"
-                :user-counts="userCounts"
-            />
+            <RoomsGrid v-else-if="rooms?.length" :rooms="rooms" />
 
             <Placeholder
                 v-else

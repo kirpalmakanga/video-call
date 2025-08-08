@@ -46,7 +46,7 @@ export interface EmissionsPayloads {
 
 type EmittedEvent = keyof EmissionsPayloads;
 
-interface SubscriptionPayloads {
+export interface SubscriptionPayloads {
     disconnect: never;
     connect: never;
     participantSynced: { participant: ClientParticipant };
@@ -72,7 +72,6 @@ interface SubscriptionPayloads {
         sdpMLineIndex: number;
         candidate: string;
     };
-    syncUserCounts: Record<string, number>;
 }
 
 type SubscriptionEvent = keyof SubscriptionPayloads;

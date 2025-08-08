@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router';
+import RoomsGridItem from './RoomsGridItem.vue';
 
-defineProps<{ rooms: Room[]; userCounts: Record<string, number> }>();
+defineProps<{ rooms: Room[] }>();
 </script>
 
 <template>
@@ -9,30 +9,7 @@ defineProps<{ rooms: Room[]; userCounts: Record<string, number> }>();
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
     >
         <li v-for="{ id, name } of rooms">
-            <RouterLink
-                class="group flex flex-col items-center text-neutral-100 rounded transition-colors overflow-hidden"
-                :to="`/room/${id}/start`"
-            >
-                <span
-                    class="aspect-video bg-gray-900 flex items-center justify-center w-full"
-                >
-                    <UIcon class="size-8" name="i-mdi-account-group" />
-                </span>
-
-                <span
-                    class="flex flex-col grow bg-gray-700 group-hover:bg-gray-600 w-full p-3 transition-colors"
-                >
-                    <span>{{ name }}</span>
-                    <span class="flex items-center opacity-70">
-                        <UIcon
-                            class="size-5 mr-1"
-                            name="i-mdi-account-multiple"
-                            aria-label="participants"
-                        />
-                        {{ userCounts[id] || 0 }}
-                    </span>
-                </span>
-            </RouterLink>
+            <RoomsGridItem :id="id" :name="name" />
         </li>
     </ul>
 </template>
