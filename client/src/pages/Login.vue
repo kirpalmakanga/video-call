@@ -4,7 +4,6 @@ import type { InferType } from 'yup';
 import { reactive } from 'vue';
 import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
 import { useAuthStore } from '../composables/store/use-auth-store';
-import type { AxiosError } from 'axios';
 
 const toast = useToast();
 

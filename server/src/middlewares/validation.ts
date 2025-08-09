@@ -1,5 +1,5 @@
 import type { Request, RequestHandler } from 'express';
-import { object, type AnySchema } from 'yup';
+import { object, type AnySchema, ValidationError } from 'yup';
 
 type ValidateOptions = {
     [key in keyof Request]?: AnySchema;
@@ -19,7 +19,17 @@ export function validateRequest(options: ValidateOptions): RequestHandler {
 
             next();
         } catch (error) {
-            res.status(400).json({ errors: error.errors });
+            res.status(400).json({
+                ...(error instanceof Error && {
+                    error: error.message,
+                    ...(process.env.NODE_ENV !== 'production' && {
+                        stack: error.stack
+                    })
+                }),
+                ...(error instanceof ValidationError && {
+                    errors: error.errors
+                })
+            });
         }
     };
 }
