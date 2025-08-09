@@ -3,49 +3,6 @@ import { storeToRefs } from 'pinia';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from './store/use-auth-store';
 
-export interface EmissionsPayloads {
-    connectParticipant: {
-        roomId: string;
-        participant: Participant;
-    };
-    disconnectParticipant: {
-        roomId: string;
-        participantId: string;
-    };
-    offer: {
-        roomId: string;
-        senderParticipantId: string;
-        targetParticipantId: string;
-        offer: RTCSessionDescriptionInit;
-    };
-    answer: {
-        roomId: string;
-        senderParticipantId: string;
-        targetParticipantId: string;
-        answer: RTCSessionDescriptionInit;
-    };
-    iceCandidate: {
-        senderParticipantId: string;
-        targetParticipantId: string;
-        roomId: string;
-        sdpMLineIndex: number | null | undefined;
-        candidate: string | undefined;
-    };
-    toggleMicrophone: {
-        roomId: string;
-        senderParticipantId: string;
-        isMuted: boolean;
-    };
-    syncParticipant: {
-        roomId: string;
-        participant: Participant;
-    };
-    joinUserCounts: never;
-    leaveUserCounts: never;
-}
-
-type EmittedEvent = keyof EmissionsPayloads;
-
 let socket: Socket;
 
 export function useSocket() {
