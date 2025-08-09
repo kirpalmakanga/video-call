@@ -187,8 +187,8 @@ export function useRTCSession(
         },
         async addIceCandidate(
             peerId: string,
-            sdpMLineIndex: number,
-            candidate: string
+            sdpMLineIndex: number | null | undefined,
+            candidate: string | undefined
         ) {
             const peer = getPeer(peerId);
 

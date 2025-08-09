@@ -2,83 +2,108 @@ import type { Server } from 'http';
 import {
     Socket,
     Server as SocketServer,
+    type ExtendedError,
     type ServerOptions as SocketServerOptions
 } from 'socket.io';
+import { type AnySchema } from 'yup';
 import { authenticate, getUserIdFromToken } from './utils/jwt';
 import { assertIsDefined } from '../../utils/assert';
+import { connectedParticipantSchema } from './validation/socket';
 
-function getAccessToken(socket: Socket): string | undefined {
+const { NODE_ENV } = process.env;
+
+function getSocketAuthToken(socket: Socket): string | undefined {
     return socket.handshake.auth.token;
 }
+
+async function authorizeSocket(
+    socket: Socket,
+    next: (err?: ExtendedError) => void
+) {
+    try {
+        const token = getSocketAuthToken(socket);
+
+        if (!token) {
+            throw new Error('unauthorized');
+        }
+
+        await authenticate(socket.handshake.auth.token);
+
+        next();
+    } catch (error) {
+        next(new Error('unauthorized'));
+    }
+}
+
+// function createEventHandler<T>(
+//     socket: Socket,
+//     {
+//         event,
+//         schema,
+//         callback
+//     }: { event: string; schema: AnySchema; callback: (payload: T) => void }
+// ) {
+//     return socket.on(event, async (payload: T) => {
+//         try {
+//             await schema.validate(payload);
+
+//             callback(payload);
+//         } catch (error) {
+//             socket.emit('error', {
+//                 event,
+//                 error: error.message,
+//                 ...(NODE_ENV !== 'production' && { stack: error.stack })
+//             });
+//         }
+//     });
+// }
 
 export default function startSocketServer(
     httpServer: Server,
     socketOptions: Partial<SocketServerOptions>
 ) {
-    const io = new SocketServer(httpServer, socketOptions);
+    const io = new SocketServer<ClientToServerEvents, ServerToClientEvents>(
+        httpServer,
+        socketOptions
+    );
 
-    io.use(async (socket, next) => {
-        try {
-            const token = getAccessToken(socket);
-
-            if (!token) {
-                throw new Error('unauthorized');
-            }
-
-            await authenticate(socket.handshake.auth.token);
-
-            next();
-        } catch (error) {
-            next(new Error('unauthorized'));
-        }
-    });
+    io.use(authorizeSocket);
 
     io.on('connection', async (socket) => {
-        const token = getAccessToken(socket);
+        const token = getSocketAuthToken(socket);
 
         assertIsDefined(token);
 
         const userId = await getUserIdFromToken(token);
 
-        socket.on(
-            'connectParticipant',
-            async ({
-                roomId,
-                participant
-            }: {
-                roomId: string;
-                participant: Participant;
-            }) => {
-                await Promise.all([
-                    socket.join(`room:${roomId}`),
-                    socket.join(`participant:${participant.id}:room:${roomId}`)
-                ]);
+        // createEventHandler(socket, {
+        //     event: 'connectParticipant',
+        //     schema: connectedParticipantSchema,
+        //     async callback({ roomId, participant }) {}
+        // });
 
-                socket.once('disconnect', () => {
-                    socket
-                        .to(`room:${roomId}`)
-                        .emit('participantDisconnected', {
-                            participantId: participant.id
-                        });
-                });
+        socket.on('connectParticipant', async ({ roomId, participant }) => {
+            await Promise.all([
+                socket.join(`room:${roomId}`),
+                socket.join(`participant:${participant.id}:room:${roomId}`)
+            ]);
 
-                socket.emit('connectedToRoom');
-
-                socket.to(`room:${roomId}`).emit('participantConnected', {
+            socket.once('disconnect', () => {
+                socket.to(`room:${roomId}`).emit('participantDisconnected', {
                     participantId: participant.id
                 });
-            }
-        );
+            });
+
+            socket.emit('connectedToRoom');
+
+            socket.to(`room:${roomId}`).emit('participantConnected', {
+                participantId: participant.id
+            });
+        });
 
         socket.on(
             'disconnectParticipant',
-            async ({
-                roomId,
-                participantId
-            }: {
-                roomId: string;
-                participantId: string;
-            }) => {
+            async ({ roomId, participantId }) => {
                 await Promise.all([
                     socket.leave(`room:${roomId}`),
                     socket.leave(`participant:${participantId}:room:${roomId}`)
@@ -90,36 +115,15 @@ export default function startSocketServer(
             }
         );
 
-        socket.on(
-            'offer',
-            async ({
-                roomId,
-                targetParticipantId,
-                ...data
-            }: {
-                roomId: string;
-                senderParticipantId: string;
-                targetParticipantId: string;
-                offer: RTCSessionDescriptionInit;
-            }) => {
-                socket
-                    .to(`participant:${targetParticipantId}:room:${roomId}`)
-                    .emit('incomingOffer', data);
-            }
-        );
+        socket.on('offer', async ({ roomId, targetParticipantId, ...data }) => {
+            socket
+                .to(`participant:${targetParticipantId}:room:${roomId}`)
+                .emit('incomingOffer', data);
+        });
 
         socket.on(
             'answer',
-            async ({
-                roomId,
-                targetParticipantId,
-                ...data
-            }: {
-                roomId: string;
-                senderParticipantId: string;
-                targetParticipantId: string;
-                answer: RTCSessionDescriptionInit;
-            }) => {
+            async ({ roomId, targetParticipantId, ...data }) => {
                 socket
                     .to(`participant:${targetParticipantId}:room:${roomId}`)
                     .emit('incomingAnswer', data);
@@ -128,37 +132,15 @@ export default function startSocketServer(
 
         socket.on(
             'iceCandidate',
-            async ({
-                roomId,
-                targetParticipantId,
-                ...data
-            }: {
-                roomId: string;
-                senderParticipantId: string;
-                targetParticipantId: string;
-                sdpMLineIndex: number;
-                candidate: string;
-            }) => {
+            async ({ roomId, targetParticipantId, ...data }) => {
                 socket
                     .to(`participant:${targetParticipantId}:room:${roomId}`)
                     .emit('incomingIceCandidate', data);
             }
         );
 
-        socket.on(
-            'syncParticipant',
-            async ({
-                roomId,
-                participant
-            }: {
-                roomId: string;
-                senderParticipantId: string;
-                participant: Participant;
-            }) => {
-                socket
-                    .to(`room:${roomId}`)
-                    .emit('participantSynced', { participant });
-            }
-        );
+        socket.on('syncParticipant', async ({ roomId, participant }) => {
+            socket.to(`room:${roomId}`).emit('participantSynced', participant);
+        });
     });
 }

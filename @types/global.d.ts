@@ -56,4 +56,74 @@ declare global {
     interface RoomFormData {
         name: string;
     }
+
+    /** Socket: */
+    interface ClientToServerEvents {
+        connectParticipant: (payload: {
+            roomId: string;
+            participant: Participant;
+        }) => void;
+        disconnectParticipant: (payload: {
+            roomId: string;
+            participantId: string;
+        }) => void;
+        offer: (payload: {
+            roomId: string;
+            senderParticipantId: string;
+            targetParticipantId: string;
+            offer: RTCSessionDescriptionInit;
+        }) => void;
+        answer: (payload: {
+            roomId: string;
+            senderParticipantId: string;
+            targetParticipantId: string;
+            answer: RTCSessionDescriptionInit;
+        }) => void;
+        iceCandidate: (payload: {
+            senderParticipantId: string;
+            targetParticipantId: string;
+            roomId: string;
+            sdpMLineIndex: number | null | undefined;
+            candidate: string | undefined;
+        }) => void;
+        toggleMicrophone: (payload: {
+            roomId: string;
+            senderParticipantId: string;
+            isMuted: boolean;
+        }) => void;
+        syncParticipant: (payload: {
+            roomId: string;
+            participant: Participant;
+        }) => void;
+    }
+
+    type ClientToServerEventId = keyof ClientToServerEvents;
+
+    type ClientToServerEventPayload<K extends ClientToServerEventId> =
+        Parameters<ClientToServerEvents[K]>[0];
+
+    interface ServerToClientEvents {
+        disconnect: () => void;
+        connect: () => void;
+        unauthorized: () => void;
+        participantSynced: (payload: ClientParticipant) => void;
+        participantConnected: (payload: { participantId: string }) => void;
+        participantDisconnected: (payload: { participantId: string }) => void;
+        connectedToRoom: () => void;
+        incomingOffer: (payload: {
+            senderParticipantId: string;
+            offer: RTCSessionDescriptionInit;
+        }) => void;
+        incomingAnswer: (payload: {
+            senderParticipantId: string;
+            answer: RTCSessionDescriptionInit;
+        }) => void;
+        incomingIceCandidate: (payload: {
+            senderParticipantId: string;
+            sdpMLineIndex: number | null | undefined;
+            candidate: string | undefined;
+        }) => void;
+    }
+
+    type ServerToClientEventId = keyof ServerToClientEvents;
 }

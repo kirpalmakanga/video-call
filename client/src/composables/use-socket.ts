@@ -38,43 +38,13 @@ export interface EmissionsPayloads {
     };
     syncParticipant: {
         roomId: string;
-        participant: Omit<Partial<ClientParticipant>, 'stream'>;
+        participant: Participant;
     };
     joinUserCounts: never;
     leaveUserCounts: never;
 }
 
 type EmittedEvent = keyof EmissionsPayloads;
-
-export interface SubscriptionPayloads {
-    disconnect: never;
-    connect: never;
-    participantSynced: { participant: ClientParticipant };
-    participantConnected: {
-        participantId: string;
-    };
-    participantDisconnected: { participantId: string };
-    connectedToRoom: never;
-    incomingOffer: {
-        roomId: string;
-        senderParticipantId: string;
-        targetParticipantId: string;
-        offer: RTCSessionDescriptionInit;
-    };
-    incomingAnswer: {
-        roomId: string;
-        senderParticipantId: string;
-        targetParticipantId: string;
-        answer: RTCSessionDescriptionInit;
-    };
-    incomingIceCandidate: {
-        senderParticipantId: string;
-        sdpMLineIndex: number;
-        candidate: string;
-    };
-}
-
-type SubscriptionEvent = keyof SubscriptionPayloads;
 
 let socket: Socket;
 
@@ -83,7 +53,7 @@ export function useSocket() {
     const { refreshAccessToken } = authStore;
     const { accessToken } = storeToRefs(authStore);
 
-    const subscriptions = new Map<SubscriptionEvent, Function>();
+    const subscriptions = new Map<ServerToClientEventId, Function>();
 
     function getSocket() {
         if (!socket) {
@@ -106,7 +76,7 @@ export function useSocket() {
         return socket;
     }
 
-    function removeSubscription(event: SubscriptionEvent) {
+    function removeSubscription(event: ServerToClientEventId) {
         const unsubscribe = subscriptions.get(event);
 
         if (unsubscribe) {
@@ -142,12 +112,15 @@ export function useSocket() {
                 socket.connect();
             }
         },
-        emit<E extends EmittedEvent>(event: E, data?: EmissionsPayloads[E]) {
+        emit<E extends ClientToServerEventId>(
+            event: E,
+            data?: ClientToServerEventPayload<E>
+        ) {
             getSocket().emit(event, data);
         },
-        subscribe<E extends SubscriptionEvent>(
+        subscribe<E extends keyof ServerToClientEvents>(
             event: E,
-            callback: (payload: SubscriptionPayloads[E]) => void
+            callback: ServerToClientEvents[E]
         ) {
             if (subscriptions.has(event)) {
                 throw new Error(
@@ -161,7 +134,7 @@ export function useSocket() {
                 subscriptions.set(event, () => socket.off(event, callback));
             }
         },
-        unsubscribe(event?: SubscriptionEvent) {
+        unsubscribe(event?: ServerToClientEventId) {
             if (event) {
                 removeSubscription(event);
             } else {

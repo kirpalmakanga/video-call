@@ -57,9 +57,9 @@ export function useRoom(
     } = useRTCSession(localStream, {
         onIceCandidate(peerId, candidate) {
             emit('iceCandidate', {
+                roomId,
                 senderParticipantId: localParticipant.id,
                 targetParticipantId: peerId,
-                roomId,
                 sdpMLineIndex: candidate.sdpMLineIndex,
                 candidate: candidate.candidate
             });
@@ -149,7 +149,7 @@ export function useRoom(
         isConnected.value = true;
     });
 
-    subscribe('participantSynced', async ({ participant }) => {
+    subscribe('participantSynced', async (participant) => {
         const { id: targetParticipantId } = participant;
 
         if (hasParticipant(targetParticipantId)) {
@@ -231,6 +231,7 @@ export function useRoom(
 
     return {
         isConnecting,
+        isReconnecting,
         participants: computed(() => [
             localParticipant,
             ...participants.value.map((item) => ({
