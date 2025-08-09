@@ -1,62 +1,25 @@
 import type { Server } from 'http';
 import {
-    Socket,
     Server as SocketServer,
-    type ExtendedError,
     type ServerOptions as SocketServerOptions
 } from 'socket.io';
-import { type AnySchema } from 'yup';
-import { authenticate, getUserIdFromToken } from './utils/jwt';
 import { assertIsDefined } from '../../utils/assert';
-import { connectedParticipantSchema } from './validation/socket';
-
-const { NODE_ENV } = process.env;
-
-function getSocketAuthToken(socket: Socket): string | undefined {
-    return socket.handshake.auth.token;
-}
-
-async function authorizeSocket(
-    socket: Socket,
-    next: (err?: ExtendedError) => void
-) {
-    try {
-        const token = getSocketAuthToken(socket);
-
-        if (!token) {
-            throw new Error('unauthorized');
-        }
-
-        await authenticate(socket.handshake.auth.token);
-
-        next();
-    } catch (error) {
-        next(new Error('unauthorized'));
-    }
-}
-
-// function createEventHandler<T>(
-//     socket: Socket,
-//     {
-//         event,
-//         schema,
-//         callback
-//     }: { event: string; schema: AnySchema; callback: (payload: T) => void }
-// ) {
-//     return socket.on(event, async (payload: T) => {
-//         try {
-//             await schema.validate(payload);
-
-//             callback(payload);
-//         } catch (error) {
-//             socket.emit('error', {
-//                 event,
-//                 error: error.message,
-//                 ...(NODE_ENV !== 'production' && { stack: error.stack })
-//             });
-//         }
-//     });
-// }
+import {
+    answerSchema,
+    connectedParticipantSchema,
+    disconnectParticipantSchema,
+    iceCandidateSchema,
+    offerSchema,
+    syncParticipantSchema
+} from './validation/socket';
+import {
+    authorizeSocket,
+    bindEvent,
+    emit,
+    getSocketAuthToken,
+    joinRooms,
+    leaveRooms
+} from './utils/socket';
 
 export default function startSocketServer(
     httpServer: Server,
@@ -74,73 +37,119 @@ export default function startSocketServer(
 
         assertIsDefined(token);
 
-        const userId = await getUserIdFromToken(token);
+        // const userId = await getUserIdFromToken(token);
 
-        // createEventHandler(socket, {
-        //     event: 'connectParticipant',
-        //     schema: connectedParticipantSchema,
-        //     async callback({ roomId, participant }) {}
+        // bindEvent(socket, {
+        //     event: 'disconnect',
+        //     callback() {
+        //         for (const roomId of socket.rooms) {
+        //             if (roomId.startsWith('room:')) {
+        //                 emit(socket, {
+        //                     event: 'participantDisconnected',
+        //                     roomId,
+        //                     payload: {
+        //                         participantId: participant.id
+        //                     }
+        //                 });
+        //             }
+        //         }
+        //     }
         // });
 
-        socket.on('connectParticipant', async ({ roomId, participant }) => {
-            await Promise.all([
-                socket.join(`room:${roomId}`),
-                socket.join(`participant:${participant.id}:room:${roomId}`)
-            ]);
-
-            socket.once('disconnect', () => {
-                socket.to(`room:${roomId}`).emit('participantDisconnected', {
-                    participantId: participant.id
-                });
-            });
-
-            socket.emit('connectedToRoom');
-
-            socket.to(`room:${roomId}`).emit('participantConnected', {
-                participantId: participant.id
-            });
-        });
-
-        socket.on(
-            'disconnectParticipant',
-            async ({ roomId, participantId }) => {
-                await Promise.all([
-                    socket.leave(`room:${roomId}`),
-                    socket.leave(`participant:${participantId}:room:${roomId}`)
+        bindEvent(socket, {
+            event: 'connectParticipant',
+            validation: connectedParticipantSchema,
+            async callback({ roomId, participant }) {
+                await joinRooms(socket, [
+                    `room:${roomId}`,
+                    `participant:${participant.id}:room:${roomId}`
                 ]);
 
-                socket.to(`room:${roomId}`).emit('participantDisconnected', {
-                    participantId
+                socket.once('disconnect', () => {
+                    emit(socket, {
+                        event: 'participantDisconnected',
+                        roomId: `room:${roomId}`,
+                        payload: {
+                            participantId: participant.id
+                        }
+                    });
+                });
+
+                socket.emit('connectedToRoom');
+
+                emit(socket, {
+                    event: 'participantConnected',
+                    roomId: `room:${roomId}`,
+                    payload: { participantId: participant.id }
                 });
             }
-        );
-
-        socket.on('offer', async ({ roomId, targetParticipantId, ...data }) => {
-            socket
-                .to(`participant:${targetParticipantId}:room:${roomId}`)
-                .emit('incomingOffer', data);
         });
 
-        socket.on(
-            'answer',
-            async ({ roomId, targetParticipantId, ...data }) => {
-                socket
-                    .to(`participant:${targetParticipantId}:room:${roomId}`)
-                    .emit('incomingAnswer', data);
-            }
-        );
+        bindEvent(socket, {
+            event: 'disconnectParticipant',
+            validation: disconnectParticipantSchema,
+            async callback({ roomId, participantId }) {
+                await leaveRooms(socket, [
+                    `room:${roomId}`,
+                    `participant:${participantId}:room:${roomId}`
+                ]);
 
-        socket.on(
-            'iceCandidate',
-            async ({ roomId, targetParticipantId, ...data }) => {
-                socket
-                    .to(`participant:${targetParticipantId}:room:${roomId}`)
-                    .emit('incomingIceCandidate', data);
+                emit(socket, {
+                    event: 'participantDisconnected',
+                    roomId: `room:${roomId}`,
+                    payload: {
+                        participantId
+                    }
+                });
             }
-        );
+        });
 
-        socket.on('syncParticipant', async ({ roomId, participant }) => {
-            socket.to(`room:${roomId}`).emit('participantSynced', participant);
+        bindEvent(socket, {
+            event: 'offer',
+            validation: offerSchema,
+            callback({ roomId, targetParticipantId, ...payload }) {
+                emit(socket, {
+                    event: 'incomingOffer',
+                    roomId: `participant:${targetParticipantId}:room:${roomId}`,
+                    payload
+                });
+            }
+        });
+
+        bindEvent(socket, {
+            event: 'answer',
+            validation: answerSchema,
+            callback({ roomId, targetParticipantId, ...payload }) {
+                emit(socket, {
+                    event: 'incomingAnswer',
+                    roomId: `participant:${targetParticipantId}:room:${roomId}`,
+                    payload
+                });
+            }
+        });
+
+        bindEvent(socket, {
+            event: 'iceCandidate',
+            validation: iceCandidateSchema,
+            callback({ roomId, targetParticipantId, ...payload }) {
+                emit(socket, {
+                    event: 'incomingIceCandidate',
+                    roomId: `participant:${targetParticipantId}:room:${roomId}`,
+                    payload
+                });
+            }
+        });
+
+        bindEvent(socket, {
+            event: 'syncParticipant',
+            validation: syncParticipantSchema,
+            callback({ roomId, participant: payload }) {
+                emit(socket, {
+                    event: 'participantSynced',
+                    roomId: `room:${roomId}`,
+                    payload
+                });
+            }
         });
     });
 }

@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from './store/use-auth-store';
 
-let socket: Socket;
+let socket: Socket<ServerToClientEvents, ClientToServerEvents>;
 
 export function useSocket() {
     const authStore = useAuthStore();
@@ -62,20 +62,13 @@ export function useSocket() {
     onBeforeUnmount(removeAllSubscriptions);
 
     return {
-        reconnect() {
-            const socket = getSocket();
-
-            if (socket.disconnected) {
-                socket.connect();
-            }
-        },
         emit<E extends ClientToServerEventId>(
             event: E,
-            data?: ClientToServerEventPayload<E>
+            ...data: Parameters<ClientToServerEvents[E]>
         ) {
-            getSocket().emit(event, data);
+            getSocket().emit(event, ...data);
         },
-        subscribe<E extends keyof ServerToClientEvents>(
+        subscribe<E extends ServerToClientEventId>(
             event: E,
             callback: ServerToClientEvents[E]
         ) {

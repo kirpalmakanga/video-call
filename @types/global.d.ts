@@ -59,6 +59,7 @@ declare global {
 
     /** Socket: */
     interface ClientToServerEvents {
+        disconnect: () => void;
         connectParticipant: (payload: {
             roomId: string;
             participant: Participant;
@@ -80,16 +81,11 @@ declare global {
             answer: RTCSessionDescriptionInit;
         }) => void;
         iceCandidate: (payload: {
+            roomId: string;
             senderParticipantId: string;
             targetParticipantId: string;
-            roomId: string;
             sdpMLineIndex: number | null | undefined;
             candidate: string | undefined;
-        }) => void;
-        toggleMicrophone: (payload: {
-            roomId: string;
-            senderParticipantId: string;
-            isMuted: boolean;
         }) => void;
         syncParticipant: (payload: {
             roomId: string;
@@ -126,4 +122,7 @@ declare global {
     }
 
     type ServerToClientEventId = keyof ServerToClientEvents;
+
+    type ServerToClientEventPayload<K extends ServerToClientEventId> =
+        Parameters<ServerToClientEvents[K]>[0];
 }
