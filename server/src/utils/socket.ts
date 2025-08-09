@@ -1,5 +1,5 @@
 import type { ExtendedError, Socket } from 'socket.io';
-import { type AnySchema } from 'yup';
+import { type AnySchema, ValidationError } from 'yup';
 import { authenticate } from './jwt';
 
 export function getSocketAuthToken(socket: Socket): string | undefined {
@@ -45,11 +45,15 @@ export function bindEvent<E extends ClientToServerEventId>(
 
                     callback(payload);
                 } catch (error) {
-                    console.error(error);
                     socket.emit('error', {
-                        errors: [error.message, ...(error.errors || [])],
-                        ...(process.env.NODE_ENV !== 'production' && {
-                            stack: error.stack
+                        ...(error instanceof Error && {
+                            error: error.message,
+                            ...(process.env.NODE_ENV !== 'production' && {
+                                stack: error.stack
+                            })
+                        }),
+                        ...(error instanceof ValidationError && {
+                            errors: error.errors
                         })
                     });
                 }
