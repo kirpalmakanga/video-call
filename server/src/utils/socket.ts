@@ -37,7 +37,7 @@ export function bindEvent<E extends ClientToServerEventId>(
         validation?: AnySchema;
     }
 ) {
-    socket.on(event, ((payload: ClientToServerEventPayload<E>) => {
+    socket.on(event, ((payload: any) => {
         (async () => {
             if (validation) {
                 try {
