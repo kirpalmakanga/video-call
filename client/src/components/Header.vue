@@ -11,7 +11,7 @@ const menuItems: DropdownMenuItem[] = [
     {
         label: 'Settings',
         icon: 'i-mdi-settings',
-        onSelect() {}
+        href: '/settings'
     },
     {
         type: 'separator'
