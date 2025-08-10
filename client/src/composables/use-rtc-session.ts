@@ -55,6 +55,10 @@ export function useRTCSession(
         return peer;
     }
 
+    function getPeerConnection(peerId: string) {
+        return getPeer(peerId).connection;
+    }
+
     function getAllPeerIds() {
         return [...Object.keys(peers)];
     }
@@ -70,12 +74,12 @@ export function useRTCSession(
     }
 
     function disconnectFromPeer(peerId: string) {
-        const peer = getPeer(peerId);
+        const { connection, stream } = getPeer(peerId);
 
-        peer.connection.close();
+        connection.close();
 
-        if (peer.stream) {
-            closeStream(peer.stream);
+        if (stream) {
+            closeStream(stream);
         }
 
         delete peers[peerId];
@@ -96,7 +100,7 @@ export function useRTCSession(
     function bindLocalStreamToPeer(peerId: string) {
         assertIsDefined(localStream.value, 'Local stream unavailable.');
 
-        const { connection } = getPeer(peerId);
+        const connection = getPeerConnection(peerId);
 
         for (const track of localStream.value.getTracks()) {
             connection.addTrack(track, localStream.value);
@@ -104,8 +108,7 @@ export function useRTCSession(
     }
 
     function unbindLocalStreamFromPeer(peerId: string) {
-        const { connection } = getPeer(peerId);
-
+        const connection = getPeerConnection(peerId);
         const senders = connection.getSenders();
 
         if (senders.length) {
@@ -164,7 +167,7 @@ export function useRTCSession(
         disconnectFromPeer,
         disconnectFromAllPeers,
         async createOffer(peerId: string) {
-            const { connection } = getPeer(peerId);
+            const connection = getPeerConnection(peerId);
 
             const offer = await connection.createOffer();
 
@@ -175,7 +178,7 @@ export function useRTCSession(
             return offer;
         },
         async createAnswer(peerId: string, offer: RTCSessionDescriptionInit) {
-            const { connection } = getPeer(peerId);
+            const connection = getPeerConnection(peerId);
 
             await connection.setRemoteDescription(
                 new RTCSessionDescription(offer)
@@ -190,7 +193,7 @@ export function useRTCSession(
             return answer;
         },
         async processAnswer(peerId: string, answer: RTCSessionDescriptionInit) {
-            const { connection } = getPeer(peerId);
+            const connection = getPeerConnection(peerId);
 
             await connection.setRemoteDescription(
                 new RTCSessionDescription(answer)
@@ -201,9 +204,9 @@ export function useRTCSession(
             sdpMLineIndex: number | null | undefined,
             candidate: string | undefined
         ) {
-            const peer = getPeer(peerId);
+            const connection = getPeerConnection(peerId);
 
-            await peer.connection.addIceCandidate(
+            await connection.addIceCandidate(
                 new RTCIceCandidate({
                     sdpMLineIndex,
                     candidate
@@ -211,7 +214,7 @@ export function useRTCSession(
             );
         },
         connectToPeer(peerId: string) {
-            const { connection } = createPeer(peerId);
+            const connection = getPeerConnection(peerId);
 
             connection.onicecandidate = ({ candidate }) => {
                 if (candidate) {
