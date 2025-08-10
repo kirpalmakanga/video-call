@@ -79,9 +79,11 @@ export function useSocket() {
             } else {
                 const socket = getSocket();
 
-                socket.on(event, callback);
+                socket.on(event, callback as any);
 
-                subscriptions.set(event, () => socket.off(event, callback));
+                subscriptions.set(event, () =>
+                    socket.off(event, callback as any)
+                );
             }
         },
         unsubscribe(event?: ServerToClientEventId) {
