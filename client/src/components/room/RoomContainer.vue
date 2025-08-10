@@ -155,7 +155,7 @@ onMounted(() => {
 
             <div
                 v-if="isViewMode('sidebar')"
-                class="w-64 relative h-full overflow-y-auto bg-neutral-700 p-4 rounded"
+                class="w-64 relative h-full overflow-y-auto bg-neutral-800 p-4 rounded"
             >
                 <ul class="flex flex-col gap-4">
                     <template
