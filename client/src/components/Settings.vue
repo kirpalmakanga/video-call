@@ -1,18 +1,22 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useDevicesList } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import AudioPreview from './base/AudioPreview.vue';
 import VideoPreview from './base/VideoPreview.vue';
 import { useSettingsStore } from '../composables/store/use-settings-store';
+import SettingsSkeleton from './SettingsSkeleton.vue';
 
 const settingsStore = useSettingsStore();
 const { audioDeviceId, videoDeviceId, isAudioEnabled, isVideoEnabled } =
     storeToRefs(settingsStore);
 
-const { permissionGranted, videoInputs, audioInputs } = useDevicesList({
-    requestPermissions: true
-});
+const { permissionGranted, videoInputs, audioInputs, ensurePermissions } =
+    useDevicesList({
+        requestPermissions: true
+    });
+
+const isAwaitingPermissions = ref<boolean>(true);
 
 const videoDeviceSelectItems = computed(() =>
     videoInputs.value.map(({ label, deviceId: value }) => ({ label, value }))
@@ -44,11 +48,19 @@ function handleVideoDevicesListChange() {
 
 watch(audioInputs, handleAudioDevicesListChange);
 watch(videoInputs, handleVideoDevicesListChange);
+
+onMounted(async () => {
+    await ensurePermissions();
+
+    isAwaitingPermissions.value = false;
+});
 </script>
 
 <template>
+    <SettingsSkeleton v-if="isAwaitingPermissions" />
+
     <div
-        v-if="permissionGranted"
+        v-else-if="permissionGranted"
         class="relative flex flex-col gap-4 text-gray-100"
     >
         <UFormField label="Camera">
@@ -122,8 +134,8 @@ watch(videoInputs, handleVideoDevicesListChange);
 
     <UAlert
         v-else
-        color="info"
-        icon="i-mdi-information-outline"
-        description="Awaiting media permissions."
+        color="error"
+        icon="i-mdi-warning-outline"
+        description="Couldn't get access to camera and microphone. Please check your permissions."
     />
 </template>

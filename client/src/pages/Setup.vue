@@ -4,6 +4,8 @@ import Placeholder from '../components/base/Placeholder.vue';
 import Settings from '../components/Settings.vue';
 import PageError from '../components/page/PageError.vue';
 import { useRoomQuery } from '../utils/queries';
+import { useSettingsStore } from '../composables/store/use-settings-store';
+import { storeToRefs } from 'pinia';
 
 const {
     params: { roomId }
@@ -11,6 +13,9 @@ const {
 const router = useRouter();
 
 const { data: room, isLoading, error } = useRoomQuery(roomId as string);
+
+const settingsStore = useSettingsStore();
+const { audioDeviceId, videoDeviceId } = storeToRefs(settingsStore);
 </script>
 
 <template>
@@ -21,16 +26,11 @@ const { data: room, isLoading, error } = useRoomQuery(roomId as string);
         >
             <USkeleton class="h-8 w-full mb-4" />
 
-            <USkeleton class="h-6 w-full mb-4" />
+            <USkeleton class="h-5 w-full mb-4" />
 
-            <USkeleton class="w-full aspect-video" />
+            <SettingsSkeleton />
 
-            <USkeleton class="h-8 w-full mt-2 mb-4" />
-            <USkeleton class="h-2 w-full mt-2" />
-
-            <USkeleton class="h-8 w-full mt-2 mb-4" />
-
-            <div class="flex justify-between">
+            <div class="flex gap-2 mt-4 justify-center">
                 <USkeleton class="h-8 w-20" />
 
                 <USkeleton class="h-8 w-20" />
@@ -55,6 +55,7 @@ const { data: room, isLoading, error } = useRoomQuery(roomId as string);
                 <UButton
                     icon="i-mdi-phone"
                     @click="router.replace(`/room/${roomId}`)"
+                    :disabled="!audioDeviceId || !videoDeviceId"
                 >
                     Start
                 </UButton>
