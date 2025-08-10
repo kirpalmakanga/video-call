@@ -46,14 +46,14 @@ export function useRoom(
     } = useParticipantsList();
 
     const {
+        peerStreams,
         disconnectFromPeer,
         disconnectFromAllPeers,
         createOffer,
         createAnswer,
         processAnswer,
         addIceCandidate,
-        connectToPeer,
-        getPeerStream
+        connectToPeer
     } = useRTCSession(localStream, {
         onIceCandidate(peerId, candidate) {
             emit('iceCandidate', {
@@ -236,7 +236,7 @@ export function useRoom(
             localParticipant,
             ...participants.value.map((item) => ({
                 ...item,
-                stream: getPeerStream(item.id)
+                stream: peerStreams.value[item.id] || null
             }))
         ]),
         toggleMuteParticipant,

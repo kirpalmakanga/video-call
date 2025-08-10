@@ -1,4 +1,10 @@
-import { onBeforeUnmount, ref, watch, type Ref } from 'vue';
+import {
+    computed,
+    onBeforeUnmount,
+    shallowReactive,
+    watch,
+    type Ref
+} from 'vue';
 import { assertIsDefined } from '../../../utils/assert';
 
 // const configuration = {
@@ -28,34 +34,51 @@ export function useRTCSession(
     localStream: Ref<MediaStream | undefined>,
     { onIceCandidate, onDisconnection }: RTCSessionOptions
 ) {
-    const peers = ref<Map<string, Peer>>(new Map());
+    const peers = shallowReactive<{ [peerId: string]: Peer }>({});
 
     function hasPeer(peerId: string) {
-        return peers.value.has(peerId);
+        return !!peers[peerId];
     }
 
     function hasPeers() {
-        return !!peers.value.size;
+        return !!Object.values(peers).length;
+    }
+
+    function getPeer(peerId: string) {
+        const peer = peers[peerId];
+
+        assertIsDefined(
+            peer,
+            'Peer connection does not exist or has already been closed.'
+        );
+
+        return peer;
     }
 
     function getAllPeerIds() {
-        return [...peers.value.keys()];
+        return [...Object.keys(peers)];
+    }
+
+    function getAllPeerStreams() {
+        return Object.entries(peers).reduce((obj, [peerId, { stream }]) => {
+            if (stream) {
+                obj[peerId] = stream;
+            }
+
+            return obj;
+        }, {} as { [peerId: string]: MediaStream });
     }
 
     function disconnectFromPeer(peerId: string) {
-        const peer = peers.value.get(peerId);
-
-        if (!peer) {
-            throw new Error(
-                'Peer connection does not exist or has already been closed.'
-            );
-        }
+        const peer = getPeer(peerId);
 
         peer.connection.close();
 
-        if (peer.stream) closeStream(peer.stream);
+        if (peer.stream) {
+            closeStream(peer.stream);
+        }
 
-        peers.value.delete(peerId);
+        delete peers[peerId];
     }
 
     function createPeer(peerId: string) {
@@ -65,21 +88,13 @@ export function useRTCSession(
 
         const entry = { connection: new RTCPeerConnection(), stream: null };
 
-        peers.value.set(peerId, entry);
+        peers[peerId] = entry;
 
         return entry;
     }
 
-    function getPeer(peerId: string) {
-        const peer = peers.value.get(peerId);
-
-        assertIsDefined(peer);
-
-        return peer;
-    }
-
     function bindLocalStreamToPeer(peerId: string) {
-        assertIsDefined(localStream.value);
+        assertIsDefined(localStream.value, 'Local stream unavailable.');
 
         const { connection } = getPeer(peerId);
 
@@ -104,10 +119,10 @@ export function useRTCSession(
         const { stream, ...peer } = getPeer(peerId);
 
         if (stream?.id !== peerStream?.id) {
-            peers.value.set(peerId, {
+            peers[peerId] = {
                 ...peer,
                 stream: peerStream
-            });
+            };
         }
     }
 
@@ -126,14 +141,10 @@ export function useRTCSession(
     }
 
     function disconnectFromAllPeers() {
-        if (peers.value.size) {
-            for (const { connection, stream } of peers.value.values()) {
-                if (stream) closeStream(stream);
-
-                connection.close();
+        if (hasPeers()) {
+            for (const peerId of getAllPeerIds()) {
+                disconnectFromPeer(peerId);
             }
-
-            peers.value.clear();
         }
     }
 
@@ -148,8 +159,8 @@ export function useRTCSession(
     onBeforeUnmount(disconnectFromAllPeers);
 
     return {
+        peerStreams: computed(getAllPeerStreams),
         hasPeer,
-        hasPeers,
         disconnectFromPeer,
         disconnectFromAllPeers,
         async createOffer(peerId: string) {
@@ -227,9 +238,6 @@ export function useRTCSession(
             };
 
             bindLocalStreamToPeer(peerId);
-        },
-        getPeerStream(peerId: string) {
-            return hasPeer(peerId) ? getPeer(peerId).stream : null;
         }
     };
 }
