@@ -7,10 +7,15 @@ import {
 } from 'vue';
 import { assertIsDefined } from '../../../utils/assert';
 
-// const configuration = {
+// const connectionConfiguration: RTCConfiguration = {
 //     iceServers: [
-//         { urls: 'stun:stun.stunprotocol.org:3478' },
-//         { urls: 'stun:stun.l.google.com:19302' }
+//         {
+//             urls: 'stun.cloudflare.com:3478',
+//             credential:
+//                 '865cfce4c5028dce86f37fd5e5c2a298746544aab345be010d6a909ad41cd725fcd825922958c4e420da910e6bc0fe6fa52540a7c98d7ac484f9302340cabc78',
+//             username:
+//                 'aba9b169546eb6dcc7bfb1cdf34544cf95b5161d602e3b5fa7c8342b2e9802fb'
+//         }
 //     ]
 // };
 
@@ -90,7 +95,10 @@ export function useRTCSession(
             throw new Error('Peer connection already exists.');
         }
 
-        const entry = { connection: new RTCPeerConnection(), stream: null };
+        const entry = {
+            connection: new RTCPeerConnection(),
+            stream: null
+        };
 
         peers[peerId] = entry;
 
