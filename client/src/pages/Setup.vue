@@ -2,6 +2,7 @@
 import { useRoute, useRouter } from 'vue-router';
 import Placeholder from '../components/base/Placeholder.vue';
 import Settings from '../components/Settings.vue';
+import PageError from '../components/page/PageError.vue';
 import { useRoomQuery } from '../utils/queries';
 
 const {
@@ -9,7 +10,7 @@ const {
 } = useRoute();
 const router = useRouter();
 
-const { data: room, isLoading } = useRoomQuery(roomId as string);
+const { data: room, isLoading, error } = useRoomQuery(roomId as string);
 </script>
 
 <template>
@@ -35,6 +36,8 @@ const { data: room, isLoading } = useRoomQuery(roomId as string);
                 <USkeleton class="h-8 w-20" />
             </div>
         </div>
+
+        <PageError v-else-if="error" />
 
         <div
             v-else-if="room"

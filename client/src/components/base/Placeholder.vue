@@ -6,6 +6,8 @@ defineProps<{ icon: string; text: string }>();
     <div class="flex flex-col items-center justify-center p-4">
         <UIcon class="w-12 h-12" :name="icon" />
 
-        <p>{{ text }}</p>
+        <p class="mb-4">{{ text }}</p>
+
+        <slot />
     </div>
 </template>

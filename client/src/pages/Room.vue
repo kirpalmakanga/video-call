@@ -5,6 +5,7 @@ import { useOnline } from '@vueuse/core';
 import Placeholder from '../components/base/Placeholder.vue';
 import { useRoomQuery } from '../utils/queries';
 import RoomContainer from '../components/room/RoomContainer.vue';
+import PageError from '../components/page/PageError.vue';
 
 const router = useRouter();
 
@@ -12,7 +13,7 @@ const {
     params: { roomId }
 } = useRoute();
 
-const { data: room, isLoading } = useRoomQuery(roomId as string);
+const { data: room, isLoading, error } = useRoomQuery(roomId as string);
 
 const isOnline = useOnline();
 </script>
@@ -38,6 +39,8 @@ const isOnline = useOnline();
                 </div>
             </div>
         </template>
+
+        <PageError v-else-if="error" />
 
         <template v-else-if="room">
             <h1 class="text-xl font-bold">{{ room.name }}</h1>

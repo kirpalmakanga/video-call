@@ -5,8 +5,9 @@ import RoomsGrid from '../components/RoomsGrid.vue';
 import RoomsGridSkeleton from '../components/RoomsGridSkeleton.vue';
 import { useRoomsListQuery } from '../utils/queries';
 import CreateRoomButton from '../components/CreateRoomButton.vue';
+import PageError from '../components/page/PageError.vue';
 
-const { data: rooms, isLoading } = useRoomsListQuery();
+const { data: rooms, isLoading, error } = useRoomsListQuery();
 
 const filter = ref<string>('');
 
@@ -27,13 +28,16 @@ const currentRooms = computed(() => {
 
 <template>
     <div class="flex grow md:justify-center">
-        <div class="md:rounded p-4 w-full">
+        <div class="flex flex-col md:rounded p-4 w-full">
             <div class="flex items-center gap-2 mb-4">
                 <h1 class="grow font-bold text-neutral-100">Available rooms</h1>
 
                 <CreateRoomButton />
             </div>
+
             <RoomsGridSkeleton v-if="isLoading" />
+
+            <PageError v-else-if="error" />
 
             <template v-else-if="rooms?.length">
                 <SearchForm
