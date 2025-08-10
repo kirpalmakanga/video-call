@@ -214,7 +214,7 @@ export function useRTCSession(
             );
         },
         connectToPeer(peerId: string) {
-            const connection = getPeerConnection(peerId);
+            const { connection } = createPeer(peerId);
 
             connection.onicecandidate = ({ candidate }) => {
                 if (candidate) {
