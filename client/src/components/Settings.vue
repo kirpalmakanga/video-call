@@ -63,7 +63,7 @@ onMounted(async () => {
         v-else-if="permissionGranted"
         class="relative flex flex-col gap-4 text-gray-100"
     >
-        <UFormField label="Camera">
+        <UFormField label="Camera" :ui="{ label: 'font-bold' }">
             <VideoPreview
                 class="rounded"
                 :is-enabled="isVideoEnabled"
@@ -95,7 +95,7 @@ onMounted(async () => {
             </div>
         </UFormField>
 
-        <UFormField label="Microphone">
+        <UFormField label="Microphone" :ui="{ label: 'font-bold' }">
             <AudioPreview
                 :is-enabled="isAudioEnabled"
                 :device-id="audioDeviceId"

@@ -50,7 +50,11 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
                 class="flex flex-col gap-4"
                 @submit="onSubmit"
             >
-                <UFormField label="Email" name="email">
+                <UFormField
+                    label="Email"
+                    name="email"
+                    :ui="{ label: 'font-bold' }"
+                >
                     <UInput
                         class="w-full"
                         variant="soft"
@@ -59,7 +63,11 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
                     />
                 </UFormField>
 
-                <UFormField label="Password" name="password">
+                <UFormField
+                    label="Password"
+                    name="password"
+                    :ui="{ label: 'font-bold' }"
+                >
                     <UInput
                         class="w-full"
                         variant="soft"

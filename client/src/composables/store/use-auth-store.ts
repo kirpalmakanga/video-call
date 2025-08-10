@@ -49,6 +49,12 @@ export const useAuthStore = defineStore(
 
                 return `${firstName} ${lastName}`;
             }),
+            async updateUserProfile(data: {
+                firstName: string;
+                lastName: string;
+            }) {
+                /** TODO: create api function */
+            },
             async refreshAccessToken() {
                 const tokens = await refreshAccessToken(state.refreshToken);
 

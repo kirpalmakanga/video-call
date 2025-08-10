@@ -5,6 +5,7 @@ const Setup = () => import('./pages/Setup.vue');
 const Room = () => import('./pages/Room.vue');
 const Login = () => import('./pages/Login.vue');
 const Register = () => import('./pages/Register.vue');
+const Settings = () => import('./pages/Settings.vue');
 
 const router = createRouter({
     history: createWebHistory(),
@@ -13,7 +14,8 @@ const router = createRouter({
         { path: '/room/:roomId/start', component: Setup, name: 'room-start' },
         { path: '/room/:roomId', component: Room, name: 'room' },
         { path: '/login', component: Login, name: 'login' },
-        { path: '/register', component: Register, name: 'register' }
+        { path: '/register', component: Register, name: 'register' },
+        { path: '/settings/:tab?', component: Settings, name: 'settings' }
     ]
 });
 
