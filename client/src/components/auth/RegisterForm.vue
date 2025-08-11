@@ -3,7 +3,7 @@ import { reactive } from 'vue';
 import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../composables/store/use-auth-store';
-import { registerSchema } from '../../utils/validation';
+import { registerSchema, type RegisterFormData } from '../../utils/validation';
 
 const router = useRouter();
 const toast = useToast();
