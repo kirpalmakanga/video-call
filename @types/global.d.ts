@@ -12,16 +12,6 @@ declare global {
         updatedAt: Date;
     }
 
-    interface LoginFormData {
-        email: string;
-        password: string;
-    }
-
-    interface RegisterFormData extends LoginFormData {
-        firstName: string;
-        lastName: string;
-    }
-
     interface User {
         id: string;
         firstName: string;

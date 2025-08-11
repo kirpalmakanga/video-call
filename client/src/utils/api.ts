@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { LoginFormData, RegisterFormData } from './validation';
 
 export async function register(credentials: RegisterFormData) {
     const { data } = await axios.post('/auth/register', credentials);
@@ -16,6 +17,10 @@ export async function getCurrentUserProfile() {
     const { data } = await axios.get('/users/profile');
 
     return data as User;
+}
+
+export async function updateCurrentUserProfile() {
+    await axios.put('/users/profile');
 }
 
 export async function refreshAccessToken(refreshToken: string) {

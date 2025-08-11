@@ -4,8 +4,10 @@ import {
     logIn,
     getCurrentUserProfile,
     refreshAccessToken,
-    register
+    register,
+    updateCurrentUserProfile
 } from '../../utils/api';
+import type { RegisterFormData, LoginFormData } from '../../utils/validation';
 
 interface State {
     id: string;
@@ -53,7 +55,10 @@ export const useAuthStore = defineStore(
                 firstName: string;
                 lastName: string;
             }) {
+                await updateCurrentUserProfile(data);
                 /** TODO: create api function */
+
+                Object.assign(state, data);
             },
             async refreshAccessToken() {
                 const tokens = await refreshAccessToken(state.refreshToken);
