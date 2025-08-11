@@ -1,5 +1,5 @@
 import { computed, onBeforeUnmount, reactive, ref, watch, type Ref } from 'vue';
-import { useOnline, useUserMedia } from '@vueuse/core';
+import { useOnline, useUserMedia, useWindowFocus } from '@vueuse/core';
 import { useSocket } from './use-socket';
 import { useRTCSession } from './use-rtc-session';
 import { pick } from '../utils/helpers';
@@ -16,6 +16,7 @@ export function useRoom(
     roomId: string,
     { displayName, isVideoEnabled, isAudioEnabled, streamConfig }: RoomConfig
 ) {
+    const isFocused = useWindowFocus();
     const isOnline = useOnline();
 
     const {
@@ -86,7 +87,7 @@ export function useRoom(
 
         if (videoTracks?.length) {
             for (const track of videoTracks) {
-                track.enabled = isVideoEnabled.value;
+                track.enabled = isFocused.value && isVideoEnabled.value;
             }
         }
     }
@@ -219,7 +220,7 @@ export function useRoom(
         }
     });
 
-    watch(isVideoEnabled, setVideoStatus);
+    watch([isVideoEnabled, isFocused], setVideoStatus);
 
     watch(isAudioEnabled, () => {
         setAudioStatus();
