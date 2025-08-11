@@ -10,4 +10,8 @@ declare global {
             userId?: string;
         }
     }
+
+    interface AuthenticatedRequest extends Request {
+        userId: string;
+    }
 }

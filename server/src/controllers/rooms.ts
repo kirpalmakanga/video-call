@@ -22,14 +22,8 @@ export async function show({ params: { roomId } }: Request, res: Response) {
     res.status(404).json(null);
 }
 
-interface CreateRoomRequest extends Request {
-    userId: string;
+interface CreateRoomRequest extends AuthenticatedRequest {
     body: { name: string };
-}
-
-interface UpdateRoomRequest extends CreateRoomRequest {
-    userId: string;
-    params: { roomId: string };
 }
 
 export async function insert(
@@ -47,6 +41,10 @@ export async function insert(
     } catch (error) {
         next(error);
     }
+}
+
+interface UpdateRoomRequest extends CreateRoomRequest {
+    params: { roomId: string };
 }
 
 export async function update(
