@@ -2,12 +2,13 @@
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from '../composables/store/use-auth-store';
 import type { DropdownMenuItem } from '@nuxt/ui/runtime/components/DropdownMenu.vue.js';
+import { computed } from 'vue';
 
 const authStore = useAuthStore();
 const { logOut } = authStore;
-const { initials } = storeToRefs(authStore);
+const { isLoggedIn, initials } = storeToRefs(authStore);
 
-const menuItems: DropdownMenuItem[] = [
+const menuItems = computed<DropdownMenuItem[]>(() => [
     {
         label: 'Settings',
         icon: 'i-mdi-settings',
@@ -24,7 +25,7 @@ const menuItems: DropdownMenuItem[] = [
             logOut();
         }
     }
-];
+]);
 </script>
 
 <template>
@@ -35,6 +36,7 @@ const menuItems: DropdownMenuItem[] = [
             <div class="font-bold">VCall</div>
 
             <UDropdownMenu
+                v-if="isLoggedIn"
                 :items="menuItems"
                 :content="{ align: 'end', side: 'bottom' }"
             >
