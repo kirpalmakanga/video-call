@@ -57,7 +57,6 @@ export const useAuthStore = defineStore(
             }),
             async updateUserProfile(data: UpdateProfileFormData) {
                 await updateCurrentUserProfile(data);
-                /** TODO: create api function */
 
                 Object.assign(state, data);
             },

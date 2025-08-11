@@ -30,3 +30,13 @@ export function getUserById(id: string) {
         }
     });
 }
+
+export function updateUser(
+    id: string,
+    data: Partial<Pick<User, 'firstName' | 'lastName' | 'email'>>
+) {
+    return db.user.update({
+        where: { id },
+        data
+    });
+}

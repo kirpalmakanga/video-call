@@ -35,9 +35,9 @@ async function onSubmit({ data }: FormSubmitEvent<RegisterFormData>) {
 
 <template>
     <UForm
+        class="flex flex-col gap-4"
         :schema="registerSchema"
         :state="state"
-        class="flex flex-col gap-4"
         @submit="onSubmit"
     >
         <UFormField

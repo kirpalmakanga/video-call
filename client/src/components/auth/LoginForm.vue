@@ -31,10 +31,10 @@ async function onSubmit({ data }: FormSubmitEvent<LoginFormData>) {
 
 <template>
     <UForm
+        @submit="onSubmit"
         :schema="loginSchema"
         :state="state"
         class="flex flex-col gap-4"
-        @submit="onSubmit"
     >
         <UFormField label="Email" name="email" :ui="{ label: 'font-bold' }">
             <UInput
