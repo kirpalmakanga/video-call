@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router';
 import Placeholder from '../components/base/Placeholder.vue';
-import Settings from '../components/Settings.vue';
+import MediaSettings from '../components/room/MediaSettings.vue';
+import MediaSettingsSkeleton from '../components/room/MediaSettingsSkeleton.vue';
 import PageError from '../components/page/PageError.vue';
 import { useRoomQuery } from '../utils/queries';
 import { useSettingsStore } from '../composables/store/use-settings-store';
@@ -28,7 +29,7 @@ const { audioDeviceId, videoDeviceId } = storeToRefs(settingsStore);
 
             <USkeleton class="h-5 w-full mb-4" />
 
-            <SettingsSkeleton />
+            <MediaSettingsSkeleton />
 
             <div class="flex gap-2 mt-4 justify-center">
                 <USkeleton class="h-8 w-20" />
@@ -49,7 +50,7 @@ const { audioDeviceId, videoDeviceId } = storeToRefs(settingsStore);
                 Verify your camera and microphone setup before joining the room.
             </p>
 
-            <Settings />
+            <MediaSettings />
 
             <div class="flex gap-2 mt-4 justify-center">
                 <UButton

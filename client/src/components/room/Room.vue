@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, watch } from 'vue';
-import { useFullscreen, useOnline } from '@vueuse/core';
+import { useFullscreen } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 
 import Placeholder from '../../components/base/Placeholder.vue';
-import Settings from '../../components/Settings.vue';
+import MediaSettings from './MediaSettings.vue';
 import Participant from '../../components/room/Participant.vue';
 import AutoGrid from '../../components/base/AutoGrid.vue';
 import { useRoom } from '../../composables/use-room';
@@ -288,7 +288,7 @@ onMounted(() => {
         >
             <template #body>
                 <ScrollContainer class="grow">
-                    <Settings />
+                    <MediaSettings />
                 </ScrollContainer>
             </template>
         </USlideover>

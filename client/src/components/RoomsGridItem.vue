@@ -7,7 +7,7 @@ defineProps<{ id: string; name: string }>();
 <template>
     <RouterLink
         class="group flex flex-col items-center text-neutral-100 rounded transition-colors overflow-hidden"
-        :to="`/room/${id}/start`"
+        :to="`/room/${id}/setup`"
     >
         <span
             class="aspect-video bg-gray-900 flex items-center justify-center w-full"

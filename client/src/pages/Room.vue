@@ -3,9 +3,9 @@ import { useRoute, useRouter } from 'vue-router';
 import { useOnline } from '@vueuse/core';
 
 import Placeholder from '../components/base/Placeholder.vue';
-import { useRoomQuery } from '../utils/queries';
-import RoomContainer from '../components/room/RoomContainer.vue';
+import Room from '../components/room/Room.vue';
 import PageError from '../components/page/PageError.vue';
+import { useRoomQuery } from '../utils/queries';
 
 const router = useRouter();
 
@@ -45,7 +45,7 @@ const isOnline = useOnline();
         <template v-else-if="room">
             <h1 class="text-xl font-bold">{{ room.name }}</h1>
 
-            <RoomContainer :roomId="room.id" @leave="router.push('/')" />
+            <Room :roomId="room.id" @leave="router.push('/')" />
         </template>
 
         <Placeholder

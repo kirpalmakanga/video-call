@@ -2,10 +2,10 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useDevicesList } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
-import AudioPreview from './base/AudioPreview.vue';
-import VideoPreview from './base/VideoPreview.vue';
-import { useSettingsStore } from '../composables/store/use-settings-store';
-import SettingsSkeleton from './SettingsSkeleton.vue';
+import SettingsSkeleton from './MediaSettingsSkeleton.vue';
+import AudioPreview from '../base/AudioPreview.vue';
+import VideoPreview from '../base/VideoPreview.vue';
+import { useSettingsStore } from '../../composables/store/use-settings-store';
 
 const settingsStore = useSettingsStore();
 const { audioDeviceId, videoDeviceId, isAudioEnabled, isVideoEnabled } =
