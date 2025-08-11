@@ -19,3 +19,10 @@ export const registerSchema = object({
 });
 
 export type RegisterFormData = InferType<typeof registerSchema>;
+
+export const updateProfileSchema = object({
+    firstName: string().required('Required'),
+    lastName: string().required('Required')
+});
+
+export type UpdateProfileFormData = InferType<typeof updateProfileSchema>;

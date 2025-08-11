@@ -7,7 +7,11 @@ import {
     register,
     updateCurrentUserProfile
 } from '../../utils/api';
-import type { RegisterFormData, LoginFormData } from '../../utils/validation';
+import type {
+    RegisterFormData,
+    LoginFormData,
+    UpdateProfileFormData
+} from '../../utils/validation';
 
 interface State {
     id: string;
@@ -51,10 +55,7 @@ export const useAuthStore = defineStore(
 
                 return `${firstName} ${lastName}`;
             }),
-            async updateUserProfile(data: {
-                firstName: string;
-                lastName: string;
-            }) {
+            async updateUserProfile(data: UpdateProfileFormData) {
                 await updateCurrentUserProfile(data);
                 /** TODO: create api function */
 
