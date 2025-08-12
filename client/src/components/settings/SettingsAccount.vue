@@ -48,7 +48,7 @@ async function onSubmit({
         :state="state"
         @submit="onSubmit"
     >
-        <input type="hidden" name="email" :value="email" />
+        <input class="hidden" type="email" name="email" :value="email" />
 
         <UFormField
             label="Current password"
