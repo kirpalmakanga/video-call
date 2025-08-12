@@ -46,6 +46,8 @@ async function onSubmit({ data }: FormSubmitEvent<UpdateProfileFormData>) {
 </script>
 
 <template>
+    <h2 class="font-bold mb-6">Profile</h2>
+
     <UForm
         class="flex flex-col gap-4"
         :schema="updateProfileSchema"
