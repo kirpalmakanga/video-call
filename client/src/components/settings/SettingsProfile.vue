@@ -22,11 +22,11 @@ const currentState = computed(() => ({
 
 const state = reactive<UpdateProfileFormData>({ ...currentState.value });
 
-const profileHasBeenUpdated = computed(() => {
-    return !isEqual(state, currentState.value);
-});
-
 async function onSubmit({ data }: FormSubmitEvent<UpdateProfileFormData>) {
+    if (isEqual(state, currentState.value)) {
+        return;
+    }
+
     try {
         await updateUserProfile(data);
 
@@ -74,7 +74,6 @@ async function onSubmit({ data }: FormSubmitEvent<UpdateProfileFormData>) {
             class="self-end"
             icon="i-mdi-content-save-outline"
             type="submit"
-            :disabled="!profileHasBeenUpdated"
         >
             Save modifications
         </UButton>
