@@ -52,11 +52,19 @@ async function onSubmit({ data }: FormSubmitEvent<UpdateProfileFormData>) {
         :state="state"
         @submit="onSubmit"
     >
-        <UFormField label="First name" :ui="{ label: 'font-bold' }">
+        <UFormField
+            label="First name"
+            :ui="{ label: 'font-bold' }"
+            name="firstName"
+        >
             <UInput variant="soft" v-model="state.firstName" />
         </UFormField>
 
-        <UFormField label="Last name" :ui="{ label: 'font-bold' }">
+        <UFormField
+            label="Last name"
+            :ui="{ label: 'font-bold' }"
+            name="lastName"
+        >
             <UInput variant="soft" v-model="state.lastName" />
         </UFormField>
 
