@@ -1,5 +1,5 @@
 import { jwtVerify, SignJWT } from 'jose';
-import crypto from 'crypto';
+import { randomBytes } from 'crypto';
 import { assertIsDefined } from '../../../utils/assert';
 
 const { JWT_ACCESS_SECRET, JWT_ISSUER, JWT_AUDIENCE } = process.env;
@@ -25,7 +25,7 @@ export async function generateAccessToken(user: User) {
 }
 
 export function generateRefreshToken() {
-    return crypto.randomBytes(16).toString('base64url');
+    return randomBytes(16).toString('base64url');
 }
 
 export async function generateTokens(user: User): Promise<{
