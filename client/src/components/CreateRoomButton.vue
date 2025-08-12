@@ -34,12 +34,14 @@ watch(status, (value) => {
     switch (value) {
         case 'success':
             toast.add({
-                title: 'Error',
-                description: `Room created successfully.`,
+                title: 'Success',
+                description: `Created room: ${formState.name}.`,
                 color: 'success'
             });
 
             isModalOpen.value = false;
+
+            formState.name = '';
             break;
 
         case 'error':
