@@ -1,5 +1,5 @@
 import db from '../utils/db';
-import { hashPassword } from '../utils/hash';
+import { hashPassword } from '../utils/auth';
 
 export function getUserByEmail(email: string) {
     return db.user.findUnique({
@@ -9,16 +9,16 @@ export function getUserByEmail(email: string) {
     });
 }
 
-export function createUserByEmailAndPassword(user: {
+export async function createUserByEmailAndPassword(user: {
     firstName: string;
     lastName: string;
     email: string;
     password: string;
 }) {
-    return db.user.create({
+    return await db.user.create({
         data: {
             ...user,
-            password: hashPassword(user.password)
+            password: await hashPassword(user.password)
         }
     });
 }
@@ -41,11 +41,11 @@ export function updateUser(
     });
 }
 
-export function updateUserPassword(id: string, password: string) {
-    return db.user.update({
+export async function updateUserPassword(id: string, password: string) {
+    return await db.user.update({
         where: { id },
         data: {
-            password: hashPassword(password)
+            password: await hashPassword(password)
         }
     });
 }
