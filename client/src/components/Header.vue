@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from '../composables/store/use-auth-store';
 import type { DropdownMenuItem } from '@nuxt/ui/runtime/components/DropdownMenu.vue.js';
@@ -33,7 +34,7 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
         <div
             class="container mx-auto flex items-center justify-between h-12 px-4"
         >
-            <div class="font-bold">VCall</div>
+            <div class="font-bold"><RouterLink to="/">VCall</RouterLink></div>
 
             <UDropdownMenu
                 v-if="isLoggedIn"
