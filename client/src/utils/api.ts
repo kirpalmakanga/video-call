@@ -17,6 +17,10 @@ export async function logIn(credentials: LoginFormData) {
     return data as { accessToken: string; refreshToken: string };
 }
 
+export async function updatePassword(password: string) {
+    await axios.put('/auth/password', { password });
+}
+
 export async function getCurrentUserProfile() {
     const { data } = await axios.get('/users/profile');
 

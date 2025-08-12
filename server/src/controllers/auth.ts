@@ -10,7 +10,9 @@ import {
 import {
     getUserByEmail,
     createUserByEmailAndPassword,
-    getUserById
+    getUserById,
+    updateUser,
+    updateUserPassword
 } from '../services/users';
 import { omit } from '../utils/helpers';
 
@@ -107,7 +109,7 @@ export async function login(
 }
 
 export async function refreshAccessToken(
-    { body }: Request,
+    { userId, body }: AuthenticatedRequest,
     res: Response,
     next: NextFunction
 ) {
@@ -128,10 +130,12 @@ export async function refreshAccessToken(
 
         const user = await getUserById(savedRefreshToken.userId);
 
-        if (user) {
+        if (user && user.id === userId) {
             await deleteRefreshTokenById(savedRefreshToken.id);
 
-            const { accessToken, refreshToken } = await generateTokens(user);
+            const { accessToken, refreshToken } = await generateTokens(
+                omit(user, 'password')
+            );
 
             await addRefreshTokenToWhitelist({
                 refreshToken,
@@ -149,5 +153,23 @@ export async function refreshAccessToken(
         }
     } catch (err) {
         next(err);
+    }
+}
+
+interface UpdatePasswordRequest extends AuthenticatedRequest {
+    body: { password: string };
+}
+
+export async function updatePassword(
+    { userId, body }: UpdatePasswordRequest,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        await updateUserPassword(userId, body.password);
+
+        res.status(204).send();
+    } catch (error) {
+        next(error);
     }
 }

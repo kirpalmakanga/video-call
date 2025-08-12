@@ -23,3 +23,11 @@ export const refreshTokenSchema = object({
 }).exact();
 
 export type RefreshTokenSchema = InferType<typeof refreshTokenSchema>;
+
+export const updatePasswordSchema = object({
+    password: string()
+        .min(8, 'Password must be at least 8 characters')
+        .required('Password is required')
+}).exact();
+
+export type UpdatePasswordSchema = InferType<typeof updatePasswordSchema>;

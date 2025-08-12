@@ -1,5 +1,5 @@
-import bcrypt from 'bcrypt';
 import db from '../utils/db';
+import { hashPassword } from '../utils/hash';
 
 export function getUserByEmail(email: string) {
     return db.user.findUnique({
@@ -18,7 +18,7 @@ export function createUserByEmailAndPassword(user: {
     return db.user.create({
         data: {
             ...user,
-            password: bcrypt.hashSync(user.password, 12)
+            password: hashPassword(user.password)
         }
     });
 }
@@ -38,5 +38,14 @@ export function updateUser(
     return db.user.update({
         where: { id },
         data
+    });
+}
+
+export function updateUserPassword(id: string, password: string) {
+    return db.user.update({
+        where: { id },
+        data: {
+            password: hashPassword(password)
+        }
     });
 }

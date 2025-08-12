@@ -1,11 +1,18 @@
 import { Router } from 'express';
-import { login, register, refreshAccessToken } from '../controllers/auth';
+import {
+    login,
+    register,
+    refreshAccessToken,
+    updatePassword
+} from '../controllers/auth';
 import { validateRequest } from '../middlewares/validation';
 import {
     loginSchema,
     refreshTokenSchema,
-    registerSchema
+    registerSchema,
+    updatePasswordSchema
 } from '../validation/auth';
+import { isAuthenticated } from '../middlewares/auth';
 
 const router = Router();
 
@@ -17,6 +24,13 @@ router.post(
     '/refresh',
     validateRequest({ body: refreshTokenSchema }),
     refreshAccessToken
+);
+
+router.put(
+    '/password',
+    isAuthenticated,
+    validateRequest({ body: updatePasswordSchema }),
+    updatePassword
 );
 
 export default router;
