@@ -1,38 +1,35 @@
 import type { NextFunction, Request, Response } from 'express';
-import bcrypt from 'bcrypt';
 import { generateTokens } from '../utils/jwt';
 import {
     addRefreshTokenToWhitelist,
     getRefreshToken,
-    deleteRefreshTokenById,
-    revokeTokens
+    deleteRefreshTokenById
 } from '../services/auth';
 import {
     getUserByEmail,
     createUserByEmailAndPassword,
     getUserById,
-    updateUser,
     updateUserPassword
 } from '../services/users';
 import { omit } from '../utils/helpers';
+import { validatePassword } from '../utils/auth';
 
-interface RegisterRequest {}
+interface RegisterRequest extends Request {
+    body: {
+        email: string;
+        firstName: string;
+        lastName: string;
+        password: string;
+    };
+}
 
 export async function register(
-    { body }: Request,
+    { body }: RegisterRequest,
     res: Response,
     next: NextFunction
 ) {
     try {
-        const { email, password } = body;
-
-        if (!email || !password) {
-            res.status(400);
-
-            throw new Error('You must provide an email and a password.');
-        }
-
-        const existingUser = await getUserByEmail(email);
+        const existingUser = await getUserByEmail(body.email);
 
         if (existingUser) {
             res.status(400);
@@ -79,12 +76,12 @@ export async function login(
             throw new Error('Unknown user email.');
         }
 
-        const validPassword = await bcrypt.compare(
+        const isValidPassword = await validatePassword(
             password,
             existingUser.password
         );
 
-        if (!validPassword) {
+        if (!isValidPassword) {
             res.status(403);
 
             throw new Error('Invalid password.');
@@ -108,20 +105,22 @@ export async function login(
     }
 }
 
+interface RefreshTokenRequest extends Request {
+    body: { refreshToken: string };
+}
+
 export async function refreshAccessToken(
-    { userId, body }: AuthenticatedRequest,
+    { body: { refreshToken } }: RefreshTokenRequest,
     res: Response,
     next: NextFunction
 ) {
     try {
-        const { refreshToken } = body;
-
         const savedRefreshToken = await getRefreshToken(refreshToken);
 
         if (
             !savedRefreshToken ||
             savedRefreshToken.revoked === true ||
-            Date.now() >= savedRefreshToken.expireAt.getTime()
+            savedRefreshToken.expireAt.getTime() <= Date.now()
         ) {
             res.status(401);
 
@@ -130,7 +129,7 @@ export async function refreshAccessToken(
 
         const user = await getUserById(savedRefreshToken.userId);
 
-        if (user && user.id === userId) {
+        if (user) {
             await deleteRefreshTokenById(savedRefreshToken.id);
 
             const { accessToken, refreshToken } = await generateTokens(
@@ -147,9 +146,9 @@ export async function refreshAccessToken(
                 refreshToken
             });
         } else {
-            res.status(401);
+            res.status(403);
 
-            throw new Error('Unauthorized');
+            throw new Error('Forbidden');
         }
     } catch (err) {
         next(err);
