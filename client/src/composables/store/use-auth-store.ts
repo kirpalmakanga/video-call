@@ -67,13 +67,6 @@ export const useAuthStore = defineStore(
 
                 return tokens.accessToken;
             },
-            async register(userData: RegisterFormData) {
-                const tokens = await register(userData);
-
-                Object.assign(state, tokens);
-
-                await fetchUserProfile();
-            },
             async logIn(credentials: LoginFormData) {
                 const tokens = await logIn(credentials);
 

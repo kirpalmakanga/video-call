@@ -2,18 +2,18 @@
 import { reactive } from 'vue';
 import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../../composables/store/use-auth-store';
 import { registerSchema, type RegisterFormData } from '../../utils/validation';
+import { register } from '../../utils/api';
 
 const router = useRouter();
 const toast = useToast();
-const { register } = useAuthStore();
 
 const state = reactive<RegisterFormData>({
     firstName: '',
     lastName: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
 });
 
 async function onSubmit({ data }: FormSubmitEvent<RegisterFormData>) {
