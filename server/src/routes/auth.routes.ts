@@ -1,4 +1,3 @@
-import { Router } from 'express';
 import { isAuthenticated } from '../middlewares/auth.middleware';
 import { validateRequest } from '../middlewares/validation.middleware';
 import {
@@ -13,24 +12,34 @@ import {
     refreshAccessToken,
     updatePassword
 } from '../controllers/auth.controller';
+import { createRouter } from '../utils/routes.utils';
 
-const router = Router();
-
-router.post('/register', validateRequest({ body: registerSchema }), register);
-
-router.post('/login', validateRequest({ body: loginSchema }), login);
-
-router.post(
-    '/refresh',
-    validateRequest({ body: refreshTokenSchema }),
-    refreshAccessToken
-);
-
-router.put(
-    '/password',
-    isAuthenticated,
-    validateRequest({ body: updatePasswordSchema }),
-    updatePassword
-);
-
-export default router;
+export default createRouter([
+    {
+        method: 'post',
+        path: '/register',
+        middlewares: [validateRequest({ body: registerSchema })],
+        handler: register
+    },
+    {
+        method: 'post',
+        path: '/login',
+        middlewares: [validateRequest({ body: loginSchema })],
+        handler: login
+    },
+    {
+        method: 'post',
+        path: '/refresh',
+        middlewares: [validateRequest({ body: refreshTokenSchema })],
+        handler: refreshAccessToken
+    },
+    {
+        method: 'put',
+        path: '/password',
+        middlewares: [
+            isAuthenticated,
+            validateRequest({ body: updatePasswordSchema })
+        ],
+        handler: updatePassword
+    }
+]);

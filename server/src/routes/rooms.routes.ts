@@ -1,27 +1,38 @@
-import { Router } from 'express';
 import { isAuthenticated } from '../middlewares/auth.middleware';
 import { validateRequest } from '../middlewares/validation.middleware';
 import { createRoomSchema } from '../validation/rooms.validation';
 import { index, show, insert, update } from '../controllers/rooms.controller';
+import { createRouter } from '../utils/routes.utils';
 
-const router = Router();
-
-router.get('/', isAuthenticated, index);
-
-router.get('/:roomId', isAuthenticated, show);
-
-router.post(
-    '/',
-    isAuthenticated,
-    validateRequest({ body: createRoomSchema }),
-    insert
-);
-
-router.put(
-    '/:roomId',
-    isAuthenticated,
-    validateRequest({ body: createRoomSchema }),
-    update
-);
-
-export default router;
+export default createRouter([
+    {
+        method: 'get',
+        path: '/',
+        middlewares: [isAuthenticated],
+        handler: index
+    },
+    {
+        method: 'get',
+        path: '/:roomId',
+        middlewares: [isAuthenticated],
+        handler: show
+    },
+    {
+        method: 'post',
+        path: '/',
+        middlewares: [
+            isAuthenticated,
+            validateRequest({ body: createRoomSchema })
+        ],
+        handler: insert
+    },
+    {
+        method: 'put',
+        path: '/:roomId',
+        middlewares: [
+            isAuthenticated,
+            validateRequest({ body: createRoomSchema })
+        ],
+        handler: update
+    }
+]);

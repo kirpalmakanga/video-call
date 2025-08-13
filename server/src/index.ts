@@ -3,9 +3,9 @@ import listRoutes from 'express-list-routes';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
-import authRoutes from './routes/auth.routes';
-import usersRoutes from './routes/users.routes';
-import roomsRoutes from './routes/rooms.routes';
+import authRouter from './routes/auth.routes';
+import usersRouter from './routes/users.routes';
+import roomsRouter from './routes/rooms.routes';
 import { errorHandler, notFound } from './middlewares/errors.middleware';
 import startSocket from './socket';
 
@@ -20,9 +20,9 @@ app.use(express.json());
 app.use(helmet());
 app.use(cors(corsOptions));
 
-app.use('/auth', authRoutes);
-app.use('/users', usersRoutes);
-app.use('/rooms', roomsRoutes);
+app.use('/auth', authRouter);
+app.use('/users', usersRouter);
+app.use('/rooms', roomsRouter);
 
 app.use(notFound);
 app.use(errorHandler);
