@@ -78,6 +78,19 @@ async function onSubmit({ data }: FormSubmitEvent<RegisterFormData>) {
             />
         </UFormField>
 
+        <UFormField
+            label="Password"
+            name="confirmPassword"
+            :ui="{ label: 'font-bold' }"
+        >
+            <UInput
+                class="w-full"
+                variant="soft"
+                v-model="state.confirmPassword"
+                type="password"
+            />
+        </UFormField>
+
         <UButton class="self-end" type="submit">Submit</UButton>
     </UForm>
 </template>
