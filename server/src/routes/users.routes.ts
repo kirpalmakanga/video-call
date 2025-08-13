@@ -1,9 +1,9 @@
+import type { RequestHandler } from 'express';
 import { isAuthenticated } from '../middlewares/auth.middleware';
 import { getProfile, updateProfile } from '../controllers/users.controller';
 import { createRouter } from '../utils/routes.utils';
 import { validateRequest } from '../middlewares/validation.middleware';
 import { updateProfileSchema } from '../validation/user.validation';
-import type { RequestHandler } from 'express';
 
 export default createRouter([
     {

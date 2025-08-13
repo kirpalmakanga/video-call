@@ -1,9 +1,9 @@
+import type { RequestHandler } from 'express';
 import { isAuthenticated } from '../middlewares/auth.middleware';
 import { validateRequest } from '../middlewares/validation.middleware';
 import { createRoomSchema } from '../validation/rooms.validation';
 import { index, show, insert, update } from '../controllers/rooms.controller';
 import { createRouter } from '../utils/routes.utils';
-import type { RequestHandler } from 'express';
 
 export default createRouter([
     {
