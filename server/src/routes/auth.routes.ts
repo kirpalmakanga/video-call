@@ -13,6 +13,7 @@ import {
     updatePassword
 } from '../controllers/auth.controller';
 import { createRouter } from '../utils/routes.utils';
+import type { RequestHandler } from 'express';
 
 export default createRouter([
     {
@@ -40,6 +41,6 @@ export default createRouter([
             isAuthenticated,
             validateRequest({ body: updatePasswordSchema })
         ],
-        handler: updatePassword
+        handler: updatePassword as RequestHandler
     }
 ]);

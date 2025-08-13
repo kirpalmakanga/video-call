@@ -3,6 +3,7 @@ import { validateRequest } from '../middlewares/validation.middleware';
 import { createRoomSchema } from '../validation/rooms.validation';
 import { index, show, insert, update } from '../controllers/rooms.controller';
 import { createRouter } from '../utils/routes.utils';
+import type { RequestHandler } from 'express';
 
 export default createRouter([
     {
@@ -24,7 +25,7 @@ export default createRouter([
             isAuthenticated,
             validateRequest({ body: createRoomSchema })
         ],
-        handler: insert
+        handler: insert as RequestHandler
     },
     {
         method: 'put',
@@ -33,6 +34,6 @@ export default createRouter([
             isAuthenticated,
             validateRequest({ body: createRoomSchema })
         ],
-        handler: update
+        handler: update as RequestHandler
     }
 ]);

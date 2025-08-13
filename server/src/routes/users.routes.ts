@@ -3,13 +3,14 @@ import { getProfile, updateProfile } from '../controllers/users.controller';
 import { createRouter } from '../utils/routes.utils';
 import { validateRequest } from '../middlewares/validation.middleware';
 import { updateProfileSchema } from '../validation/user.validation';
+import type { RequestHandler } from 'express';
 
 export default createRouter([
     {
         method: 'get',
         path: '/profile',
         middlewares: [isAuthenticated],
-        handler: getProfile
+        handler: getProfile as RequestHandler
     },
     {
         method: 'put',
@@ -18,6 +19,6 @@ export default createRouter([
             isAuthenticated,
             validateRequest({ body: updateProfileSchema })
         ],
-        handler: updateProfile
+        handler: updateProfile as RequestHandler
     }
 ]);
