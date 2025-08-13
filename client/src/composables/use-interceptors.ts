@@ -1,7 +1,7 @@
-import axios from 'axios';
 import { useAuthStore } from './store/use-auth-store';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
+import { apiInstance } from '../utils/api';
 
 export default function useInterceptors() {
     const router = useRouter();
@@ -9,9 +9,7 @@ export default function useInterceptors() {
     const { refreshAccessToken, logOut } = authStore;
     const { accessToken } = storeToRefs(authStore);
 
-    axios.defaults.baseURL = import.meta.env.VITE_API_URI;
-
-    axios.interceptors.request.use((config) => {
+    apiInstance.interceptors.request.use((config) => {
         if (accessToken.value) {
             config.headers.Authorization = `Bearer ${accessToken.value}`;
         }
@@ -19,8 +17,7 @@ export default function useInterceptors() {
         return config;
     });
 
-    // Add a response interceptor
-    axios.interceptors.response.use(
+    apiInstance.interceptors.response.use(
         (response) => response,
         async (error) => {
             const {
@@ -29,15 +26,19 @@ export default function useInterceptors() {
             } = error;
 
             if (status === 401 && !config._retry) {
-                await refreshAccessToken();
-
                 config._retry = true;
 
-                return axios(config);
-            } else if (status === 401) {
-                await logOut();
+                try {
+                    await refreshAccessToken();
 
-                router.push('/login');
+                    return apiInstance(config);
+                } catch (refreshError) {
+                    await logOut();
+
+                    router.push('/login');
+
+                    return Promise.reject(refreshError);
+                }
             }
 
             return Promise.reject(error);
