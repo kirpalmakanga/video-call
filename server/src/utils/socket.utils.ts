@@ -1,6 +1,6 @@
 import type { ExtendedError, Socket } from 'socket.io';
 import { type AnySchema, ValidationError } from 'yup';
-import { authenticate } from './jwt';
+import { authenticate } from './jwt.utils';
 
 export function getSocketAuthToken(socket: Socket): string | undefined {
     return socket.handshake.auth.token;

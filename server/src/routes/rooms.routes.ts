@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { index, show, insert, update } from '../controllers/rooms';
-import { isAuthenticated } from '../middlewares/auth';
-import { createRoomSchema } from '../validation/rooms';
-import { validateRequest } from '../middlewares/validation';
+import { isAuthenticated } from '../middlewares/auth.middleware';
+import { validateRequest } from '../middlewares/validation.middleware';
+import { createRoomSchema } from '../validation/rooms.validation';
+import { index, show, insert, update } from '../controllers/rooms.controller';
 
 const router = Router();
 

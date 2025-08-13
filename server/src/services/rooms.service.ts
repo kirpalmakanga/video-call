@@ -1,4 +1,4 @@
-import db from '../utils/db';
+import db from '../db';
 
 export function createRoom(data: { name: string; creatorId: string }) {
     return db.room.create({ data });

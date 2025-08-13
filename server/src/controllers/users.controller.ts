@@ -1,7 +1,7 @@
-import type { NextFunction, Request, Response } from 'express';
-import { getUserById, updateUser } from '../services/users';
-import { omit } from '../utils/helpers';
-import type { UpdateProfileFormData } from '../validation/user';
+import type { NextFunction, Response } from 'express';
+import { getUserById, updateUser } from '../services/users.service';
+import type { UpdateProfileFormData } from '../validation/user.validation';
+import { omit } from '../utils/helpers.utils';
 
 export async function getProfile(
     { userId }: AuthenticatedRequest,

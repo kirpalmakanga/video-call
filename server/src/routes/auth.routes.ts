@@ -1,18 +1,18 @@
 import { Router } from 'express';
-import {
-    login,
-    register,
-    refreshAccessToken,
-    updatePassword
-} from '../controllers/auth';
-import { validateRequest } from '../middlewares/validation';
+import { isAuthenticated } from '../middlewares/auth.middleware';
+import { validateRequest } from '../middlewares/validation.middleware';
 import {
     loginSchema,
     refreshTokenSchema,
     registerSchema,
     updatePasswordSchema
-} from '../validation/auth';
-import { isAuthenticated } from '../middlewares/auth';
+} from '../validation/auth.validation';
+import {
+    login,
+    register,
+    refreshAccessToken,
+    updatePassword
+} from '../controllers/auth.controller';
 
 const router = Router();
 

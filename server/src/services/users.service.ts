@@ -1,5 +1,5 @@
-import db from '../utils/db';
-import { hashPassword } from '../utils/auth';
+import db from '../db';
+import { hashPassword } from '../utils/auth.utils';
 
 export function getUserByEmail(email: string) {
     return db.user.findUnique({

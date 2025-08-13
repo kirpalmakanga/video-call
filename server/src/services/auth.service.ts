@@ -1,5 +1,5 @@
-import db from '../utils/db';
-import { hashToken } from '../utils/auth';
+import db from '../db';
+import { hashToken } from '../utils/auth.utils';
 
 export function addRefreshTokenToWhitelist({
     refreshToken,

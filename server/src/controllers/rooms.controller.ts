@@ -4,7 +4,7 @@ import {
     getAllRooms,
     getRoomById,
     updateRoom
-} from '../services/rooms';
+} from '../services/rooms.service';
 
 export async function index(_: Request, res: Response) {
     const rooms = await getAllRooms();

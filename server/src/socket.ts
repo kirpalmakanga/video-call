@@ -3,7 +3,6 @@ import {
     Server as SocketServer,
     type ServerOptions as SocketServerOptions
 } from 'socket.io';
-import { assertIsDefined } from '../../utils/assert';
 import {
     answerSchema,
     connectedParticipantSchema,
@@ -11,7 +10,7 @@ import {
     iceCandidateSchema,
     offerSchema,
     syncParticipantSchema
-} from './validation/socket';
+} from './validation/socket.validation';
 import {
     authorizeSocket,
     bindEvent,
@@ -19,7 +18,8 @@ import {
     getSocketAuthToken,
     joinRooms,
     leaveRooms
-} from './utils/socket';
+} from './utils/socket.utils';
+import { assertIsDefined } from '../../utils/assert';
 
 export default function startSocketServer(
     httpServer: Server,

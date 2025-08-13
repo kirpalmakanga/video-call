@@ -3,11 +3,11 @@ import listRoutes from 'express-list-routes';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
-import authRoutes from './routes/auth';
-import usersRoutes from './routes/users';
-import roomsRoutes from './routes/rooms';
+import authRoutes from './routes/auth.routes';
+import usersRoutes from './routes/users.routes';
+import roomsRoutes from './routes/rooms.routes';
+import { errorHandler, notFound } from './middlewares/errors.middleware';
 import startSocket from './socket';
-import { errorHandler, notFound } from './middlewares/errors';
 
 const { PORT, CLIENT_URI } = process.env;
 

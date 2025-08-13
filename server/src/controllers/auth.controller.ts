@@ -1,18 +1,18 @@
 import type { NextFunction, Request, Response } from 'express';
-import { generateTokens } from '../utils/jwt';
+import { generateTokens } from '../utils/jwt.utils';
 import {
     addRefreshTokenToWhitelist,
     getRefreshToken,
     deleteRefreshTokenById
-} from '../services/auth';
+} from '../services/auth.service';
 import {
     getUserByEmail,
     createUserByEmailAndPassword,
     getUserById,
     updateUserPassword
-} from '../services/users';
-import { omit } from '../utils/helpers';
-import { validatePassword } from '../utils/auth';
+} from '../services/users.service';
+import { validatePassword } from '../utils/auth.utils';
+import { omit } from '../utils/helpers.utils';
 
 interface RegisterRequest extends Request {
     body: {
