@@ -1,15 +1,15 @@
 # video-call
 
-Experimental WebRTC videoconferencing app
+Experimental WebRTC videoconferencing app (Work In Progress)
 
 ## Client
 
 ### Environment
 
-.env file
+Copy from example and fill .env file
 
 ```
-VITE_API_URI=[your_api_uri]
+VITE_API_URI=
 ```
 
 #### Setup
@@ -39,11 +39,27 @@ pnpm run build
 
 ### Environment
 
-.env file
+Copy from example and fill .env file
 
 ```
-PORT=[your_api_port]
-CLIENT_URI=[your_client_uri]
+PORT=
+CLIENT_URI=
+API_URI=
+DATABASE_URL=
+NODE_ENV=
+
+# JWT
+JWT_ACCESS_SECRET=
+JWT_ISSUER=
+JWT_AUDIENCE=
+
+#Email
+SMTP_HOST=
+SMTP_PORT=
+SMTP_SECURE=[true || false]
+SMTP_USER=
+SMTP_PASS=
+MAIL_FROM=
 ```
 
 #### Setup
