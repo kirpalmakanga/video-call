@@ -1,10 +1,12 @@
 import { createWebHistory, createRouter } from 'vue-router';
-
 const Home = () => import('./pages/Home.vue');
 const RoomSetup = () => import('./pages/RoomSetup.vue');
 const Room = () => import('./pages/Room.vue');
 const Login = () => import('./pages/Login.vue');
 const Register = () => import('./pages/Register.vue');
+const RegisterSuccess = () => import('./pages/RegisterSuccess.vue');
+const RegisterVerified = () => import('./pages/RegisterVerified.vue');
+
 const Settings = () => import('./pages/Settings.vue');
 
 const router = createRouter({
@@ -19,6 +21,16 @@ const router = createRouter({
         { path: '/room/:roomId', component: Room, name: 'room' },
         { path: '/login', component: Login, name: 'login' },
         { path: '/register', component: Register, name: 'register' },
+        {
+            path: '/register/success',
+            component: RegisterSuccess,
+            name: 'register-success'
+        },
+        {
+            path: '/register/verified',
+            component: RegisterVerified,
+            name: 'register-verified'
+        },
         { path: '/settings/:tab?', component: Settings, name: 'settings' }
     ]
 });

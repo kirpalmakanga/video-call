@@ -11,12 +11,12 @@ import {
     getUserById,
     updateUserPassword,
     getUserByVerificationToken,
-    updateUser
+    updateUser,
+    updateUserVerificationToken
 } from '../services/users.service';
 import { createVerificationToken, validatePassword } from '../utils/auth.utils';
 import { omit } from '../utils/helpers.utils';
 import { sendVerificationEmail } from '../utils/mail.utils';
-import type { $Enums } from '../../generated/prisma';
 
 const { CLIENT_URI } = process.env;
 
@@ -56,6 +56,46 @@ export async function register(
     }
 }
 
+interface SendVerificationRequest extends Request {
+    body: { email: string };
+}
+
+async function sendNewVerificationToken(email: string) {
+    const verificationToken = createVerificationToken();
+
+    await updateUserVerificationToken(email, verificationToken);
+
+    await sendVerificationEmail(email, verificationToken);
+}
+
+export async function resendVerificationEmail(
+    { body: { email } }: SendVerificationRequest,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const user = await getUserByEmail(email);
+
+        if (!user) {
+            res.status(400);
+
+            throw new Error('This user does not exist.');
+        }
+
+        if (user.status === 'PENDING') {
+            await sendNewVerificationToken(email);
+
+            res.status(204).send();
+        } else {
+            res.status(400);
+
+            throw new Error('This user has already been verified.');
+        }
+    } catch (error) {
+        next(error);
+    }
+}
+
 interface VerifyEmailRequest extends Request {
     params: { token: string };
 }
@@ -74,7 +114,7 @@ export async function verifyEmail(
                 verificationToken: null
             });
 
-            res.redirect(`${CLIENT_URI}/login`);
+            res.redirect(`${CLIENT_URI}/register/verified`);
         } else {
             res.status(400);
 
@@ -93,18 +133,21 @@ export async function login(
     try {
         const { email, password } = body;
 
-        if (!email || !password) {
-            res.status(400);
-
-            throw new Error('You must provide an email and a password.');
-        }
-
         const existingUser = await getUserByEmail(email);
 
         if (!existingUser) {
             res.status(403);
 
             throw new Error('Unknown user email.');
+        }
+
+        if (existingUser.status !== 'ACTIVE') {
+            res.status(401);
+
+            /** TODO: Send verification email ? */
+            await sendNewVerificationToken(email);
+
+            throw new Error(`Unverified user.`);
         }
 
         const isValidPassword = await validatePassword(

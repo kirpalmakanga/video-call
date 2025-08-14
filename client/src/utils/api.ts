@@ -44,6 +44,10 @@ export async function getCurrentUserProfile() {
     return data as User;
 }
 
+export async function sendVerificationEmail(email: string) {
+    await authInstance.post('/verify/send', { email });
+}
+
 /** API */
 export async function updateCurrentUserProfile(data: UpdateProfileFormData) {
     await apiInstance.put('/users/profile', data);

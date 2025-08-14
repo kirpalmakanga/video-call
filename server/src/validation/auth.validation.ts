@@ -32,6 +32,10 @@ export const updatePasswordSchema = object({
 
 export type UpdatePasswordSchema = InferType<typeof updatePasswordSchema>;
 
-export const verifyEmailSchema = object({ token: string().required() });
+export const verifyEmailSchema = object({ token: string().required() }).exact();
 
 export type VerifyEmailSchema = InferType<typeof verifyEmailSchema>;
+
+export const resendVerificationSchema = object({
+    email: string().email('Invalid email').required('Email required')
+}).exact();

@@ -25,13 +25,10 @@ async function onSubmit({ data }: FormSubmitEvent<RegisterFormData>) {
     try {
         await register(omit(data, 'confirmPassword'));
 
-        toast.add({
-            title: 'Success',
-            description:
-                'Account created. A verification email has been sent to your inbox.'
+        router.replace({
+            path: '/register/success',
+            query: { email: data.email }
         });
-
-        router.replace('/login');
     } catch (error: any) {
         toast.add({
             title: 'Registering failed',

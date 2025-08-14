@@ -13,7 +13,12 @@ const { isLoggedIn } = storeToRefs(authStore);
 useInterceptors();
 
 function isAuthRoute(name: RouteRecordNameGeneric) {
-    return name && ['login', 'register'].includes(name.toString());
+    return (
+        name &&
+        ['login', 'register', 'register-success', 'register-verified'].includes(
+            name.toString()
+        )
+    );
 }
 
 router.beforeEach(({ name }, _, next) => {

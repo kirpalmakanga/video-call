@@ -47,6 +47,16 @@ export function updateUser(
     });
 }
 
+export function updateUserVerificationToken(
+    email: string,
+    verificationToken: string
+) {
+    return db.user.update({
+        where: { email },
+        data: { verificationToken }
+    });
+}
+
 export async function updateUserPassword(id: string, password: string) {
     return await db.user.update({
         where: { id },
