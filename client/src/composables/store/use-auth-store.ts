@@ -4,11 +4,9 @@ import {
     logIn,
     getCurrentUserProfile,
     refreshAccessToken,
-    register,
     updateCurrentUserProfile
 } from '../../services/api';
 import type {
-    RegisterFormData,
     LoginFormData,
     UpdateProfileFormData
 } from '../../utils/validation';
@@ -35,12 +33,6 @@ export const useAuthStore = defineStore(
     'auth',
     () => {
         const state = reactive<State>(getDefaultState());
-
-        async function fetchUserProfile() {
-            const userData = await getCurrentUserProfile();
-
-            Object.assign(state, userData);
-        }
 
         return {
             ...toRefs(state),
@@ -72,7 +64,9 @@ export const useAuthStore = defineStore(
 
                 Object.assign(state, tokens);
 
-                await fetchUserProfile();
+                const user = await getCurrentUserProfile();
+
+                Object.assign(state, user);
             },
             async logOut() {
                 Object.assign(state, getDefaultState());
