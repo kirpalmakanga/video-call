@@ -17,8 +17,26 @@ import {
 import { createVerificationToken, validatePassword } from '../utils/auth.utils';
 import { omit } from '../utils/helpers.utils';
 import { sendVerificationEmail } from '../utils/mail.utils';
+import {
+    badRequest,
+    forbidden,
+    success,
+    unauthorized
+} from '../utils/response';
+import { type User } from '../../generated/prisma';
 
 const { CLIENT_URI } = process.env;
+
+async function generateUserTokens(user: User) {
+    const tokens = await generateTokens(omit(user, 'password'));
+
+    await addRefreshTokenToWhitelist({
+        refreshToken: tokens.refreshToken,
+        userId: user.id
+    });
+
+    return tokens;
+}
 
 interface RegisterRequest extends Request {
     body: {
@@ -39,9 +57,7 @@ export async function register(
         const existingUser = await getUserByEmail(email);
 
         if (existingUser) {
-            res.status(400);
-
-            throw new Error('Email already in use.');
+            return badRequest(res, 'Email already in use.');
         }
 
         const verificationToken = createVerificationToken();
@@ -50,9 +66,9 @@ export async function register(
 
         await sendVerificationEmail(email, verificationToken);
 
-        res.status(204).send();
-    } catch (err) {
-        next(err);
+        success(res);
+    } catch (error) {
+        next(error);
     }
 }
 
@@ -85,11 +101,9 @@ export async function resendVerificationEmail(
         if (user.status === 'PENDING') {
             await sendNewVerificationToken(email);
 
-            res.status(204).send();
+            success(res);
         } else {
-            res.status(400);
-
-            throw new Error('This user has already been verified.');
+            badRequest(res, 'This user has already been verified.');
         }
     } catch (error) {
         next(error);
@@ -116,9 +130,7 @@ export async function verifyEmail(
 
             res.redirect(`${CLIENT_URI}/register/verified`);
         } else {
-            res.status(400);
-
-            throw new Error('Invalid or expired verification token');
+            badRequest(res, 'Invalid verification token');
         }
     } catch (error) {
         next(error);
@@ -133,49 +145,29 @@ export async function login(
     try {
         const { email, password } = body;
 
-        const existingUser = await getUserByEmail(email);
+        const user = await getUserByEmail(email);
 
-        if (!existingUser) {
-            res.status(403);
-
-            throw new Error('Unknown user email.');
+        if (!user) {
+            return forbidden(res, 'Unknown user email.');
         }
 
-        if (existingUser.status !== 'ACTIVE') {
-            res.status(401);
-
-            /** TODO: Send verification email ? */
+        if (user.status !== 'ACTIVE') {
             await sendNewVerificationToken(email);
 
-            throw new Error(`Unverified user.`);
+            return forbidden(res, 'Unverified user.');
         }
 
-        const isValidPassword = await validatePassword(
-            password,
-            existingUser.password
-        );
+        const isValidPassword = await validatePassword(password, user.password);
 
         if (!isValidPassword) {
-            res.status(403);
-
-            throw new Error('Invalid password.');
+            return forbidden(res, 'Invalid password.');
         }
 
-        const { accessToken, refreshToken } = await generateTokens(
-            omit(existingUser, 'password')
-        );
+        const tokens = await generateUserTokens(user);
 
-        await addRefreshTokenToWhitelist({
-            refreshToken,
-            userId: existingUser.id
-        });
-
-        res.json({
-            accessToken,
-            refreshToken
-        });
-    } catch (err) {
-        next(err);
+        success(res, tokens);
+    } catch (error) {
+        next(error);
     }
 }
 
@@ -196,9 +188,7 @@ export async function refreshAccessToken(
             savedRefreshToken.revoked === true ||
             savedRefreshToken.expireAt.getTime() <= Date.now()
         ) {
-            res.status(401);
-
-            throw new Error('Unauthorized');
+            return unauthorized(res, 'Invalid refresh token.');
         }
 
         const user = await getUserById(savedRefreshToken.userId);
@@ -206,26 +196,14 @@ export async function refreshAccessToken(
         if (user) {
             await deleteRefreshTokenById(savedRefreshToken.id);
 
-            const { accessToken, refreshToken } = await generateTokens(
-                omit(user, 'password')
-            );
+            const tokens = await generateUserTokens(user);
 
-            await addRefreshTokenToWhitelist({
-                refreshToken,
-                userId: user.id
-            });
-
-            res.json({
-                accessToken,
-                refreshToken
-            });
+            success(res, tokens);
         } else {
-            res.status(403);
-
-            throw new Error('Forbidden');
+            badRequest(res, 'Unknown user.');
         }
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        next(error);
     }
 }
 
@@ -241,7 +219,7 @@ export async function updatePassword(
     try {
         await updateUserPassword(userId, body.password);
 
-        res.status(204).send();
+        success(res);
     } catch (error) {
         next(error);
     }

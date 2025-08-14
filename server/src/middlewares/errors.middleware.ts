@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import { error } from '../utils/response';
 
 export function notFound(_: Request, res: Response, next: NextFunction) {
     const error = new Error(`Not found.`);
@@ -9,25 +10,13 @@ export function notFound(_: Request, res: Response, next: NextFunction) {
 }
 
 export function errorHandler(
-    error: Error,
+    err: Error,
     _: Request,
     res: Response,
     next: NextFunction
 ) {
-    if (error) {
-        const { message, stack } = error;
-        const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
-
-        console.error(stack);
-
-        res.status(statusCode);
-
-        res.json({
-            error: message,
-            ...(process.env.NODE_ENV !== 'production' && {
-                stack
-            })
-        });
+    if (err) {
+        error(res, err);
     }
 
     next();

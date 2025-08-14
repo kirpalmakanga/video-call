@@ -2,6 +2,7 @@ import type { NextFunction, Response } from 'express';
 import { getUserById, updateUser } from '../services/users.service';
 import type { UpdateProfileFormData } from '../validation/user.validation';
 import { omit } from '../utils/helpers.utils';
+import { notFound, success } from '../utils/response';
 
 export async function getProfile(
     { userId }: AuthenticatedRequest,
@@ -12,10 +13,13 @@ export async function getProfile(
         const user = await getUserById(userId);
 
         if (user) {
-            return res.json(omit(user, 'password', 'createdAt', 'updatedAt'));
+            return success(
+                res,
+                omit(user, 'password', 'createdAt', 'updatedAt')
+            );
         }
 
-        res.status(404);
+        notFound(res, 'User not found.');
     } catch (error) {
         next(error);
     }
@@ -31,9 +35,9 @@ export async function updateProfile(
     next: NextFunction
 ) {
     try {
-        await updateUser(userId, body);
+        const user = await updateUser(userId, body);
 
-        res.status(204).send();
+        success(res, user);
     } catch (error) {
         next(error);
     }

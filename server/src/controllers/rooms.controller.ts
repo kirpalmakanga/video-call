@@ -5,21 +5,34 @@ import {
     getRoomById,
     updateRoom
 } from '../services/rooms.service';
+import { notFound, success } from '../utils/response';
 
-export async function index(_: Request, res: Response) {
-    const rooms = await getAllRooms();
+export async function index(_: Request, res: Response, next: NextFunction) {
+    try {
+        const rooms = await getAllRooms();
 
-    res.json(rooms);
+        success(res, rooms);
+    } catch (error) {
+        next(error);
+    }
 }
 
-export async function show({ params: { roomId } }: Request, res: Response) {
-    const room = await getRoomById(roomId as string);
+export async function show(
+    { params: { roomId } }: Request,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const room = await getRoomById(roomId as string);
 
-    if (room) {
-        return res.json(room);
+        if (room) {
+            return success(res, room);
+        }
+
+        notFound(res, 'Room not found');
+    } catch (error) {
+        next(error);
     }
-
-    res.status(404).json(null);
 }
 
 interface CreateRoomRequest extends AuthenticatedRequest {
@@ -37,7 +50,7 @@ export async function insert(
             creatorId
         });
 
-        res.status(200).json(room);
+        success(res, room);
     } catch (error) {
         next(error);
     }
