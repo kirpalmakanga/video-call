@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { getUserIdFromToken } from '../utils/jwt.utils';
 import { getAuthToken } from '../utils/auth.utils';
+import { unauthorized } from '../utils/response';
 
 export async function isAuthenticated(
     req: Request,
@@ -11,11 +12,9 @@ export async function isAuthenticated(
         const token = getAuthToken(req);
 
         req.userId = await getUserIdFromToken(token);
+
+        next();
     } catch (err) {
-        res.status(401);
-
-        throw new Error('Unauthorized.');
+        unauthorized(res);
     }
-
-    return next();
 }
