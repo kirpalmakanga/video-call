@@ -4,29 +4,40 @@ import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
 import { useRouter } from 'vue-router';
 import { registerSchema, type RegisterFormData } from '../../utils/validation';
 import { register } from '../../utils/api';
+import { omit } from '../../utils/helpers';
 
 const router = useRouter();
 const toast = useToast();
 
-const state = reactive<RegisterFormData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-});
+function getInitialState() {
+    return {
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+    };
+}
+
+const state = reactive<RegisterFormData>(getInitialState());
 
 async function onSubmit({ data }: FormSubmitEvent<RegisterFormData>) {
     try {
-        await register(data);
+        await register(omit(data, 'confirmPassword'));
 
-        router.replace('/');
+        toast.add({
+            title: 'Success',
+            description:
+                'Account created. A verification email has been sent to your inbox.'
+        });
+
+        router.replace('/login');
     } catch (error: any) {
         toast.add({
             title: 'Registering failed',
             description:
                 error?.response?.data.error ||
-                `Couldn't register, check your credentials.`,
+                `Couldn't register, please try later.`,
             color: 'error'
         });
     }

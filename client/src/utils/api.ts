@@ -14,7 +14,9 @@ export const authInstance = axios.create({
 });
 
 /** Auth */
-export async function register(credentials: RegisterFormData) {
+export async function register(
+    credentials: Omit<RegisterFormData, 'confirmPassword'>
+) {
     const { data } = await authInstance.post('/register', credentials);
 
     return data as { accessToken: string; refreshToken: string };

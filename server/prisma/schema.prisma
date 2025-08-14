@@ -11,6 +11,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Status {
+  PENDING
+  ACTIVE
+  BLOCKED
+}
+
 model RefreshToken {
   id          String   @id @unique @default(uuid())
   hashedToken String   @unique
@@ -32,13 +38,15 @@ model Room {
 }
 
 model User {
-  id            String         @id @unique @default(uuid())
-  email         String         @unique
-  password      String
-  firstName     String
-  lastName      String
-  refreshTokens RefreshToken[]
-  rooms         Room[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                String         @id @unique @default(uuid())
+  email             String         @unique
+  password          String
+  firstName         String
+  lastName          String
+  status            Status         @default(PENDING)
+  verificationToken String?
+  refreshTokens     RefreshToken[]
+  rooms             Room[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 }

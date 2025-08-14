@@ -5,13 +5,15 @@ import {
     loginSchema,
     refreshTokenSchema,
     registerSchema,
-    updatePasswordSchema
+    updatePasswordSchema,
+    verifyEmailSchema
 } from '../validation/auth.validation';
 import {
     login,
     register,
     refreshAccessToken,
-    updatePassword
+    updatePassword,
+    verifyEmail
 } from '../controllers/auth.controller';
 import { createRouter } from '../utils/routes.utils';
 
@@ -42,5 +44,11 @@ export default createRouter([
             validateRequest({ body: updatePasswordSchema })
         ],
         handler: updatePassword as RequestHandler
+    },
+    {
+        method: 'get',
+        path: '/verify/:token',
+        middlewares: [validateRequest({ params: verifyEmailSchema })],
+        handler: verifyEmail as RequestHandler
     }
 ]);

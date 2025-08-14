@@ -31,3 +31,7 @@ export const updatePasswordSchema = object({
 }).exact();
 
 export type UpdatePasswordSchema = InferType<typeof updatePasswordSchema>;
+
+export const verifyEmailSchema = object({ token: string().required() });
+
+export type VerifyEmailSchema = InferType<typeof verifyEmailSchema>;

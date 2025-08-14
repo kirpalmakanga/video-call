@@ -7,12 +7,18 @@ import {
 } from '../services/auth.service';
 import {
     getUserByEmail,
-    createUserByEmailAndPassword,
+    createUser,
     getUserById,
-    updateUserPassword
+    updateUserPassword,
+    getUserByVerificationToken,
+    updateUser
 } from '../services/users.service';
-import { validatePassword } from '../utils/auth.utils';
+import { createVerificationToken, validatePassword } from '../utils/auth.utils';
 import { omit } from '../utils/helpers.utils';
+import { sendVerificationEmail } from '../utils/mail.utils';
+import type { $Enums } from '../../generated/prisma';
+
+const { CLIENT_URI } = process.env;
 
 interface RegisterRequest extends Request {
     body: {
@@ -29,7 +35,8 @@ export async function register(
     next: NextFunction
 ) {
     try {
-        const existingUser = await getUserByEmail(body.email);
+        const { email } = body;
+        const existingUser = await getUserByEmail(email);
 
         if (existingUser) {
             res.status(400);
@@ -37,20 +44,44 @@ export async function register(
             throw new Error('Email already in use.');
         }
 
-        const user = await createUserByEmailAndPassword(body);
+        const verificationToken = createVerificationToken();
 
-        const { accessToken, refreshToken } = await generateTokens(
-            omit(user, 'password')
-        );
+        await createUser({ ...body, verificationToken });
 
-        await addRefreshTokenToWhitelist({ refreshToken, userId: user.id });
+        await sendVerificationEmail(email, verificationToken);
 
-        res.json({
-            accessToken,
-            refreshToken
-        });
+        res.status(204).send();
     } catch (err) {
         next(err);
+    }
+}
+
+interface VerifyEmailRequest extends Request {
+    params: { token: string };
+}
+
+export async function verifyEmail(
+    { params: { token } }: VerifyEmailRequest,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const user = await getUserByVerificationToken(token);
+
+        if (user) {
+            await updateUser(user.id, {
+                status: 'ACTIVE',
+                verificationToken: null
+            });
+
+            res.redirect(`${CLIENT_URI}/login`);
+        } else {
+            res.status(400);
+
+            throw new Error('Invalid or expired verification token');
+        }
+    } catch (error) {
+        next(error);
     }
 }
 

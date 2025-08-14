@@ -1,6 +1,6 @@
 import type { Request } from 'express';
 import { compare, hash } from 'bcrypt';
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 
 export function getAuthToken(req: Request) {
     const {
@@ -33,4 +33,8 @@ export function hashToken(token: string) {
 
 export function hashPassword(password: string) {
     return hash(password, 12);
+}
+
+export function createVerificationToken() {
+    return randomBytes(32).toString('hex');
 }
