@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
-import { sendVerificationEmail } from '../utils/api';
+import { sendVerificationEmail } from '../services/api';
 const {
     query: { email }
 } = useRoute();

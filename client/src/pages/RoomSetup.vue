@@ -4,7 +4,7 @@ import Placeholder from '../components/base/Placeholder.vue';
 import MediaSettings from '../components/room/MediaSettings.vue';
 import MediaSettingsSkeleton from '../components/room/MediaSettingsSkeleton.vue';
 import PageError from '../components/page/PageError.vue';
-import { useRoomQuery } from '../utils/queries';
+import { useRoomQuery } from '../services/queries';
 import { useSettingsStore } from '../composables/store/use-settings-store';
 import { storeToRefs } from 'pinia';
 

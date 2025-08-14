@@ -2,7 +2,7 @@
 import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
 import { reactive, ref, watch } from 'vue';
 import { object, string, type InferType } from 'yup';
-import { useCreateRoomMutation } from '../utils/queries';
+import { useCreateRoomMutation } from '../services/queries';
 import { useDebounceFn } from '@vueuse/core';
 
 const toast = useToast();

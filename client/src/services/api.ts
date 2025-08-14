@@ -17,9 +17,7 @@ export const authInstance = axios.create({
 export async function register(
     credentials: Omit<RegisterFormData, 'confirmPassword'>
 ) {
-    const { data } = await authInstance.post('/register', credentials);
-
-    return data as { accessToken: string; refreshToken: string };
+    await authInstance.post('/register', credentials);
 }
 
 export async function refreshAccessToken(refreshToken: string) {
@@ -34,8 +32,13 @@ export async function logIn(credentials: LoginFormData) {
     return data as { accessToken: string; refreshToken: string };
 }
 
+export async function sendVerificationEmail(email: string) {
+    await authInstance.post('/verify/send', { email });
+}
+
+/** Authenticated API Requests */
 export async function updatePassword(password: string) {
-    await authInstance.put('/password', { password });
+    await apiInstance.put('/auth/password', { password });
 }
 
 export async function getCurrentUserProfile() {
@@ -44,11 +47,6 @@ export async function getCurrentUserProfile() {
     return data as User;
 }
 
-export async function sendVerificationEmail(email: string) {
-    await authInstance.post('/verify/send', { email });
-}
-
-/** API */
 export async function updateCurrentUserProfile(data: UpdateProfileFormData) {
     await apiInstance.put('/users/profile', data);
 }

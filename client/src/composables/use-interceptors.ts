@@ -1,7 +1,7 @@
 import { useAuthStore } from './store/use-auth-store';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
-import { apiInstance } from '../utils/api';
+import { apiInstance } from '../services/api';
 
 export default function useInterceptors() {
     const router = useRouter();

@@ -3,7 +3,7 @@ import { reactive } from 'vue';
 import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
 import { useRouter } from 'vue-router';
 import { registerSchema, type RegisterFormData } from '../../utils/validation';
-import { register } from '../../utils/api';
+import { register } from '../../services/api';
 import { omit } from '../../utils/helpers';
 
 const router = useRouter();

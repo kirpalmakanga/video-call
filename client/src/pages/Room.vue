@@ -5,7 +5,7 @@ import { useOnline } from '@vueuse/core';
 import Placeholder from '../components/base/Placeholder.vue';
 import Room from '../components/room/Room.vue';
 import PageError from '../components/page/PageError.vue';
-import { useRoomQuery } from '../utils/queries';
+import { useRoomQuery } from '../services/queries';
 
 const router = useRouter();
 

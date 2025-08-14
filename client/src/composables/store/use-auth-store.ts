@@ -6,7 +6,7 @@ import {
     refreshAccessToken,
     register,
     updateCurrentUserProfile
-} from '../../utils/api';
+} from '../../services/api';
 import type {
     RegisterFormData,
     LoginFormData,

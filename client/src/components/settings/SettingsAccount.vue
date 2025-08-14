@@ -5,7 +5,7 @@ import {
     type UpdatePasswordFormData
 } from '../../utils/validation';
 import type { FormSubmitEvent } from '@nuxt/ui';
-import { updatePassword } from '../../utils/api';
+import { updatePassword } from '../../services/api';
 import { useAuthStore } from '../../composables/store/use-auth-store';
 
 const toast = useToast();
