@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, reactive, ref, watch, type Ref } from 'vue';
 import { useOnline, useUserMedia } from '@vueuse/core';
 import { useSocket } from './use-socket';
-import { useRTCSession } from './use-rtc-session';
+import { useWebRTC } from './use-web-rtc';
 import { pick } from '../utils/helpers';
 import { useParticipantsList } from './use-participants-list';
 
@@ -54,7 +54,7 @@ export function useRoom(
         processAnswer,
         addIceCandidate,
         connectToPeer
-    } = useRTCSession(localStream, {
+    } = useWebRTC(localStream, {
         onIceCandidate(peerId, candidate) {
             emit('iceCandidate', {
                 roomId,
@@ -185,8 +185,8 @@ export function useRoom(
         });
     });
 
-    subscribe('incomingAnswer', async ({ senderParticipantId, answer }) => {
-        await processAnswer(senderParticipantId, answer);
+    subscribe('incomingAnswer', ({ senderParticipantId, answer }) => {
+        processAnswer(senderParticipantId, answer);
     });
 
     subscribe(

@@ -1,11 +1,6 @@
-import {
-    computed,
-    onBeforeUnmount,
-    shallowReactive,
-    watch,
-    type Ref
-} from 'vue';
+import { onBeforeUnmount, ref, watch, type Ref } from 'vue';
 import { assertIsDefined } from '../../../utils/assert';
+import { omit } from '../utils/helpers';
 
 // const connectionConfiguration: RTCConfiguration = {
 //     iceServers: [
@@ -19,14 +14,9 @@ import { assertIsDefined } from '../../../utils/assert';
 //     ]
 // };
 
-interface RTCSessionOptions {
+interface RTCOptions {
     onIceCandidate: (peerId: string, candidate: RTCIceCandidate) => void;
     onDisconnection?: (peerId: string) => void;
-}
-
-interface Peer {
-    connection: RTCPeerConnection;
-    stream: MediaStream | null;
 }
 
 function closeStream(stream: MediaStream) {
@@ -35,51 +25,70 @@ function closeStream(stream: MediaStream) {
     }
 }
 
-export function useRTCSession(
-    localStream: Ref<MediaStream | undefined>,
-    { onIceCandidate, onDisconnection }: RTCSessionOptions
-) {
-    const peers = shallowReactive<{ [peerId: string]: Peer }>({});
+function usePeerConnections() {
+    const peerConnections: { [peerId: string]: RTCPeerConnection } = {};
 
     function hasPeer(peerId: string) {
-        return !!peers[peerId];
+        return !!peerConnections[peerId];
     }
 
-    function hasPeers() {
-        return !!Object.values(peers).length;
-    }
-
-    function getPeer(peerId: string) {
-        const peer = peers[peerId];
-
-        assertIsDefined(
-            peer,
-            'Peer connection does not exist or has already been closed.'
-        );
-
-        return peer;
-    }
-
-    function getPeerConnection(peerId: string) {
-        return getPeer(peerId).connection;
-    }
-
-    function getAllPeerIds() {
-        return [...Object.keys(peers)];
-    }
-
-    function getAllPeerStreams() {
-        return Object.entries(peers).reduce((obj, [peerId, { stream }]) => {
-            if (stream) {
-                obj[peerId] = stream;
+    return {
+        createPeer(peerId: string) {
+            if (hasPeer(peerId)) {
+                throw new Error('Peer connection already exists.');
             }
 
-            return obj;
-        }, {} as { [peerId: string]: MediaStream });
+            const connection = new RTCPeerConnection();
+
+            peerConnections[peerId] = connection;
+
+            return connection;
+        },
+        getAllPeerIds() {
+            return Object.keys(peerConnections);
+        },
+        getPeer(peerId: string) {
+            const connection = peerConnections[peerId];
+
+            assertIsDefined(
+                connection,
+                'Peer connection does not exist or has already been closed.'
+            );
+
+            return connection;
+        },
+        hasPeers() {
+            return !!Object.values(peerConnections).length;
+        },
+        hasPeer
+    };
+}
+
+export function useWebRTC(
+    localStream: Ref<MediaStream | undefined>,
+    { onIceCandidate, onDisconnection }: RTCOptions
+) {
+    const { createPeer, getAllPeerIds, getPeer, hasPeers } =
+        usePeerConnections();
+
+    const peerConnections: { [peerId: string]: RTCPeerConnection } = {};
+    const peerStreams = ref<{ [peerId: string]: MediaStream | null }>({});
+
+    function getPeerStream(peerId: string) {
+        return peerStreams.value[peerId] || null;
+    }
+
+    function setPeerStream(peerId: string, peerStream: MediaStream | null) {
+        const currentStream = getPeerStream(peerId);
+
+        if (peerStream?.id !== currentStream?.id) {
+            peerStreams.value = { ...peerStreams.value, [peerId]: peerStream };
+        }
     }
 
     function disconnectFromPeer(peerId: string) {
-        const { connection, stream } = getPeer(peerId);
+        const connection = getPeer(peerId);
+        const stream = getPeerStream(peerId);
 
         connection.close();
 
@@ -87,28 +96,15 @@ export function useRTCSession(
             closeStream(stream);
         }
 
-        delete peers[peerId];
-    }
+        delete peerConnections[peerId];
 
-    function createPeer(peerId: string) {
-        if (hasPeer(peerId)) {
-            throw new Error('Peer connection already exists.');
-        }
-
-        const entry = {
-            connection: new RTCPeerConnection(),
-            stream: null
-        };
-
-        peers[peerId] = entry;
-
-        return entry;
+        peerStreams.value = omit(peerStreams.value, peerId);
     }
 
     function bindLocalStreamToPeer(peerId: string) {
         assertIsDefined(localStream.value, 'Local stream unavailable.');
 
-        const connection = getPeerConnection(peerId);
+        const connection = getPeer(peerId);
 
         for (const track of localStream.value.getTracks()) {
             connection.addTrack(track, localStream.value);
@@ -116,24 +112,13 @@ export function useRTCSession(
     }
 
     function unbindLocalStreamFromPeer(peerId: string) {
-        const connection = getPeerConnection(peerId);
+        const connection = getPeer(peerId);
         const senders = connection.getSenders();
 
         if (senders.length) {
             for (const sender of senders) {
                 connection.removeTrack(sender);
             }
-        }
-    }
-
-    function setPeerStream(peerId: string, peerStream: MediaStream | null) {
-        const { stream, ...peer } = getPeer(peerId);
-
-        if (stream?.id !== peerStream?.id) {
-            peers[peerId] = {
-                ...peer,
-                stream: peerStream
-            };
         }
     }
 
@@ -170,59 +155,9 @@ export function useRTCSession(
     onBeforeUnmount(disconnectFromAllPeers);
 
     return {
-        peerStreams: computed(getAllPeerStreams),
-        hasPeer,
-        disconnectFromPeer,
-        disconnectFromAllPeers,
-        async createOffer(peerId: string) {
-            const connection = getPeerConnection(peerId);
-
-            const offer = await connection.createOffer();
-
-            await connection.setLocalDescription(
-                new RTCSessionDescription(offer)
-            );
-
-            return offer;
-        },
-        async createAnswer(peerId: string, offer: RTCSessionDescriptionInit) {
-            const connection = getPeerConnection(peerId);
-
-            await connection.setRemoteDescription(
-                new RTCSessionDescription(offer)
-            );
-
-            const answer = await connection.createAnswer();
-
-            await connection.setLocalDescription(
-                new RTCSessionDescription(answer)
-            );
-
-            return answer;
-        },
-        async processAnswer(peerId: string, answer: RTCSessionDescriptionInit) {
-            const connection = getPeerConnection(peerId);
-
-            await connection.setRemoteDescription(
-                new RTCSessionDescription(answer)
-            );
-        },
-        async addIceCandidate(
-            peerId: string,
-            sdpMLineIndex: number | null | undefined,
-            candidate: string | undefined
-        ) {
-            const connection = getPeerConnection(peerId);
-
-            await connection.addIceCandidate(
-                new RTCIceCandidate({
-                    sdpMLineIndex,
-                    candidate
-                })
-            );
-        },
+        peerStreams,
         connectToPeer(peerId: string) {
-            const { connection } = createPeer(peerId);
+            const connection = createPeer(peerId);
 
             connection.onicecandidate = ({ candidate }) => {
                 if (candidate) {
@@ -249,6 +184,55 @@ export function useRTCSession(
             };
 
             bindLocalStreamToPeer(peerId);
-        }
+        },
+        async createOffer(peerId: string) {
+            const connection = getPeer(peerId);
+
+            const offer = await connection.createOffer();
+
+            await connection.setLocalDescription(
+                new RTCSessionDescription(offer)
+            );
+
+            return offer;
+        },
+        async createAnswer(peerId: string, offer: RTCSessionDescriptionInit) {
+            const connection = getPeer(peerId);
+
+            await connection.setRemoteDescription(
+                new RTCSessionDescription(offer)
+            );
+
+            const answer = await connection.createAnswer();
+
+            await connection.setLocalDescription(
+                new RTCSessionDescription(answer)
+            );
+
+            return answer;
+        },
+        async processAnswer(peerId: string, answer: RTCSessionDescriptionInit) {
+            const connection = getPeer(peerId);
+
+            await connection.setRemoteDescription(
+                new RTCSessionDescription(answer)
+            );
+        },
+        async addIceCandidate(
+            peerId: string,
+            sdpMLineIndex: number | null | undefined,
+            candidate: string | undefined
+        ) {
+            const connection = getPeer(peerId);
+
+            await connection.addIceCandidate(
+                new RTCIceCandidate({
+                    sdpMLineIndex,
+                    candidate
+                })
+            );
+        },
+        disconnectFromPeer,
+        disconnectFromAllPeers
     };
 }
