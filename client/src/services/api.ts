@@ -3,7 +3,7 @@ import type {
     LoginFormData,
     RegisterFormData,
     UpdateProfileFormData
-} from './validation';
+} from '../utils/validation';
 
 export const apiInstance = axios.create({
     baseURL: import.meta.env.VITE_API_URI
