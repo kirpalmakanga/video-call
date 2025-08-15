@@ -1,43 +1,12 @@
 <script setup lang="ts">
-import { watch } from 'vue';
-import { RouterView, useRouter, type RouteRecordNameGeneric } from 'vue-router';
-import { storeToRefs } from 'pinia';
-import useInterceptors from './composables/use-interceptors';
-import { useAuthStore } from './composables/store/use-auth-store';
+import { RouterView } from 'vue-router';
 import Header from './components/Header.vue';
+import useInterceptors from './composables/use-interceptors';
+import { useAuthRouteGuard } from './composables/use-auth-route-guard';
 
-const router = useRouter();
-const authStore = useAuthStore();
-const { isLoggedIn } = storeToRefs(authStore);
+useAuthRouteGuard();
 
 useInterceptors();
-
-function isAuthRoute(name: RouteRecordNameGeneric) {
-    return (
-        name &&
-        ['login', 'register', 'register-success', 'register-verified'].includes(
-            name.toString()
-        )
-    );
-}
-
-router.beforeEach(({ name }, _, next) => {
-    if (!isLoggedIn.value && !isAuthRoute(name)) {
-        next({ name: 'login' });
-    } else if (isLoggedIn.value && isAuthRoute(name)) {
-        next({ name: 'home' });
-    } else {
-        next();
-    }
-});
-
-watch(isLoggedIn, () => {
-    if (isLoggedIn.value) {
-        router.replace('/');
-    } else {
-        router.replace('/login');
-    }
-});
 </script>
 
 <template>
