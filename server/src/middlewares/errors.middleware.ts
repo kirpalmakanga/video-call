@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { error } from '../utils/response';
+import { error } from '../utils/response.utils';
 
 export function notFound(_: Request, res: Response, next: NextFunction) {
     const error = new Error(`Not found.`);

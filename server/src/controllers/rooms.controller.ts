@@ -5,7 +5,7 @@ import {
     getRoomById,
     updateRoom
 } from '../services/rooms.service';
-import { notFound, success } from '../utils/response';
+import { notFound, success } from '../utils/response.utils';
 
 export async function index(_: Request, res: Response, next: NextFunction) {
     try {

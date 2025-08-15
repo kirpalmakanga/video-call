@@ -1,6 +1,6 @@
 import type { Request, RequestHandler } from 'express';
 import { object, type AnySchema, ValidationError } from 'yup';
-import { validationError } from '../utils/response';
+import { validationError } from '../utils/response.utils';
 
 type ValidateOptions = {
     [key in keyof Request]?: AnySchema;

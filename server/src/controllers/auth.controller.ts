@@ -27,7 +27,7 @@ import {
     forbidden,
     success,
     unauthorized
-} from '../utils/response';
+} from '../utils/response.utils';
 import { type User } from '../../generated/prisma';
 import type {
     VerificationTokenSchema,

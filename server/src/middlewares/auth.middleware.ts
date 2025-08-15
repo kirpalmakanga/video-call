@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { getUserIdFromToken } from '../utils/jwt.utils';
 import { getAuthToken } from '../utils/auth.utils';
-import { unauthorized } from '../utils/response';
+import { unauthorized } from '../utils/response.utils';
 
 export async function isAuthenticated(
     req: Request,
