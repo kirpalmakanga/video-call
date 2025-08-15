@@ -8,6 +8,7 @@ import {
     type UpdateProfileFormData
 } from '../../utils/validation';
 import type { FormSubmitEvent } from '@nuxt/ui';
+import TextField from '../form/TextField.vue';
 
 const toast = useToast();
 
@@ -54,21 +55,13 @@ async function onSubmit({ data }: FormSubmitEvent<UpdateProfileFormData>) {
         :state="state"
         @submit="onSubmit"
     >
-        <UFormField
+        <TextField
             label="First name"
-            :ui="{ label: 'font-bold' }"
             name="firstName"
-        >
-            <UInput variant="soft" v-model="state.firstName" />
-        </UFormField>
+            v-model="state.firstName"
+        />
 
-        <UFormField
-            label="Last name"
-            :ui="{ label: 'font-bold' }"
-            name="lastName"
-        >
-            <UInput variant="soft" v-model="state.lastName" />
-        </UFormField>
+        <TextField label="Last name" name="lastName" v-model="state.lastName" />
 
         <UButton
             class="self-end"

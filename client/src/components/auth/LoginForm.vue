@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
+import EmailField from '../form/EmailField.vue';
+import PasswordField from '../form/PasswordField.vue';
 import { useAuthStore } from '../../composables/store/use-auth-store';
 import { loginSchema, type LoginFormData } from '../../utils/validation';
 
@@ -36,27 +38,13 @@ async function onSubmit({ data }: FormSubmitEvent<LoginFormData>) {
         :state="state"
         class="flex flex-col gap-4"
     >
-        <UFormField label="Email" name="email" :ui="{ label: 'font-bold' }">
-            <UInput
-                class="w-full"
-                variant="soft"
-                v-model="state.email"
-                type="email"
-            />
-        </UFormField>
+        <EmailField label="Email" name="email" v-model="state.email" />
 
-        <UFormField
+        <PasswordField
             label="Password"
             name="password"
-            :ui="{ label: 'font-bold' }"
-        >
-            <UInput
-                class="w-full"
-                variant="soft"
-                v-model="state.password"
-                type="password"
-            />
-        </UFormField>
+            v-model="state.password"
+        />
 
         <UButton class="self-end" type="submit">Submit</UButton>
     </UForm>

@@ -48,39 +48,25 @@ async function onSubmit({
         :state="state"
         @submit="onSubmit"
     >
-        <input class="hidden" type="email" name="email" :value="email" />
+        <input type="hidden" name="email" :value="email" />
 
-        <UFormField
+        <PasswordField
             label="Current password"
-            :ui="{ label: 'font-bold' }"
             name="currentPassword"
-        >
-            <UInput
-                variant="soft"
-                v-model="state.currentPassword"
-                type="password"
-            />
-        </UFormField>
+            v-model="state.currentPassword"
+        />
 
-        <UFormField
-            label="New password"
-            :ui="{ label: 'font-bold' }"
+        <PasswordField
+            label="Password"
             name="password"
-        >
-            <UInput variant="soft" v-model="state.password" type="password" />
-        </UFormField>
+            v-model="state.password"
+        />
 
-        <UFormField
-            label="Confirm new password"
-            :ui="{ label: 'font-bold' }"
+        <PasswordField
+            label="Confirm password"
             name="confirmPassword"
-        >
-            <UInput
-                variant="soft"
-                v-model="state.confirmPassword"
-                type="password"
-            />
-        </UFormField>
+            v-model="state.confirmPassword"
+        />
 
         <UButton
             class="self-end"

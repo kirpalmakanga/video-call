@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
+import EmailField from '../form/EmailField.vue';
+import { requestPasswordReset } from '../../services/api';
 import {
     forgotPasswordSchema,
     type ForgotPasswordFormData
 } from '../../utils/validation';
-import { requestPasswordReset } from '../../services/api';
 
 const toast = useToast();
 
@@ -42,14 +43,7 @@ async function onSubmit({
         :state="state"
         class="flex flex-col gap-4"
     >
-        <UFormField label="Email" name="email" :ui="{ label: 'font-bold' }">
-            <UInput
-                class="w-full"
-                variant="soft"
-                v-model="state.email"
-                type="email"
-            />
-        </UFormField>
+        <EmailField label="Email" name="email" v-model="state.email" />
 
         <UButton class="self-end" type="submit">Submit</UButton>
     </UForm>

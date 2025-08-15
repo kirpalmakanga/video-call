@@ -5,6 +5,9 @@ import { useRouter } from 'vue-router';
 import { registerSchema, type RegisterFormData } from '../../utils/validation';
 import { register } from '../../services/api';
 import { omit } from '../../utils/helpers';
+import TextField from '../form/TextField.vue';
+import EmailField from '../form/EmailField.vue';
+import PasswordField from '../form/PasswordField.vue';
 
 const router = useRouter();
 const toast = useToast();
@@ -48,57 +51,30 @@ async function onSubmit({ data }: FormSubmitEvent<RegisterFormData>) {
         :state="state"
         @submit="onSubmit"
     >
-        <UFormField
+        <TextField
             label="First name"
             name="firstName"
-            :ui="{ label: 'font-bold' }"
-        >
-            <UInput class="w-full" variant="soft" v-model="state.firstName" />
-        </UFormField>
+            v-model="state.firstName"
+        />
 
-        <UFormField
-            label="Last name"
-            name="lastName"
-            :ui="{ label: 'font-bold' }"
-        >
-            <UInput class="w-full" variant="soft" v-model="state.lastName" />
-        </UFormField>
+        <TextField label="Last name" name="lastName" v-model="state.lastName" />
 
-        <UFormField label="Email" name="email" :ui="{ label: 'font-bold' }">
-            <UInput
-                class="w-full"
-                variant="soft"
-                v-model="state.email"
-                type="email"
-            />
-        </UFormField>
+        <EmailField label="Email" name="email" v-model="state.email" />
 
-        <UFormField
+        <PasswordField
             label="Password"
             name="password"
-            :ui="{ label: 'font-bold' }"
-        >
-            <UInput
-                class="w-full"
-                variant="soft"
-                v-model="state.password"
-                type="password"
-            />
-        </UFormField>
+            v-model="state.password"
+        />
 
-        <UFormField
-            label="Password"
+        <PasswordField
+            label="Confirm password"
             name="confirmPassword"
-            :ui="{ label: 'font-bold' }"
-        >
-            <UInput
-                class="w-full"
-                variant="soft"
-                v-model="state.confirmPassword"
-                type="password"
-            />
-        </UFormField>
+            v-model="state.confirmPassword"
+        />
 
-        <UButton class="self-end" type="submit">Submit</UButton>
+        <UButton class="self-end" icon="i-mdi-save" type="submit">
+            Submit
+        </UButton>
     </UForm>
 </template>

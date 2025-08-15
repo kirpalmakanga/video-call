@@ -64,7 +64,7 @@ export function sendPasswordResetEmail(email: string, resetToken: string) {
         subject: 'Reset password',
         template: 'account-reset-password',
         context: {
-            resetLink: `${CLIENT_URI}/reset-password/${resetToken}`
+            resetLink: `${CLIENT_URI}/reset-password?email=${email}&resetToken=${resetToken}`
         }
     });
 }

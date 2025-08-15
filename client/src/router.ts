@@ -29,7 +29,7 @@ const router = createRouter({
         },
         ,
         {
-            path: '/reset-password/:resetToken',
+            path: '/reset-password',
             component: ResetPassword,
             name: 'auth-reset-password'
         },

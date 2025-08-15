@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
+import PasswordField from '../form/PasswordField.vue';
+import { useAuthStore } from '../../composables/store/use-auth-store';
+import { resetPassword } from '../../services/api';
 import {
     resetPasswordSchema,
     type ResetPasswordFormData
 } from '../../utils/validation';
-import { resetPassword } from '../../services/api';
 
-const router = useRouter();
 const {
-    params: { resetToken }
+    query: { email, resetToken }
 } = useRoute();
 const toast = useToast();
+
+const { logIn } = useAuthStore();
 
 const state = reactive<ResetPasswordFormData>({
     password: '',
@@ -23,7 +26,10 @@ async function onSubmit({ data }: FormSubmitEvent<ResetPasswordFormData>) {
     try {
         await resetPassword(resetToken as string, data);
 
-        router.replace('/login');
+        await logIn({
+            email: email as string,
+            password: data.password
+        });
     } catch (error: any) {
         toast.add({
             title: 'Error',
@@ -43,31 +49,19 @@ async function onSubmit({ data }: FormSubmitEvent<ResetPasswordFormData>) {
         :state="state"
         @submit="onSubmit"
     >
-        <UFormField
-            label="Password"
-            :ui="{ label: 'font-bold' }"
-            name="password"
-        >
-            <UInput
-                class="w-full"
-                variant="soft"
-                v-model="state.password"
-                type="password"
-            />
-        </UFormField>
+        <input type="hidden" name="email" :value="email" />
 
-        <UFormField
+        <PasswordField
+            label="Password"
+            name="password"
+            v-model="state.password"
+        />
+
+        <PasswordField
             label="Confirm password"
-            :ui="{ label: 'font-bold' }"
             name="confirmPassword"
-        >
-            <UInput
-                class="w-full"
-                variant="soft"
-                v-model="state.confirmPassword"
-                type="password"
-            />
-        </UFormField>
+            v-model="state.confirmPassword"
+        />
 
         <UButton class="self-end" type="submit">Submit</UButton>
     </UForm>
