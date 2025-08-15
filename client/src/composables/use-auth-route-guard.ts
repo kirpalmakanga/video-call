@@ -14,7 +14,7 @@ export function useAuthRouteGuard() {
 
     router.beforeEach(({ name }, _, next) => {
         if (!isLoggedIn.value && !isAuthRoute(name)) {
-            next({ name: 'login' });
+            next({ name: 'auth-login' });
         } else if (isLoggedIn.value && isAuthRoute(name)) {
             next({ name: 'home' });
         } else {
