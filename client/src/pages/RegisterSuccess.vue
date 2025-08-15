@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
-import { sendVerificationEmail } from '../services/api';
+import { requestVerificationEmail } from '../services/api';
 const {
     query: { email }
 } = useRoute();
 
 const toast = useToast();
 
-async function sendMail() {
+async function requestEmail() {
     if (email) {
         try {
-            await sendVerificationEmail(email as string);
+            await requestVerificationEmail(email as string);
 
             toast.add({
                 title: 'Email sent',
@@ -40,7 +40,7 @@ async function sendMail() {
                 button below.
             </p>
 
-            <UButton class="self-end" icon="i-mdi-send" @click="sendMail">
+            <UButton class="self-end" icon="i-mdi-send" @click="requestEmail">
                 Send again
             </UButton>
         </div>

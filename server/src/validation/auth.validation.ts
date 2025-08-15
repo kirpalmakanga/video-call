@@ -1,4 +1,4 @@
-import { object, string, type InferType } from 'yup';
+import { object, string, ref, type InferType } from 'yup';
 
 export const registerSchema = object({
     firstName: string().required('First name is required'),
@@ -32,10 +32,29 @@ export const updatePasswordSchema = object({
 
 export type UpdatePasswordSchema = InferType<typeof updatePasswordSchema>;
 
-export const verifyEmailSchema = object({ token: string().required() }).exact();
+export const verificationTokenSchema = object({
+    verificationToken: string().required()
+}).exact();
 
-export type VerifyEmailSchema = InferType<typeof verifyEmailSchema>;
+export type VerificationTokenSchema = InferType<typeof verificationTokenSchema>;
 
-export const resendVerificationSchema = object({
+export const resetTokenSchema = object({
+    resetToken: string().required()
+}).exact();
+
+export type ResetTokenSchema = InferType<typeof resetTokenSchema>;
+
+export const emailSchema = object({
     email: string().email('Invalid email').required('Email required')
 }).exact();
+
+export const resetPasswordSchema = object({
+    password: string()
+        .min(8, 'Password must be at least 8 characters')
+        .required('Password is required'),
+    confirmPassword: string()
+        .required()
+        .oneOf([ref('password')], 'Must match password')
+}).exact();
+
+export type ResetPasswordSchema = InferType<typeof resetPasswordSchema>;

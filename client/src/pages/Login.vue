@@ -12,6 +12,15 @@ import LoginForm from '../components/auth/LoginForm.vue';
             <USeparator class="my-4" />
 
             <p class="text-sm">
+                Forgot your password ?
+                <ULink class="font-bold" href="/forgot-password">
+                    Request reset
+                </ULink>
+            </p>
+
+            <USeparator class="my-4" />
+
+            <p class="text-sm">
                 Don't have an account ?
                 <ULink class="font-bold" href="/register">Register here</ULink>
             </p>

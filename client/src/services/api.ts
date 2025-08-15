@@ -2,6 +2,7 @@ import axios from 'axios';
 import type {
     LoginFormData,
     RegisterFormData,
+    ResetPasswordFormData,
     UpdateProfileFormData
 } from '../utils/validation';
 
@@ -32,8 +33,19 @@ export async function logIn(credentials: LoginFormData) {
     return data as { accessToken: string; refreshToken: string };
 }
 
-export async function sendVerificationEmail(email: string) {
+export async function requestVerificationEmail(email: string) {
     await authInstance.post('/verify/send', { email });
+}
+
+export async function requestPasswordReset(email: string) {
+    await authInstance.post('/forgot-password', { email });
+}
+
+export async function resetPassword(
+    resetToken: string,
+    data: ResetPasswordFormData
+) {
+    await authInstance.post(`/reset-password/${resetToken}`, data);
 }
 
 /** Authenticated API Requests */

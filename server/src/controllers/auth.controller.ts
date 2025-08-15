@@ -12,11 +12,16 @@ import {
     updateUserPassword,
     getUserByVerificationToken,
     updateUser,
-    updateUserVerificationToken
+    setUserVerificationToken,
+    setUserResetToken,
+    getUserByResetToken
 } from '../services/users.service';
 import { createVerificationToken, validatePassword } from '../utils/auth.utils';
 import { omit } from '../utils/helpers.utils';
-import { sendVerificationEmail } from '../utils/mail.utils';
+import {
+    sendPasswordResetEmail,
+    sendVerificationEmail
+} from '../utils/mail.utils';
 import {
     badRequest,
     forbidden,
@@ -24,6 +29,11 @@ import {
     unauthorized
 } from '../utils/response';
 import { type User } from '../../generated/prisma';
+import type {
+    VerificationTokenSchema,
+    ResetTokenSchema,
+    UpdatePasswordSchema
+} from '../validation/auth.validation';
 
 const { CLIENT_URI } = process.env;
 
@@ -36,6 +46,14 @@ async function generateUserTokens(user: User) {
     });
 
     return tokens;
+}
+
+async function sendNewVerificationToken(email: string) {
+    const verificationToken = createVerificationToken();
+
+    await setUserVerificationToken(email, verificationToken);
+
+    await sendVerificationEmail(email, verificationToken);
 }
 
 interface RegisterRequest extends Request {
@@ -60,11 +78,9 @@ export async function register(
             return badRequest(res, 'Email already in use.');
         }
 
-        const verificationToken = createVerificationToken();
+        await createUser(body);
 
-        await createUser({ ...body, verificationToken });
-
-        await sendVerificationEmail(email, verificationToken);
+        await sendNewVerificationToken(email);
 
         success(res);
     } catch (error) {
@@ -76,15 +92,7 @@ interface SendVerificationRequest extends Request {
     body: { email: string };
 }
 
-async function sendNewVerificationToken(email: string) {
-    const verificationToken = createVerificationToken();
-
-    await updateUserVerificationToken(email, verificationToken);
-
-    await sendVerificationEmail(email, verificationToken);
-}
-
-export async function resendVerificationEmail(
+export async function requestVerificationEmail(
     { body: { email } }: SendVerificationRequest,
     res: Response,
     next: NextFunction
@@ -111,16 +119,16 @@ export async function resendVerificationEmail(
 }
 
 interface VerifyEmailRequest extends Request {
-    params: { token: string };
+    params: VerificationTokenSchema;
 }
 
 export async function verifyEmail(
-    { params: { token } }: VerifyEmailRequest,
+    { params: { verificationToken } }: VerifyEmailRequest,
     res: Response,
     next: NextFunction
 ) {
     try {
-        const user = await getUserByVerificationToken(token);
+        const user = await getUserByVerificationToken(verificationToken);
 
         if (user) {
             await updateUser(user.id, {
@@ -220,6 +228,59 @@ export async function updatePassword(
         await updateUserPassword(userId, body.password);
 
         success(res);
+    } catch (error) {
+        next(error);
+    }
+}
+
+interface PasswordResetRequest extends Request {
+    body: { email: string };
+}
+
+export async function requestPasswordReset(
+    { body: { email } }: PasswordResetRequest,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const user = await getUserByEmail(email);
+
+        if (user) {
+            const resetToken = createVerificationToken();
+
+            await setUserResetToken(email, resetToken);
+
+            await sendPasswordResetEmail(email, resetToken);
+
+            success(res);
+        } else {
+            badRequest(res, 'Unknown user.');
+        }
+    } catch (error) {
+        next(error);
+    }
+}
+
+interface ResetPasswordRequest extends Request {
+    params: ResetTokenSchema;
+    body: UpdatePasswordSchema;
+}
+
+export async function updatePasswordWithResetToken(
+    { params: { resetToken }, body: { password } }: ResetPasswordRequest,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const user = await getUserByResetToken(resetToken);
+
+        if (user) {
+            await updateUserPassword(user.id, password);
+
+            success(res);
+        } else {
+            badRequest(res, 'Invalid or expired reset token.');
+        }
     } catch (error) {
         next(error);
     }

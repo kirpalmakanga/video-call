@@ -5,9 +5,11 @@ import {
     loginSchema,
     refreshTokenSchema,
     registerSchema,
-    resendVerificationSchema,
+    emailSchema,
     updatePasswordSchema,
-    verifyEmailSchema
+    verificationTokenSchema,
+    resetTokenSchema,
+    resetPasswordSchema
 } from '../validation/auth.validation';
 import {
     login,
@@ -15,7 +17,9 @@ import {
     refreshAccessToken,
     updatePassword,
     verifyEmail,
-    resendVerificationEmail
+    requestVerificationEmail,
+    requestPasswordReset,
+    updatePasswordWithResetToken
 } from '../controllers/auth.controller';
 import { createRouter } from '../utils/routes.utils';
 
@@ -29,13 +33,13 @@ export default createRouter([
     {
         method: 'post',
         path: '/verify/send',
-        middlewares: [validateRequest({ body: resendVerificationSchema })],
-        handler: resendVerificationEmail
+        middlewares: [validateRequest({ body: emailSchema })],
+        handler: requestVerificationEmail
     },
     {
         method: 'get',
-        path: '/verify/:token',
-        middlewares: [validateRequest({ params: verifyEmailSchema })],
+        path: '/verify/:verificationToken',
+        middlewares: [validateRequest({ params: verificationTokenSchema })],
         handler: verifyEmail as RequestHandler
     },
     {
@@ -58,5 +62,22 @@ export default createRouter([
             validateRequest({ body: updatePasswordSchema })
         ],
         handler: updatePassword as RequestHandler
+    },
+    {
+        method: 'post',
+        path: '/forgot-password',
+        middlewares: [validateRequest({ body: emailSchema })],
+        handler: requestPasswordReset
+    },
+    {
+        method: 'post',
+        path: '/reset-password/:resetToken',
+        middlewares: [
+            validateRequest({
+                params: resetTokenSchema,
+                body: resetPasswordSchema
+            })
+        ],
+        handler: updatePasswordWithResetToken as RequestHandler
     }
 ]);
