@@ -1,8 +1,15 @@
 import { createTransport } from 'nodemailer';
 import { renderView } from './views.utils';
 
-const { API_URI, SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS } =
-    process.env;
+const {
+    API_URI,
+    CLIENT_URI,
+    SMTP_HOST,
+    SMTP_PORT,
+    SMTP_SECURE,
+    SMTP_USER,
+    SMTP_PASS
+} = process.env;
 
 const transporter = createTransport({
     host: SMTP_HOST,
@@ -57,7 +64,7 @@ export function sendPasswordResetEmail(email: string, resetToken: string) {
         subject: 'Reset password',
         template: 'account-reset-password',
         context: {
-            resetLink: `${API_URI}/auth/reset-password/${resetToken}`
+            resetLink: `${CLIENT_URI}/reset-password/${resetToken}`
         }
     });
 }
