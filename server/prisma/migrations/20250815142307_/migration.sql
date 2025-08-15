@@ -29,6 +29,9 @@ CREATE TABLE "User" (
     "lastName" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "verificationToken" TEXT,
+    "verificationTokenExpiry" DATETIME,
+    "resetToken" TEXT,
+    "resetTokenExpiry" DATETIME,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );

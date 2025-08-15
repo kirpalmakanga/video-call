@@ -38,15 +38,18 @@ model Room {
 }
 
 model User {
-  id                String         @id @unique @default(uuid())
-  email             String         @unique
-  password          String
-  firstName         String
-  lastName          String
-  status            Status         @default(PENDING)
-  verificationToken String?
-  refreshTokens     RefreshToken[]
-  rooms             Room[]
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id                      String         @id @unique @default(uuid())
+  email                   String         @unique
+  password                String
+  firstName               String
+  lastName                String
+  status                  Status         @default(PENDING)
+  verificationToken       String?
+  verificationTokenExpiry DateTime?
+  resetToken              String?
+  resetTokenExpiry        DateTime?
+  refreshTokens           RefreshToken[]
+  rooms                   Room[]
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
 }
