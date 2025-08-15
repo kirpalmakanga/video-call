@@ -50,3 +50,14 @@ export function sendVerificationEmail(
         }
     });
 }
+
+export function sendPasswordResetEmail(email: string, resetToken: string) {
+    return sendMail({
+        to: email,
+        subject: 'Reset password',
+        template: 'account-reset-password',
+        context: {
+            resetLink: `${API_URI}/auth/reset-password/${resetToken}`
+        }
+    });
+}
