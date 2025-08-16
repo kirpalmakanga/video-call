@@ -30,7 +30,6 @@
     },
     "type": "module",
     "devDependencies": {
-        "@types/bcrypt": "^6.0.0",
-        "@types/cors": "^2.8.19"
+        "@types/bcrypt": "^6.0.0"
     }
 }
