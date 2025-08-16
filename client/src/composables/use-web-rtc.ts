@@ -80,7 +80,7 @@ export function useWebRTC(
     const { createPeer, removePeer, getAllPeerIds, getPeer, hasPeers } =
         usePeerConnections();
 
-    const peerStreams = ref<{ [peerId: string]: MediaStream | null }>({});
+    const peerStreams = ref<{ [peerId: string]: MediaStream }>({});
 
     function getPeerStream(peerId: string) {
         return peerStreams.value[peerId] || null;
@@ -89,7 +89,7 @@ export function useWebRTC(
     function setPeerStream(peerId: string, peerStream: MediaStream | null) {
         const currentStream = getPeerStream(peerId);
 
-        if (peerStream?.id !== currentStream?.id) {
+        if (peerStream && peerStream.id !== currentStream?.id) {
             peerStreams.value = { ...peerStreams.value, [peerId]: peerStream };
         }
     }
