@@ -32,6 +32,17 @@ function usePeerConnections() {
         return !!peerConnections[peerId];
     }
 
+    function getPeer(peerId: string) {
+        const connection = peerConnections[peerId];
+
+        assertIsDefined(
+            connection,
+            'Peer connection does not exist or has already been closed.'
+        );
+
+        return connection;
+    }
+
     return {
         createPeer(peerId: string) {
             if (hasPeer(peerId)) {
@@ -44,19 +55,17 @@ function usePeerConnections() {
 
             return connection;
         },
+        removePeer(peerId: string) {
+            const connection = getPeer(peerId);
+
+            connection.close();
+
+            delete peerConnections[peerId];
+        },
         getAllPeerIds() {
             return Object.keys(peerConnections);
         },
-        getPeer(peerId: string) {
-            const connection = peerConnections[peerId];
-
-            assertIsDefined(
-                connection,
-                'Peer connection does not exist or has already been closed.'
-            );
-
-            return connection;
-        },
+        getPeer,
         hasPeers() {
             return !!Object.values(peerConnections).length;
         },
@@ -68,10 +77,9 @@ export function useWebRTC(
     localStream: Ref<MediaStream | undefined>,
     { onIceCandidate, onDisconnection }: RTCOptions
 ) {
-    const { createPeer, getAllPeerIds, getPeer, hasPeers } =
+    const { createPeer, removePeer, getAllPeerIds, getPeer, hasPeers } =
         usePeerConnections();
 
-    const peerConnections: { [peerId: string]: RTCPeerConnection } = {};
     const peerStreams = ref<{ [peerId: string]: MediaStream | null }>({});
 
     function getPeerStream(peerId: string) {
@@ -86,19 +94,23 @@ export function useWebRTC(
         }
     }
 
-    function disconnectFromPeer(peerId: string) {
-        const connection = getPeer(peerId);
+    function removePeerStream(peerId: string) {
         const stream = getPeerStream(peerId);
 
-        connection.close();
+        assertIsDefined(
+            stream,
+            'Peer stream does not exist or already has been removed.'
+        );
 
-        if (stream) {
-            closeStream(stream);
-        }
-
-        delete peerConnections[peerId];
+        closeStream(stream);
 
         peerStreams.value = omit(peerStreams.value, peerId);
+    }
+
+    function disconnectFromPeer(peerId: string) {
+        removePeer(peerId);
+
+        removePeerStream(peerId);
     }
 
     function bindLocalStreamToPeer(peerId: string) {
