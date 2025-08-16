@@ -1,5 +1,5 @@
-import type { NextFunction, Request, Response } from 'express';
-import { generateTokens } from '../utils/jwt.utils';
+import { getRouterParams, H3Event, readValidatedBody, redirect } from 'h3';
+import { type User } from '../../generated/prisma';
 import {
     addRefreshTokenToWhitelist,
     getRefreshToken,
@@ -16,6 +16,7 @@ import {
     setUserResetToken,
     getUserByResetToken
 } from '../services/users.service';
+import { generateTokens } from '../utils/jwt.utils';
 import { createVerificationToken, validatePassword } from '../utils/auth.utils';
 import { omit } from '../utils/helpers.utils';
 import {
@@ -25,15 +26,10 @@ import {
 import {
     badRequest,
     forbidden,
-    success,
+    serverError,
     unauthorized
 } from '../utils/response.utils';
-import { type User } from '../../generated/prisma';
-import type {
-    VerificationTokenSchema,
-    ResetTokenSchema,
-    UpdatePasswordSchema
-} from '../validation/auth.validation';
+import { type UpdatePasswordSchema } from '../validation/auth.validation';
 
 const { CLIENT_URI } = process.env;
 
@@ -56,7 +52,7 @@ async function sendNewVerificationToken(email: string) {
     await sendVerificationEmail(email, verificationToken);
 }
 
-interface RegisterRequest extends Request {
+interface RegisterRequest {
     body: {
         email: string;
         firstName: string;
@@ -65,223 +61,173 @@ interface RegisterRequest extends Request {
     };
 }
 
-export async function register(
-    { body }: RegisterRequest,
-    res: Response,
-    next: NextFunction
-) {
+export async function register(event: H3Event<RegisterRequest>) {
     try {
-        const { email } = body;
-        const existingUser = await getUserByEmail(email);
+        const body = await event.req.json();
+
+        const existingUser = await getUserByEmail(body.email);
 
         if (existingUser) {
-            return badRequest(res, 'Email already in use.');
+            return badRequest('Email already in use.');
         }
 
         await createUser(body);
 
-        await sendNewVerificationToken(email);
-
-        success(res);
+        await sendNewVerificationToken(body.email);
     } catch (error) {
-        next(error);
+        serverError(error);
     }
 }
 
-interface SendVerificationRequest extends Request {
+interface SendVerificationRequest {
     body: { email: string };
 }
 
 export async function requestVerificationEmail(
-    { body: { email } }: SendVerificationRequest,
-    res: Response,
-    next: NextFunction
+    event: H3Event<SendVerificationRequest>
 ) {
-    try {
-        const user = await getUserByEmail(email);
+    const { email } = await event.req.json();
+    const user = await getUserByEmail(email);
 
-        if (!user) {
-            res.status(400);
+    if (!user) {
+        return badRequest('This user does not exist.');
+    }
 
-            throw new Error('This user does not exist.');
-        }
-
-        if (user.status === 'PENDING') {
-            await sendNewVerificationToken(email);
-
-            success(res);
-        } else {
-            badRequest(res, 'This user has already been verified.');
-        }
-    } catch (error) {
-        next(error);
+    if (user.status === 'PENDING') {
+        await sendNewVerificationToken(email);
+    } else {
+        badRequest('This user has already been verified.');
     }
 }
 
-interface VerifyEmailRequest extends Request {
-    params: VerificationTokenSchema;
-}
+export async function verifyEmail(event: H3Event<VerifyEmailRequest>) {
+    const { verificationToken } = getRouterParams(event);
 
-export async function verifyEmail(
-    { params: { verificationToken } }: VerifyEmailRequest,
-    res: Response,
-    next: NextFunction
-) {
-    try {
-        const user = await getUserByVerificationToken(verificationToken);
+    if (!verificationToken) {
+        badRequest('Missing verification token');
+    }
 
-        if (user) {
-            await updateUser(user.id, {
-                status: 'ACTIVE',
-                verificationToken: null
-            });
+    const user = await getUserByVerificationToken(verificationToken);
 
-            res.redirect(`${CLIENT_URI}/register/verified`);
-        } else {
-            badRequest(res, 'Invalid verification token');
-        }
-    } catch (error) {
-        next(error);
+    if (user) {
+        await updateUser(user.id, {
+            status: 'ACTIVE',
+            verificationToken: null,
+            verificationTokenExpiry: null
+        });
+
+        redirect(event, `${CLIENT_URI}/register/verified`);
+    } else {
+        badRequest('Invalid verification token');
     }
 }
 
-export async function login(
-    { body }: Request,
-    res: Response,
-    next: NextFunction
-) {
-    try {
-        const { email, password } = body;
-
-        const user = await getUserByEmail(email);
-
-        if (!user) {
-            return forbidden(res, 'Unknown user email.');
-        }
-
-        if (user.status !== 'ACTIVE') {
-            await sendNewVerificationToken(email);
-
-            return forbidden(res, 'Unverified user.');
-        }
-
-        const isValidPassword = await validatePassword(password, user.password);
-
-        if (!isValidPassword) {
-            return forbidden(res, 'Invalid password.');
-        }
-
-        const tokens = await generateUserTokens(user);
-
-        success(res, tokens);
-    } catch (error) {
-        next(error);
-    }
+interface LoginRequest {
+    body: { email: string; password: string };
 }
 
-interface RefreshTokenRequest extends Request {
+export async function login(event: H3Event<LoginRequest>) {
+    const { email, password } = await event.req.json();
+
+    const user = await getUserByEmail(email);
+
+    if (!user) {
+        return forbidden('Unknown user email.');
+    }
+
+    if (user.status !== 'ACTIVE') {
+        await sendNewVerificationToken(email);
+
+        return forbidden('Unverified user.');
+    }
+
+    const isValidPassword = await validatePassword(password, user.password);
+
+    if (!isValidPassword) {
+        return forbidden('Invalid password.');
+    }
+
+    return await generateUserTokens(user);
+}
+
+interface RefreshTokenRequest {
     body: { refreshToken: string };
 }
 
-export async function refreshAccessToken(
-    { body: { refreshToken } }: RefreshTokenRequest,
-    res: Response,
-    next: NextFunction
-) {
-    try {
-        const savedRefreshToken = await getRefreshToken(refreshToken);
+export async function refreshAccessToken(event: H3Event<RefreshTokenRequest>) {
+    const { refreshToken } = await event.req.json();
+    const savedRefreshToken = await getRefreshToken(refreshToken);
 
-        if (
-            !savedRefreshToken ||
-            savedRefreshToken.revoked === true ||
-            savedRefreshToken.expireAt.getTime() <= Date.now()
-        ) {
-            return unauthorized(res, 'Invalid refresh token.');
-        }
+    if (
+        !savedRefreshToken ||
+        savedRefreshToken.revoked === true ||
+        savedRefreshToken.expireAt.getTime() <= Date.now()
+    ) {
+        return unauthorized('Invalid refresh token.');
+    }
 
-        const user = await getUserById(savedRefreshToken.userId);
+    const user = await getUserById(savedRefreshToken.userId);
 
-        if (user) {
-            await deleteRefreshTokenById(savedRefreshToken.id);
+    if (user) {
+        await deleteRefreshTokenById(savedRefreshToken.id);
 
-            const tokens = await generateUserTokens(user);
-
-            success(res, tokens);
-        } else {
-            badRequest(res, 'Unknown user.');
-        }
-    } catch (error) {
-        next(error);
+        return await generateUserTokens(user);
+    } else {
+        badRequest('Unknown user.');
     }
 }
 
-interface UpdatePasswordRequest extends AuthenticatedRequest {
+interface UpdatePasswordRequest {
     body: { password: string };
 }
 
-export async function updatePassword(
-    { userId, body }: UpdatePasswordRequest,
-    res: Response,
-    next: NextFunction
-) {
-    try {
-        await updateUserPassword(userId, body.password);
+/** TODO: add user id to auth, add confirmPassword to body for validation */
+export async function updatePassword(event: H3Event<UpdatePasswordRequest>) {
+    const { password } = await event.req.json();
 
-        success(res);
-    } catch (error) {
-        next(error);
-    }
+    await updateUserPassword(userId, password);
 }
 
-interface PasswordResetRequest extends Request {
+interface PasswordResetRequest {
     body: { email: string };
 }
 
 export async function requestPasswordReset(
-    { body: { email } }: PasswordResetRequest,
-    res: Response,
-    next: NextFunction
+    event: H3Event<PasswordResetRequest>
 ) {
-    try {
-        const user = await getUserByEmail(email);
+    const { email } = await event.req.json();
+    const user = await getUserByEmail(email);
 
-        if (user) {
-            const resetToken = createVerificationToken();
+    if (user) {
+        const resetToken = createVerificationToken();
 
-            await setUserResetToken(email, resetToken);
+        await setUserResetToken(email, resetToken);
 
-            await sendPasswordResetEmail(email, resetToken);
-
-            success(res);
-        } else {
-            badRequest(res, 'Unknown user.');
-        }
-    } catch (error) {
-        next(error);
+        await sendPasswordResetEmail(email, resetToken);
+    } else {
+        badRequest('Unknown user.');
     }
 }
 
-interface ResetPasswordRequest extends Request {
-    params: ResetTokenSchema;
+interface ResetPasswordRequest {
     body: UpdatePasswordSchema;
 }
 
 export async function updatePasswordWithResetToken(
-    { params: { resetToken }, body: { password } }: ResetPasswordRequest,
-    res: Response,
-    next: NextFunction
+    event: H3Event<ResetPasswordRequest>
 ) {
-    try {
-        const user = await getUserByResetToken(resetToken);
+    const { resetToken } = await getRouterParams(event);
+    const { password } = await event.req.json();
 
-        if (user) {
-            await updateUserPassword(user.id, password);
+    if (!resetToken) {
+        badRequest('Missing reset token');
+    }
 
-            success(res);
-        } else {
-            badRequest(res, 'Invalid or expired reset token.');
-        }
-    } catch (error) {
-        next(error);
+    const user = await getUserByResetToken(resetToken);
+
+    if (user) {
+        await updateUserPassword(user.id, password);
+    } else {
+        badRequest('Invalid or expired reset token.');
     }
 }

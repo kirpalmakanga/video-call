@@ -1,24 +1,33 @@
-import type { RequestHandler } from 'express';
+import type { H3 } from 'h3';
 import { isAuthenticated } from '../middlewares/auth.middleware';
 import { getProfile, updateProfile } from '../controllers/users.controller';
-import { createRouter } from '../utils/routes.utils';
-import { validateRequest } from '../middlewares/validation.middleware';
+import { bindRoutes } from '../utils/routes.utils';
+import { validateBody } from '../middlewares/validation.middleware';
 import { updateProfileSchema } from '../validation/user.validation';
 
-export default createRouter([
-    {
-        method: 'get',
-        path: '/profile',
-        middlewares: [isAuthenticated],
-        handler: getProfile as RequestHandler
-    },
-    {
-        method: 'put',
-        path: '/profile',
-        middlewares: [
-            isAuthenticated,
-            validateRequest({ body: updateProfileSchema })
-        ],
-        handler: updateProfile as RequestHandler
-    }
-]);
+export default function useUsersRoutes(app: H3) {
+    bindRoutes(app, {
+        namespace: 'users',
+        routes: [
+            {
+                method: 'GET',
+                path: '/profile',
+                handler: getProfile,
+                options: {
+                    middleware: [isAuthenticated]
+                }
+            },
+            {
+                method: 'PUT',
+                path: '/profile',
+                handler: updateProfile,
+                options: {
+                    middleware: [
+                        isAuthenticated,
+                        validateBody(updateProfileSchema)
+                    ]
+                }
+            }
+        ]
+    });
+}

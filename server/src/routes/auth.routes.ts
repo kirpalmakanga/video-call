@@ -1,14 +1,12 @@
-import type { RequestHandler } from 'express';
+import type { H3 } from 'h3';
 import { isAuthenticated } from '../middlewares/auth.middleware';
-import { validateRequest } from '../middlewares/validation.middleware';
+import { validateBody } from '../middlewares/validation.middleware';
 import {
     loginSchema,
     refreshTokenSchema,
     registerSchema,
     emailSchema,
     updatePasswordSchema,
-    verificationTokenSchema,
-    resetTokenSchema,
     resetPasswordSchema
 } from '../validation/auth.validation';
 import {
@@ -21,63 +19,76 @@ import {
     requestPasswordReset,
     updatePasswordWithResetToken
 } from '../controllers/auth.controller';
-import { createRouter } from '../utils/routes.utils';
+import { bindRoutes } from '../utils/routes.utils';
 
-export default createRouter([
-    {
-        method: 'post',
-        path: '/register',
-        middlewares: [validateRequest({ body: registerSchema })],
-        handler: register
-    },
-    {
-        method: 'post',
-        path: '/verify/send',
-        middlewares: [validateRequest({ body: emailSchema })],
-        handler: requestVerificationEmail
-    },
-    {
-        method: 'get',
-        path: '/verify/:verificationToken',
-        middlewares: [validateRequest({ params: verificationTokenSchema })],
-        handler: verifyEmail as RequestHandler
-    },
-    {
-        method: 'post',
-        path: '/login',
-        middlewares: [validateRequest({ body: loginSchema })],
-        handler: login
-    },
-    {
-        method: 'post',
-        path: '/refresh',
-        middlewares: [validateRequest({ body: refreshTokenSchema })],
-        handler: refreshAccessToken
-    },
-    {
-        method: 'put',
-        path: '/password',
-        middlewares: [
-            isAuthenticated,
-            validateRequest({ body: updatePasswordSchema })
-        ],
-        handler: updatePassword as RequestHandler
-    },
-    {
-        method: 'post',
-        path: '/forgot-password',
-        middlewares: [validateRequest({ body: emailSchema })],
-        handler: requestPasswordReset
-    },
-    {
-        method: 'post',
-        path: '/reset-password/:resetToken',
-        middlewares: [
-            validateRequest({
-                params: resetTokenSchema,
-                body: resetPasswordSchema
-            })
-        ],
-        handler: updatePasswordWithResetToken as RequestHandler
-    }
-]);
+export default function useAuthRoutes(app: H3) {
+    bindRoutes(app, {
+        namespace: 'auth',
+        routes: [
+            {
+                method: 'POST',
+                path: '/register',
+                handler: register,
+                options: {
+                    middleware: [validateBody(registerSchema)]
+                }
+            },
+            {
+                method: 'POST',
+                path: '/verify/send',
+                handler: requestVerificationEmail,
+                options: {
+                    middleware: [validateBody(emailSchema)]
+                }
+            },
+            {
+                method: 'GET',
+                path: '/verify/:verificationToken',
+                handler: verifyEmail
+            },
+            {
+                method: 'POST',
+                path: '/login',
+                handler: login,
+                options: {
+                    middleware: [validateBody(loginSchema)]
+                }
+            },
+            {
+                method: 'POST',
+                path: '/refresh',
+                handler: refreshAccessToken,
+                options: {
+                    middleware: [validateBody(refreshTokenSchema)]
+                }
+            },
+            {
+                method: 'PUT',
+                path: '/password',
+                handler: updatePassword,
+                options: {
+                    middleware: [
+                        isAuthenticated,
+                        validateBody(updatePasswordSchema)
+                    ]
+                }
+            },
+            {
+                method: 'POST',
+                path: '/forgot-password',
+                handler: requestPasswordReset,
+                options: {
+                    middleware: [validateBody(emailSchema)]
+                }
+            },
+            {
+                method: 'POST',
+                path: '/reset-password/:resetToken',
+                handler: updatePasswordWithResetToken,
+                options: {
+                    middleware: [validateBody(resetPasswordSchema)]
+                }
+            }
+        ]
+    });
+}

@@ -1,38 +1,22 @@
-import express from 'express';
-import listRoutes from 'express-list-routes';
-import morgan from 'morgan';
-import helmet from 'helmet';
-import cors from 'cors';
-import authRouter from './routes/auth.routes';
-import usersRouter from './routes/users.routes';
-import roomsRouter from './routes/rooms.routes';
-import { errorHandler, notFound } from './middlewares/errors.middleware';
-import startSocket from './socket';
+import { H3, handleCors, serve } from 'h3';
+import useAuthRoutes from './routes/auth.routes';
 
 const { PORT, CLIENT_URI } = process.env;
 
-const corsOptions = { origin: [CLIENT_URI as string] };
+const app = new H3();
 
-const app = express();
+// app.use(async (event, next) => {
+//     const corsRes = handleCors(event, {
+//         origin: [CLIENT_URI as string],
+//         preflight: {
+//             statusCode: 204
+//         },
+//         methods: '*'
+//     });
 
-app.use(morgan('dev'));
-app.use(express.json());
-app.use(helmet());
-app.use(cors(corsOptions));
+//     return corsRes;
+// });
 
-app.use('/auth', authRouter);
-app.use('/users', usersRouter);
-app.use('/rooms', roomsRouter);
+useAuthRoutes(app);
 
-app.use(notFound);
-app.use(errorHandler);
-
-listRoutes(app);
-
-const server = app.listen(PORT, () => {
-    console.log(`Listening: http://localhost:${PORT}`);
-});
-
-startSocket(server, {
-    cors: corsOptions
-});
+serve(app, { port: PORT });

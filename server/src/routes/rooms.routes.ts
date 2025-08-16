@@ -1,39 +1,52 @@
-import type { RequestHandler } from 'express';
+import type { H3 } from 'h3';
 import { isAuthenticated } from '../middlewares/auth.middleware';
-import { validateRequest } from '../middlewares/validation.middleware';
+import { validateBody } from '../middlewares/validation.middleware';
 import { createRoomSchema } from '../validation/rooms.validation';
 import { index, show, insert, update } from '../controllers/rooms.controller';
-import { createRouter } from '../utils/routes.utils';
+import { bindRoutes } from '../utils/routes.utils';
 
-export default createRouter([
-    {
-        method: 'get',
-        path: '/',
-        middlewares: [isAuthenticated],
-        handler: index
-    },
-    {
-        method: 'get',
-        path: '/:roomId',
-        middlewares: [isAuthenticated],
-        handler: show
-    },
-    {
-        method: 'post',
-        path: '/',
-        middlewares: [
-            isAuthenticated,
-            validateRequest({ body: createRoomSchema })
-        ],
-        handler: insert as RequestHandler
-    },
-    {
-        method: 'put',
-        path: '/:roomId',
-        middlewares: [
-            isAuthenticated,
-            validateRequest({ body: createRoomSchema })
-        ],
-        handler: update as RequestHandler
-    }
-]);
+export default function useRoomsRoutes(app: H3) {
+    bindRoutes(app, {
+        namespace: 'rooms',
+        routes: [
+            {
+                method: 'GET',
+                path: '/',
+                handler: index,
+                options: {
+                    middleware: [isAuthenticated]
+                }
+            },
+            {
+                method: 'GET',
+                path: '/:roomId',
+                handler: show,
+                options: {
+                    middleware: [isAuthenticated]
+                }
+            },
+            {
+                method: 'POST',
+                path: '/',
+                handler: insert,
+                options: {
+                    middleware: [
+                        isAuthenticated,
+                        validateBody(createRoomSchema)
+                    ]
+                }
+            },
+            {
+                method: 'PUT',
+                path: '/:roomId',
+                handler: update,
+                options: {
+                    middleware: [
+                        isAuthenticated,
+                        validateBody(createRoomSchema)
+                    ]
+                }
+            }
+        ]
+    });
+}

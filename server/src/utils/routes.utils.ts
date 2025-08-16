@@ -1,29 +1,23 @@
-import { Router, type RequestHandler } from 'express';
-
-type RouteMethod = 'get' | 'post' | 'put' | 'delete' | 'patch';
+import type { H3, HTTPMethod, EventHandler, RouteOptions } from 'h3';
+import { join } from 'path';
 
 interface RouteConfig {
-    method: RouteMethod;
+    method: HTTPMethod;
     path: string;
-    handler: RequestHandler;
-    middlewares?: RequestHandler[];
+    handler: EventHandler<any>;
+    options?: RouteOptions;
 }
 
-export function createRouter(routeConfigs: RouteConfig[]) {
-    if (routeConfigs.length) {
-        const router = Router();
-
-        for (const {
+export function bindRoutes(
+    app: H3,
+    { namespace, routes }: { namespace?: string; routes: RouteConfig[] }
+) {
+    for (const { method, path, handler, options } of routes) {
+        app.on(
             method,
-            path,
+            namespace ? join('/', namespace, path) : path,
             handler,
-            middlewares = []
-        } of routeConfigs) {
-            router[method](path, ...middlewares, handler);
-        }
-
-        return router;
-    } else {
-        throw new Error('routeConfigs is empty.');
+            options
+        );
     }
 }

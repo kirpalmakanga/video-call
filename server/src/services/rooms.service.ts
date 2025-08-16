@@ -5,10 +5,10 @@ export function createRoom(data: { name: string; creatorId: string }) {
 }
 
 export function updateRoom(
-    match: { id: string; creatorId: string },
+    where: { id: string; creatorId: string },
     data: { name: string }
 ) {
-    return db.room.update({ where: match, data });
+    return db.room.update({ where: where, data });
 }
 
 export function getAllRooms() {

@@ -1,57 +1,53 @@
-import type { Response } from 'express';
+import { HTTPError } from 'h3';
 
-function sendResponse(
-    res: Response,
-    code: number,
-    body: Record<string, unknown>
-) {
-    res.status(code).json(body);
-}
-
-export function error(res: Response, error: Error) {
+export function serverError(error: Error) {
     console.error(error);
 
-    sendResponse(res, 500, {
-        error: error.message,
+    throw new HTTPError({
+        status: 500,
+        statusText: 'Server error',
+        message: error.message,
         ...(process.env.NODE_ENV !== 'production' && {
             stack: error.stack
         })
     });
 }
 
-export function success(res: Response, data?: any) {
-    sendResponse(res, 200, data);
-}
-
-export function notFound(res: Response, message = 'not_found') {
-    sendResponse(res, 404, {
+export function notFound(message?: string) {
+    throw new HTTPError({
+        status: 404,
+        statusText: 'Not found',
         message
     });
 }
-export function validationError(
-    res: Response,
-    errors: string[] | Record<string, string[]>
-) {
-    sendResponse(res, 422, {
-        message: 'Validation error',
-        errors
+export function validationError(errors: string[] | Record<string, string[]>) {
+    throw new HTTPError({
+        status: 422,
+        statusText: 'Validation errors',
+        body: { errors }
     });
 }
 
-export function badRequest(res: Response, error = 'bad_request') {
-    sendResponse(res, 400, {
-        error
+export function badRequest(message?: string) {
+    throw new HTTPError({
+        status: 400,
+        statusText: 'Bad Request',
+        message
     });
 }
 
-export function unauthorized(res: Response, error = 'unauthorized') {
-    sendResponse(res, 401, {
-        error
+export function unauthorized(message?: string) {
+    throw new HTTPError({
+        status: 401,
+        statusText: 'Unauthorized',
+        message
     });
 }
 
-export function forbidden(res: Response, error = 'forbidden') {
-    sendResponse(res, 403, {
-        error
+export function forbidden(message?: string) {
+    throw new HTTPError({
+        status: 403,
+        statusText: 'Forbidden',
+        message
     });
 }

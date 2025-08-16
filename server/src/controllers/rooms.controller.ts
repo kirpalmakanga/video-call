@@ -1,75 +1,54 @@
-import type { NextFunction, Request, Response } from 'express';
+import { getRouterParams, type H3Event } from 'h3';
 import {
     createRoom,
     getAllRooms,
     getRoomById,
     updateRoom
 } from '../services/rooms.service';
-import { notFound, success } from '../utils/response.utils';
+import { notFound } from '../utils/response.utils';
 
-export async function index(_: Request, res: Response, next: NextFunction) {
-    try {
-        const rooms = await getAllRooms();
-
-        success(res, rooms);
-    } catch (error) {
-        next(error);
-    }
+export async function index() {
+    return await getAllRooms();
 }
 
-export async function show(
-    { params: { roomId } }: Request,
-    res: Response,
-    next: NextFunction
-) {
-    try {
-        const room = await getRoomById(roomId as string);
+export async function show(event: H3Event) {
+    const { roomId } = getRouterParams(event);
+    const room = await getRoomById(roomId as string);
 
-        if (room) {
-            return success(res, room);
-        }
-
-        notFound(res, 'Room not found');
-    } catch (error) {
-        next(error);
+    if (room) {
+        return room;
     }
+
+    notFound('Room not found');
 }
 
-interface CreateRoomRequest extends AuthenticatedRequest {
+interface CreateRoomRequest {
     body: { name: string };
 }
 
-export async function insert(
-    { userId: creatorId, body: { name } }: CreateRoomRequest,
-    res: Response,
-    next: NextFunction
-) {
-    try {
-        const room = await createRoom({
-            name,
-            creatorId
-        });
+export async function insert(event: H3Event<CreateRoomRequest>) {
+    const body = await event.req.json();
+    const room = await createRoom({
+        ...body,
+        creatorId
+    });
 
-        success(res, room);
-    } catch (error) {
-        next(error);
-    }
+    return room;
 }
 
-interface UpdateRoomRequest extends CreateRoomRequest {
+interface UpdateRoomRequest {
     params: { roomId: string };
+    body: { name: string };
 }
 
-export async function update(
-    { userId: creatorId, params: { roomId }, body }: UpdateRoomRequest,
-    res: Response,
-    next: NextFunction
-) {
-    try {
-        const updatedRoom = await updateRoom({ id: roomId, creatorId }, body);
+export async function update(event: H3Event<UpdateRoomRequest>) {
+    const { roomId } = getRouterParams(event);
 
-        res.status(200).json(updatedRoom);
-    } catch (error) {
-        next(error);
-    }
+    const body = await event.req.json();
+    const updatedRoom = await updateRoom(
+        { id: roomId as string, creatorId },
+        body
+    );
+
+    return updatedRoom;
 }

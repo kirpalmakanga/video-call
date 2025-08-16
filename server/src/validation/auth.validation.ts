@@ -13,7 +13,9 @@ export type RegisterSchema = InferType<typeof registerSchema>;
 
 export const loginSchema = object({
     email: string().email('Invalid email').required('Email is required'),
-    password: string().required('Password is required')
+    password: string()
+        .min(8, 'Password must be at least 8 characters')
+        .required('Password is required')
 }).exact();
 
 export type LoginSchema = InferType<typeof loginSchema>;
@@ -31,18 +33,6 @@ export const updatePasswordSchema = object({
 }).exact();
 
 export type UpdatePasswordSchema = InferType<typeof updatePasswordSchema>;
-
-export const verificationTokenSchema = object({
-    verificationToken: string().required()
-}).exact();
-
-export type VerificationTokenSchema = InferType<typeof verificationTokenSchema>;
-
-export const resetTokenSchema = object({
-    resetToken: string().required()
-}).exact();
-
-export type ResetTokenSchema = InferType<typeof resetTokenSchema>;
 
 export const emailSchema = object({
     email: string().email('Invalid email').required('Email required')
