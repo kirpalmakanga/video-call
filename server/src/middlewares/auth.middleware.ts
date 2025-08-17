@@ -2,19 +2,25 @@ import type { H3Event } from 'h3';
 import { getUserIdFromToken } from '../utils/jwt.utils';
 import { unauthorized } from '../utils/response.utils';
 
-export async function isAuthenticated(event: H3Event) {
-    const accessToken = event.req.headers
-        .get('Authorization')
-        ?.split(' ')
-        .pop();
+export function useAuthentication() {
+    return async (event: H3Event) => {
+        if (!event.context.matchedRoute?.meta?.authenticated) {
+            return;
+        }
 
-    if (!accessToken) {
-        return unauthorized();
-    }
+        const accessToken = event.req.headers
+            .get('Authorization')
+            ?.split(' ')
+            .pop();
 
-    try {
-        event.context.userId = await getUserIdFromToken(accessToken);
-    } catch (error) {
-        unauthorized();
-    }
+        if (!accessToken) {
+            return unauthorized();
+        }
+
+        try {
+            event.context.userId = await getUserIdFromToken(accessToken);
+        } catch (error) {
+            unauthorized();
+        }
+    };
 }

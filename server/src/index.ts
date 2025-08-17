@@ -1,22 +1,28 @@
-import { H3, handleCors, serve } from 'h3';
+import { H3, serve } from 'h3';
+import { useCors } from './middlewares/cors.middleware';
+import {
+    useRequestErrorLogger,
+    useRequestLogger
+} from './middlewares/loggers.middleware';
+import { useAuthentication } from './middlewares/auth.middleware';
 import useAuthRoutes from './routes/auth.routes';
+import useRoomsRoutes from './routes/rooms.routes';
+import useUsersRoutes from './routes/users.routes';
 
-const { PORT, CLIENT_URI } = process.env;
+const { PORT } = process.env;
 
 const app = new H3();
 
-// app.use(async (event, next) => {
-//     const corsRes = handleCors(event, {
-//         origin: [CLIENT_URI as string],
-//         preflight: {
-//             statusCode: 204
-//         },
-//         methods: '*'
-//     });
+app.use(useRequestLogger());
 
-//     return corsRes;
-// });
+app.use(useRequestErrorLogger());
+
+app.use(useCors());
+
+app.use(useAuthentication());
 
 useAuthRoutes(app);
+useUsersRoutes(app);
+useRoomsRoutes(app);
 
 serve(app, { port: PORT });
