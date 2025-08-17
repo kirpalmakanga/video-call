@@ -20,9 +20,12 @@ importers:
       bcryptjs:
         specifier: ^3.0.2
         version: 3.0.2
+      crossws:
+        specifier: ^0.4.1
+        version: 0.4.1(srvx@0.8.6)
       h3:
         specifier: 2.0.0-beta.3
-        version: 2.0.0-beta.3
+        version: 2.0.0-beta.3(crossws@0.4.1(srvx@0.8.6))
       jose:
         specifier: ^6.0.12
         version: 6.0.12
@@ -35,6 +38,9 @@ importers:
       prisma:
         specifier: ^6.13.0
         version: 6.13.0
+      srvx:
+        specifier: ^0.8.6
+        version: 0.8.6
       yup:
         specifier: ^1.7.0
         version: 1.7.0
@@ -132,6 +138,14 @@ packages:
 
   cookie-es@2.0.0:
     resolution: {integrity: sha512-RAj4E421UYRgqokKUmotqAwuplYw15qtdXfY+hGzgCJ/MBjCVZcSoHK/kH9kocfjRjcDME7IiDWR/1WX1TM2Pg==}
+
+  crossws@0.4.1:
+    resolution: {integrity: sha512-E7WKBcHVhAVrY6JYD5kteNqVq1GSZxqGrdSiwXR9at+XHi43HJoCQKXcCczR5LBnBquFZPsB3o7HklulKoBU5w==}
+    peerDependencies:
+      srvx: '>=0.7.1'
+    peerDependenciesMeta:
+      srvx:
+        optional: true
 
   deepmerge-ts@7.1.5:
     resolution: {integrity: sha512-HOJkrhaYsweh+W+e74Yn7YStZOilkoPb6fycpwNLKzSPtruFs48nYis0zy5yJz1+ktUhHxoRDJ27RQAWLIJVJw==}
@@ -424,6 +438,10 @@ snapshots:
 
   cookie-es@2.0.0: {}
 
+  crossws@0.4.1(srvx@0.8.6):
+    optionalDependencies:
+      srvx: 0.8.6
+
   deepmerge-ts@7.1.5: {}
 
   defu@6.1.4: {}
@@ -456,12 +474,14 @@ snapshots:
       nypm: 0.6.1
       pathe: 2.0.3
 
-  h3@2.0.0-beta.3:
+  h3@2.0.0-beta.3(crossws@0.4.1(srvx@0.8.6)):
     dependencies:
       cookie-es: 2.0.0
       fetchdts: 0.1.6
       rou3: 0.7.3
       srvx: 0.8.6
+    optionalDependencies:
+      crossws: 0.4.1(srvx@0.8.6)
 
   hosted-git-info@7.0.2:
     dependencies:
