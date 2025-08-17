@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "@prisma/client": "^6.13.0",
+        "@types/bcrypt": "^6.0.0",
         "@types/nodemailer": "^6.4.17",
         "@types/nunjucks": "^3.2.6",
         "bcrypt": "^6.0.0",
@@ -28,8 +29,5 @@
         "prisma": "^6.13.0",
         "yup": "^1.7.0"
     },
-    "type": "module",
-    "devDependencies": {
-        "@types/bcrypt": "^6.0.0"
-    }
+    "type": "module"
 }
