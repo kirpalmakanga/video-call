@@ -29,9 +29,6 @@ importers:
       h3:
         specifier: 2.0.0-beta.3
         version: 2.0.0-beta.3
-      helmet:
-        specifier: ^8.1.0
-        version: 8.1.0
       jose:
         specifier: ^6.0.12
         version: 6.0.12
@@ -192,10 +189,6 @@ packages:
     peerDependenciesMeta:
       crossws:
         optional: true
-
-  helmet@8.1.0:
-    resolution: {integrity: sha512-jOiHyAZsmnr8LqoPGmCjYAaiuWwjAPLgY8ZX2XrmHawt99/u1y6RgrZMTeoPfpUbV96HOalYgz1qzkRbw54Pmg==}
-    engines: {node: '>=18.0.0'}
 
   hosted-git-info@7.0.2:
     resolution: {integrity: sha512-puUZAUKT5m8Zzvs72XWy3HtvVbTWljRE66cP60bxJzAqf2DgICo7lYTY2IHUmLnNpjYvw5bvmoHvPc0QO2a62w==}
@@ -510,8 +503,6 @@ snapshots:
       fetchdts: 0.1.6
       rou3: 0.7.3
       srvx: 0.8.6
-
-  helmet@8.1.0: {}
 
   hosted-git-info@7.0.2:
     dependencies:
