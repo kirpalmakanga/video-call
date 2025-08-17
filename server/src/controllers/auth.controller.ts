@@ -23,13 +23,15 @@ import {
     sendPasswordResetEmail,
     sendVerificationEmail
 } from '../utils/mail.utils';
+import { badRequest, forbidden, unauthorized } from '../utils/response.utils';
 import {
-    badRequest,
-    forbidden,
-    serverError,
-    unauthorized
-} from '../utils/response.utils';
-import { type UpdatePasswordSchema } from '../validation/auth.validation';
+    emailSchema,
+    loginSchema,
+    refreshTokenSchema,
+    registerSchema,
+    updatePasswordSchema,
+    type UpdatePasswordSchema
+} from '../validation/auth.validation';
 
 const { CLIENT_URI } = process.env;
 
@@ -62,21 +64,17 @@ interface RegisterRequest {
 }
 
 export async function register(event: H3Event<RegisterRequest>) {
-    try {
-        const body = await event.req.json();
+    const body = await readValidatedBody(event, registerSchema);
 
-        const existingUser = await getUserByEmail(body.email);
+    const existingUser = await getUserByEmail(body.email);
 
-        if (existingUser) {
-            return badRequest('Email already in use.');
-        }
-
-        await createUser(body);
-
-        await sendNewVerificationToken(body.email);
-    } catch (error) {
-        serverError(error);
+    if (existingUser) {
+        return badRequest('Email already in use.');
     }
+
+    await createUser(body);
+
+    await sendNewVerificationToken(body.email);
 }
 
 interface SendVerificationRequest {
@@ -86,7 +84,7 @@ interface SendVerificationRequest {
 export async function requestVerificationEmail(
     event: H3Event<SendVerificationRequest>
 ) {
-    const { email } = await event.req.json();
+    const { email } = await readValidatedBody(event, emailSchema);
     const user = await getUserByEmail(email);
 
     if (!user) {
@@ -100,11 +98,11 @@ export async function requestVerificationEmail(
     }
 }
 
-export async function verifyEmail(event: H3Event<VerifyEmailRequest>) {
+export async function verifyEmail(event: H3Event) {
     const { verificationToken } = getRouterParams(event);
 
     if (!verificationToken) {
-        badRequest('Missing verification token');
+        return badRequest('Missing verification token');
     }
 
     const user = await getUserByVerificationToken(verificationToken);
@@ -127,7 +125,7 @@ interface LoginRequest {
 }
 
 export async function login(event: H3Event<LoginRequest>) {
-    const { email, password } = await event.req.json();
+    const { email, password } = await readValidatedBody(event, loginSchema);
 
     const user = await getUserByEmail(email);
 
@@ -155,7 +153,7 @@ interface RefreshTokenRequest {
 }
 
 export async function refreshAccessToken(event: H3Event<RefreshTokenRequest>) {
-    const { refreshToken } = await event.req.json();
+    const { refreshToken } = await readValidatedBody(event, refreshTokenSchema);
     const savedRefreshToken = await getRefreshToken(refreshToken);
 
     if (
@@ -181,11 +179,10 @@ interface UpdatePasswordRequest {
     body: { password: string };
 }
 
-/** TODO: add user id to auth, add confirmPassword to body for validation */
 export async function updatePassword(event: H3Event<UpdatePasswordRequest>) {
-    const { password } = await event.req.json();
+    const { password } = await readValidatedBody(event, updatePasswordSchema);
 
-    await updateUserPassword(userId, password);
+    await updateUserPassword(event.context.userId, password);
 }
 
 interface PasswordResetRequest {
@@ -195,7 +192,7 @@ interface PasswordResetRequest {
 export async function requestPasswordReset(
     event: H3Event<PasswordResetRequest>
 ) {
-    const { email } = await event.req.json();
+    const { email } = await readValidatedBody(event, emailSchema);
     const user = await getUserByEmail(email);
 
     if (user) {
@@ -217,10 +214,10 @@ export async function updatePasswordWithResetToken(
     event: H3Event<ResetPasswordRequest>
 ) {
     const { resetToken } = await getRouterParams(event);
-    const { password } = await event.req.json();
+    const { password } = await readValidatedBody(event, updatePasswordSchema);
 
     if (!resetToken) {
-        badRequest('Missing reset token');
+        return badRequest('Missing reset token');
     }
 
     const user = await getUserByResetToken(resetToken);

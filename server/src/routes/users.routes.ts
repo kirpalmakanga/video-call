@@ -1,9 +1,6 @@
 import type { H3 } from 'h3';
-import { isAuthenticated } from '../middlewares/auth.middleware';
 import { getProfile, updateProfile } from '../controllers/users.controller';
 import { bindRoutes } from '../utils/routes.utils';
-import { validateBody } from '../middlewares/validation.middleware';
-import { updateProfileSchema } from '../validation/user.validation';
 
 export default function useUsersRoutes(app: H3) {
     bindRoutes(app, {
@@ -14,7 +11,7 @@ export default function useUsersRoutes(app: H3) {
                 path: '/profile',
                 handler: getProfile,
                 options: {
-                    middleware: [isAuthenticated]
+                    meta: { authenticated: true }
                 }
             },
             {
@@ -22,10 +19,7 @@ export default function useUsersRoutes(app: H3) {
                 path: '/profile',
                 handler: updateProfile,
                 options: {
-                    middleware: [
-                        isAuthenticated,
-                        validateBody(updateProfileSchema)
-                    ]
+                    meta: { authenticated: true }
                 }
             }
         ]

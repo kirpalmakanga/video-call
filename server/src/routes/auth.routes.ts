@@ -1,14 +1,4 @@
 import type { H3 } from 'h3';
-import { isAuthenticated } from '../middlewares/auth.middleware';
-import { validateBody } from '../middlewares/validation.middleware';
-import {
-    loginSchema,
-    refreshTokenSchema,
-    registerSchema,
-    emailSchema,
-    updatePasswordSchema,
-    resetPasswordSchema
-} from '../validation/auth.validation';
 import {
     login,
     register,
@@ -28,18 +18,12 @@ export default function useAuthRoutes(app: H3) {
             {
                 method: 'POST',
                 path: '/register',
-                handler: register,
-                options: {
-                    middleware: [validateBody(registerSchema)]
-                }
+                handler: register
             },
             {
                 method: 'POST',
                 path: '/verify/send',
-                handler: requestVerificationEmail,
-                options: {
-                    middleware: [validateBody(emailSchema)]
-                }
+                handler: requestVerificationEmail
             },
             {
                 method: 'GET',
@@ -49,45 +33,30 @@ export default function useAuthRoutes(app: H3) {
             {
                 method: 'POST',
                 path: '/login',
-                handler: login,
-                options: {
-                    middleware: [validateBody(loginSchema)]
-                }
+                handler: login
             },
             {
                 method: 'POST',
                 path: '/refresh',
-                handler: refreshAccessToken,
-                options: {
-                    middleware: [validateBody(refreshTokenSchema)]
-                }
+                handler: refreshAccessToken
             },
             {
                 method: 'PUT',
                 path: '/password',
                 handler: updatePassword,
                 options: {
-                    middleware: [
-                        isAuthenticated,
-                        validateBody(updatePasswordSchema)
-                    ]
+                    meta: { authenticated: true }
                 }
             },
             {
                 method: 'POST',
                 path: '/forgot-password',
-                handler: requestPasswordReset,
-                options: {
-                    middleware: [validateBody(emailSchema)]
-                }
+                handler: requestPasswordReset
             },
             {
                 method: 'POST',
                 path: '/reset-password/:resetToken',
-                handler: updatePasswordWithResetToken,
-                options: {
-                    middleware: [validateBody(resetPasswordSchema)]
-                }
+                handler: updatePasswordWithResetToken
             }
         ]
     });
