@@ -1,20 +1,51 @@
-import { handleCors, type CorsOptions, type H3Event } from 'h3';
+import {
+    handleCors,
+    type H3,
+    type CorsOptions,
+    type H3Event,
+    onError,
+    onResponse
+} from 'h3';
 
-const { CLIENT_URI } = process.env;
+const corsResponseHeaderKeys = [
+    'access-control-allow-origin',
+    'access-control-allow-credentials',
+    'access-control-expose-headers',
+    'vary',
+    'origin'
+];
 
-const corsOptions: CorsOptions = {
-    origin: [CLIENT_URI as string],
-    preflight: {
-        statusCode: 204
-    }
-};
+function getCorsHeaders(event: H3Event) {
+    const headers = new Headers(
+        [...event.res.headers.entries()].filter(([key]) =>
+            corsResponseHeaderKeys.includes(key)
+        )
+    );
+    return headers;
+}
 
-export function useCors() {
-    return (event: H3Event) => {
-        const corsResponse = handleCors(event, corsOptions);
+export function useCors(app: H3, options: CorsOptions) {
+    app.use((event: H3Event) => {
+        const corsResponse = handleCors(event, options);
 
         if (typeof corsResponse === 'string') {
             return corsResponse;
         }
-    };
+    });
+
+    app.use(
+        onError((error, event) => {
+            const headers = getCorsHeaders(event);
+
+            headers.append('content-type', 'application/json;charset=UTF-8');
+
+            return new Response(JSON.stringify(error.toJSON(), null, 2), {
+                status: error.status,
+                statusText: error.statusText,
+                headers: headers
+            });
+        })
+    );
+
+    app.use(onResponse((response) => console.log({ response })));
 }
