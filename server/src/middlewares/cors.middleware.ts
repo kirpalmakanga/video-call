@@ -6,8 +6,7 @@ const corsOptions: CorsOptions = {
     origin: [CLIENT_URI as string],
     preflight: {
         statusCode: 204
-    },
-    methods: '*'
+    }
 };
 
 export function useCors() {
