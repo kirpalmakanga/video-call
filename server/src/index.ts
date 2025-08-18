@@ -1,9 +1,10 @@
-import { defineWebSocketHandler, H3, onError, serve } from 'h3';
+import { defineWebSocketHandler, H3, onError, onResponse, serve } from 'h3';
 import { plugin as ws } from 'crossws/server';
 import { useCors } from './middlewares/cors.middleware';
 import {
     useRequestLogger,
-    useRequestErrorLogger
+    useErrorLogger,
+    useResponseLogger
 } from './middlewares/loggers.middleware';
 import { useAuthentication } from './middlewares/auth.middleware';
 import useAuthRoutes from './routes/auth.routes';
@@ -16,7 +17,9 @@ const app = new H3();
 
 app.use(useRequestLogger());
 
-app.use(useRequestErrorLogger());
+app.use(useErrorLogger());
+
+app.use(useResponseLogger());
 
 app.use(useCors());
 
@@ -26,6 +29,11 @@ useAuthRoutes(app);
 useUsersRoutes(app);
 useRoomsRoutes(app);
 
+app.use(
+    onResponse((response) => {
+        console.log(response.headers);
+    })
+);
 // useSocketHandler(app);
 
 // app.get('/_ws', defineWebSocketHandler({ message: console.log }));

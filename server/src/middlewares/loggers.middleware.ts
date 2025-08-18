@@ -1,4 +1,4 @@
-import { onError, onRequest } from 'h3';
+import { onError, onRequest, onResponse } from 'h3';
 
 export function useRequestLogger() {
     return onRequest((event) => {
@@ -6,7 +6,7 @@ export function useRequestLogger() {
     });
 }
 
-export function useRequestErrorLogger() {
+export function useErrorLogger() {
     return onError((error, event) => {
         console.error(
             `[${event.req.method}] ${event.url.pathname} !! ${error.message}`
@@ -15,5 +15,11 @@ export function useRequestErrorLogger() {
         if (process.env.NODE_ENV !== 'production') {
             console.error(error.stack);
         }
+    });
+}
+
+export function useResponseLogger() {
+    return onResponse((response) => {
+        console.log(response);
     });
 }
