@@ -1,3 +1,7 @@
+export function isProduction() {
+    return process.env.NODE_ENV === 'production';
+}
+
 export function update<T extends object>(
     arr: T[],
     predicate: (item: T, index: number, array: T[]) => boolean,

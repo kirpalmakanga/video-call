@@ -1,4 +1,5 @@
 import { HTTPError } from 'h3';
+import { isProduction } from './helpers.utils';
 
 export function serverError(error: Error) {
     console.error(error);
@@ -7,7 +8,7 @@ export function serverError(error: Error) {
         status: 500,
         statusText: 'Server error',
         message: error.message,
-        ...(process.env.NODE_ENV !== 'production' && {
+        ...(!isProduction() && {
             stack: error.stack
         })
     });

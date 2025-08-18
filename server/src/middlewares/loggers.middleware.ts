@@ -1,4 +1,5 @@
 import { onError, onRequest, onResponse } from 'h3';
+import { isProduction } from '../utils/helpers.utils';
 
 export function useRequestLogger() {
     return onRequest((event) => {
@@ -12,7 +13,7 @@ export function useErrorLogger() {
             `[${event.req.method}] ${event.url.pathname} !! ${error.message}`
         );
 
-        if (process.env.NODE_ENV !== 'production') {
+        if (!isProduction()) {
             console.error(error.stack);
         }
     });
