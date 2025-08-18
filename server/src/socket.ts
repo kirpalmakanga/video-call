@@ -3,7 +3,13 @@ import { plugin as ws } from 'crossws/server';
 
 export function useSocketPlugin(app: H3) {
     return ws({
-        resolve: async (req) => (await app.fetch(req)).crossws
+        resolve: async (req) => {
+            const { crossws } = await app.fetch(req);
+
+            console.log({ crossws });
+
+            return crossws;
+        }
     });
 }
 

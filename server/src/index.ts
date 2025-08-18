@@ -2,7 +2,8 @@ import { H3, serve } from 'h3';
 import { useCors } from './middlewares/cors.middleware';
 import {
     useRequestLogger,
-    useErrorLogger
+    useErrorLogger,
+    useResponseLogger
 } from './middlewares/loggers.middleware';
 import { useAuthentication } from './middlewares/auth.middleware';
 import useAuthRoutes from './routes/auth.routes';
@@ -18,6 +19,8 @@ useCors(app, {
 });
 
 app.use(useRequestLogger());
+
+app.use(useResponseLogger());
 
 app.use(useErrorLogger());
 
