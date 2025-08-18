@@ -46,6 +46,4 @@ export function useCors(app: H3, options: CorsOptions) {
             });
         })
     );
-
-    app.use(onResponse((response) => console.log({ response })));
 }
