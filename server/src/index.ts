@@ -1,5 +1,4 @@
-import { defineWebSocketHandler, H3, serve } from 'h3';
-import { plugin as ws } from 'crossws/server';
+import { H3, serve } from 'h3';
 import { useCors } from './middlewares/cors.middleware';
 import {
     useRequestLogger,
@@ -9,7 +8,7 @@ import { useAuthentication } from './middlewares/auth.middleware';
 import useAuthRoutes from './routes/auth.routes';
 import useRoomsRoutes from './routes/rooms.routes';
 import useUsersRoutes from './routes/users.routes';
-import { useSocketHandler } from './socket';
+import { useSocketPlugin, useSocketHandler } from './socket';
 const { PORT, CLIENT_URI } = process.env;
 
 const app = new H3();
@@ -27,15 +26,9 @@ app.use(useAuthentication());
 useAuthRoutes(app);
 useUsersRoutes(app);
 useRoomsRoutes(app);
-// useSocketHandler(app);
-
-// app.get('/_ws', defineWebSocketHandler({ message: console.log }));
+useSocketHandler(app);
 
 serve(app, {
-    port: PORT
-    // plugins: [
-    //     ws({
-    //         resolve: async (req) => (await app.fetch(req)).crossws
-    //     })
-    // ]
+    port: PORT,
+    plugins: [useSocketPlugin(app)]
 });
