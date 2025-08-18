@@ -1,6 +1,7 @@
 import type { H3Event } from 'h3';
 import { getUserIdFromToken } from '../utils/jwt.utils';
 import { unauthorized } from '../utils/response.utils';
+import { getRequestAccessToken } from '../utils/request.utils';
 
 export function useAuthentication() {
     return async (event: H3Event) => {
@@ -8,18 +9,15 @@ export function useAuthentication() {
             return;
         }
 
-        const accessToken = event.req.headers
-            .get('Authorization')
-            ?.split(' ')
-            .pop();
+        const accessToken = getRequestAccessToken(event);
 
-        if (!accessToken) {
-            return unauthorized();
-        }
-
-        try {
-            event.context.userId = await getUserIdFromToken(accessToken);
-        } catch (error) {
+        if (accessToken) {
+            try {
+                event.context.userId = await getUserIdFromToken(accessToken);
+            } catch (error) {
+                unauthorized();
+            }
+        } else {
             unauthorized();
         }
     };
