@@ -7,9 +7,10 @@ let isConnected = false;
 
 function getSocket() {
     if (!socket) {
-        socket = new WebSocket(import.meta.env.VITE_SOCKET_URI as string);
+        socket = new WebSocket(`${import.meta.env.VITE_SOCKET_URI}/_ws`);
 
         socket.addEventListener('open', () => {
+            console.log('socket:connected');
             isConnected = true;
         });
 
@@ -46,6 +47,8 @@ export function useSocket() {
     function handleSocketMessage({ data }: MessageEvent) {
         const { event, payload } = JSON.parse(data);
 
+        console.log({ event, payload });
+
         subscriptions.get(event)?.(payload);
     }
 
@@ -79,10 +82,6 @@ export function useSocket() {
 
     function clearSubscriptions() {
         if (subscriptions.size) {
-            for (const [_, unsubscribe] of subscriptions) {
-                unsubscribe();
-            }
-
             subscriptions.clear();
         } else {
             throw new Error('No current subscriptions.');
