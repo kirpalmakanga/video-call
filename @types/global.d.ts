@@ -50,29 +50,24 @@ declare global {
     /** Socket: */
     interface ClientToServerEvents {
         disconnect: () => void;
-        connectParticipant: (payload: {
-            roomId: string;
-            participant: Participant;
-        }) => void;
+        requestConnection: (payload: { roomId: string }) => void;
+        connectParticipant: (payload: { roomId: string }) => void;
         disconnectParticipant: (payload: {
             roomId: string;
             participantId: string;
         }) => void;
         offer: (payload: {
             roomId: string;
-            senderParticipantId: string;
             targetParticipantId: string;
             offer: RTCSessionDescriptionInit;
         }) => void;
         answer: (payload: {
             roomId: string;
-            senderParticipantId: string;
             targetParticipantId: string;
             answer: RTCSessionDescriptionInit;
         }) => void;
         iceCandidate: (payload: {
             roomId: string;
-            senderParticipantId: string;
             targetParticipantId: string;
             sdpMLineIndex: number | null | undefined;
             candidate: string | undefined;
@@ -93,9 +88,9 @@ declare global {
         connect: () => void;
         unauthorized: () => void;
         participantSynced: (payload: ClientParticipant) => void;
+        connectionConfirmed: (payload: { participantId: string }) => void;
         participantConnected: (payload: { participantId: string }) => void;
         participantDisconnected: (payload: { participantId: string }) => void;
-        connectedToRoom: () => void;
         incomingOffer: (payload: {
             senderParticipantId: string;
             offer: RTCSessionDescriptionInit;

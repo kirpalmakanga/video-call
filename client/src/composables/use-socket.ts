@@ -1,41 +1,9 @@
 import { onBeforeMount, onBeforeUnmount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from './store/use-auth-store';
+import { Socket } from '../utils/socket';
 
-let socket: WebSocket;
-let isConnected = false;
-
-function getSocket() {
-    if (!socket) {
-        socket = new WebSocket(`${import.meta.env.VITE_SOCKET_URI}/_ws`);
-
-        socket.addEventListener('open', () => {
-            console.log('socket:connected');
-            isConnected = true;
-        });
-
-        socket.addEventListener('error', async (event) => {
-            console.log('socket:error', event);
-            // if (err.message === 'unauthorized') {
-            //     const accessToken = await refreshAccessToken();
-            //     socket.auth = { token: accessToken };
-            //     socket.connect();
-            // }
-        });
-    }
-
-    return socket;
-}
-
-function ensureConnection(): Promise<void> {
-    return new Promise((resolve) =>
-        setInterval(() => {
-            if (isConnected) {
-                resolve();
-            }
-        }, 100)
-    );
-}
+let socket: Socket;
 
 export function useSocket() {
     const authStore = useAuthStore();
@@ -44,37 +12,34 @@ export function useSocket() {
 
     const subscriptions = new Map<ServerToClientEventId, Function>();
 
-    function handleSocketMessage({ data }: MessageEvent) {
-        const { event, payload } = JSON.parse(data);
+    function getSocket() {
+        if (!socket) {
+            /** TODO: authentication */
+            socket = new Socket(`${import.meta.env.VITE_SOCKET_URI}/_ws`);
 
-        console.log({ event, payload });
+            socket.on('error', async (err) => {
+                if (err.message === 'unauthorized') {
+                    const accessToken = await refreshAccessToken();
 
-        subscriptions.get(event)?.(payload);
-    }
+                    socket.auth = { token: accessToken };
 
-    async function sendEvent(data: Record<string, unknown>) {
-        /** TODO: add to queue if not connected and send on opening */
-        await ensureConnection();
+                    socket.connect();
+                }
+            });
+        }
 
-        getSocket().send(JSON.stringify(data));
-    }
-
-    function hasSubscription(event: ServerToClientEventId) {
-        return subscriptions.has(event);
-    }
-
-    async function addSubscription<E extends ServerToClientEventId>(
-        event: E,
-        callback: ServerToClientEvents[E]
-    ) {
-        subscriptions.set(event, callback);
+        return socket;
     }
 
     function removeSubscription(event: ServerToClientEventId) {
-        if (hasSubscription(event)) {
+        const unsubscribe = subscriptions.get(event);
+
+        if (unsubscribe) {
+            unsubscribe();
+
             subscriptions.delete(event);
         } else {
-            throw new Error(
+            console.error(
                 `Subscription for event "${event}" does not exist or has already been removed.`
             );
         }
@@ -84,43 +49,35 @@ export function useSocket() {
         if (subscriptions.size) {
             subscriptions.clear();
         } else {
-            throw new Error('No current subscriptions.');
+            console.error('No current subscriptions.');
         }
     }
 
-    function init() {
-        getSocket().addEventListener('message', handleSocketMessage);
-    }
-
-    function cleanup() {
-        getSocket().removeEventListener('message', handleSocketMessage);
-    }
-
-    onBeforeMount(init);
-
-    onBeforeUnmount(() => {
-        cleanup();
-
-        clearSubscriptions();
-    });
+    onBeforeUnmount(clearSubscriptions);
 
     return {
         emit<E extends ClientToServerEventId>(
             event: E,
-            payload: Parameters<ClientToServerEvents[E]>[0]
+            payload: ClientToServerEventPayload<E>
         ) {
-            sendEvent({ event, payload });
+            getSocket().send(event, payload);
         },
         subscribe<E extends ServerToClientEventId>(
             event: E,
             callback: ServerToClientEvents[E]
         ) {
-            if (hasSubscription(event)) {
+            if (subscriptions.has(event)) {
                 throw new Error(
                     `Subscription for event "${event}" already exists`
                 );
             } else {
-                addSubscription(event, callback);
+                const socket = getSocket();
+
+                socket.on(event, callback as any);
+
+                subscriptions.set(event, () =>
+                    socket.off(event, callback as any)
+                );
             }
         },
         unsubscribe(event?: ServerToClientEventId) {

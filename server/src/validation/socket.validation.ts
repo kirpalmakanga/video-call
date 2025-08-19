@@ -6,7 +6,7 @@ export const participantSchema = object({
     isMuted: boolean().required('Participant muted status is required')
 }).exact();
 
-export const connectedParticipantSchema = object({
+export const connectParticipantSchema = object({
     roomId: string().uuid().required('Room ID is required'),
     participant: participantSchema
 }).exact();

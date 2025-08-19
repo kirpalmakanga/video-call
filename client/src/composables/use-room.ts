@@ -58,7 +58,6 @@ export function useRoom(
         onIceCandidate(peerId, candidate) {
             emit('iceCandidate', {
                 roomId,
-                senderParticipantId: localParticipant.id,
                 targetParticipantId: peerId,
                 sdpMLineIndex: candidate.sdpMLineIndex,
                 candidate: candidate.candidate
@@ -113,9 +112,8 @@ export function useRoom(
             setVideoStatus();
         }
 
-        emit('connectParticipant', {
-            roomId,
-            participant: getLocalParticipantForServer()
+        emit('requestConnection', {
+            roomId
         });
     }
 
@@ -139,14 +137,19 @@ export function useRoom(
     });
 
     subscribe('connect', () => {
+        /** TODO: add connect special event to Socket class */
         if (!isConnecting.value) {
             connect();
         }
     });
 
-    subscribe('connectedToRoom', () => {
+    subscribe('connectionConfirmed', ({ participantId }) => {
+        localParticipant.id = participantId;
+
         isConnecting.value = false;
         isConnected.value = true;
+
+        emit('connectParticipant', { roomId });
     });
 
     subscribe('participantSynced', async (participant) => {
@@ -166,7 +169,6 @@ export function useRoom(
 
         emit('offer', {
             roomId,
-            senderParticipantId: localParticipant.id,
             targetParticipantId: participantId,
             offer: await createOffer(participantId)
         });
@@ -179,7 +181,6 @@ export function useRoom(
 
         emit('answer', {
             roomId,
-            senderParticipantId: localParticipant.id,
             targetParticipantId: senderParticipantId,
             answer: await createAnswer(senderParticipantId, offer)
         });
@@ -197,6 +198,12 @@ export function useRoom(
     );
 
     subscribe('participantDisconnected', ({ participantId }) => {
+        console.log(
+            'current',
+            participants.value.map(({ id }) => id)
+        );
+        console.log('disconnected', participantId);
+
         disconnectFromPeer(participantId);
 
         removeParticipant(participantId);

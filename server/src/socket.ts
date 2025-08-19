@@ -1,7 +1,77 @@
 import { defineWebSocketHandler, type H3 } from 'h3';
 import { plugin as ws } from 'crossws/server';
+import type { Peer } from 'crossws';
 
-function parseMessage() {}
+interface Event {
+    event: ClientToServerEventId;
+    payload: ClientToServerEventPayload<ClientToServerEventId>;
+}
+
+type EventHandlers = {
+    [K in keyof ClientToServerEvents]: (
+        payload: ClientToServerEventPayload<K>,
+        peer: Peer
+    ) => void;
+};
+
+const handlers: EventHandlers = {
+    requestConnection({ roomId }, peer) {
+        peer.subscribe(`room:${roomId}`);
+        peer.subscribe(`participant:${peer.id}:room:${roomId}`);
+
+        peer.send({
+            event: 'connectionConfirmed',
+            payload: { participantId: peer.id }
+        });
+    },
+    connectParticipant({ roomId }, peer) {
+        peer.publish(`room:${roomId}`, {
+            event: 'participantConnected',
+            payload: { participantId: peer.id }
+        });
+    },
+    disconnectParticipant({ roomId }, peer) {
+        peer.unsubscribe(`room:${roomId}`);
+        peer.unsubscribe(`participant:${peer.id}:room:${roomId}`);
+
+        peer.publish(`room:${roomId}`, {
+            event: 'participantDisconnected',
+            payload: {
+                participantId: peer.id
+            }
+        });
+    },
+    offer({ roomId, targetParticipantId, ...payload }, peer) {
+        peer.publish(`participant:${targetParticipantId}:room:${roomId}`, {
+            event: 'incomingOffer',
+            payload: {
+                ...payload,
+                senderParticipantId: peer.id
+            }
+        });
+    },
+    answer({ roomId, targetParticipantId, ...payload }, peer) {
+        peer.publish(`participant:${targetParticipantId}:room:${roomId}`, {
+            event: 'incomingAnswer',
+            payload
+        });
+    },
+    iceCandidate({ roomId, targetParticipantId, ...payload }, peer) {
+        peer.publish(`participant:${targetParticipantId}:room:${roomId}`, {
+            event: 'incomingIceCandidate',
+            payload
+        });
+    },
+    syncParticipant({ roomId, participant: payload }, peer) {
+        peer.publish(`room:${roomId}`, {
+            event: 'participantSynced',
+            payload
+        });
+    },
+    disconnect(payload, peer) {
+        console.log('disconnect ?');
+    }
+};
 
 export function useSocketHandler(app: H3) {
     app.get(
@@ -13,22 +83,32 @@ export function useSocketHandler(app: H3) {
             },
 
             message(peer, message) {
-                console.log(message);
-                const { event, payload } = message.json();
+                if (message.text() === 'ping') {
+                    peer.send('pong');
 
-                console.log({ event, payload });
-                // if (message.text().includes('ping')) {
-                //     peer.send({ user: 'server', message: 'pong' });
-                // } else {
-                //     peer.send({
-                //         user: peer.toString(),
-                //         message: message.toString()
-                //     });
-                // }
+                    return;
+                }
+
+                const { event, payload } = message.json() as Event;
+
+                const handler = handlers[event];
+
+                handler(payload, peer);
             },
 
             close(peer, event) {
-                console.log('[ws] close', peer, event);
+                console.log('[ws] close', peer, peer.topics.values());
+
+                for (const channel of peer.topics) {
+                    if (channel.startsWith('room')) {
+                        peer.publish(channel, {
+                            event: 'participantDisconnected',
+                            payload: { participantId: peer.id }
+                        });
+                    }
+
+                    peer.unsubscribe(channel);
+                }
             },
 
             error(peer, error) {

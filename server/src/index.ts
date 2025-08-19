@@ -20,7 +20,7 @@ useCors(app, {
 
 app.use(useRequestLogger());
 
-app.use(useResponseLogger());
+// app.use(useResponseLogger());
 
 app.use(useErrorLogger());
 
