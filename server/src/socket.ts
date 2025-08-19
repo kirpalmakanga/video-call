@@ -1,17 +1,7 @@
 import { defineWebSocketHandler, type H3 } from 'h3';
 import { plugin as ws } from 'crossws/server';
 
-export function useSocketPlugin(app: H3) {
-    return ws({
-        resolve: async (req) => {
-            const { crossws } = await app.fetch(req);
-
-            console.log({ crossws });
-
-            return crossws;
-        }
-    });
-}
+function parseMessage() {}
 
 export function useSocketHandler(app: H3) {
     app.get(
@@ -23,7 +13,10 @@ export function useSocketHandler(app: H3) {
             },
 
             message(peer, message) {
-                console.log('[ws] message', message);
+                console.log(message);
+                const { event, payload } = message.json();
+
+                console.log({ event, payload });
                 // if (message.text().includes('ping')) {
                 //     peer.send({ user: 'server', message: 'pong' });
                 // } else {
@@ -43,4 +36,14 @@ export function useSocketHandler(app: H3) {
             }
         })
     );
+}
+
+export function useSocketPlugin(app: H3) {
+    return ws({
+        async resolve(req) {
+            const { crossws } = await app.fetch(req);
+
+            return crossws;
+        }
+    });
 }
