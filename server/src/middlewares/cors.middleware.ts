@@ -26,6 +26,8 @@ function getCorsHeaders(event: H3Event) {
 
 export function useCors(app: H3, options: CorsOptions) {
     app.use((event: H3Event) => {
+        if (event.req.headers.get('upgrade') === 'websocket') return;
+
         const corsResponse = handleCors(event, options);
 
         if (typeof corsResponse === 'string') {
