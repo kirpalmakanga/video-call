@@ -31,35 +31,39 @@ const handlers: EventHandlers = {
         });
     },
     disconnectParticipant({ roomId }, peer) {
-        peer.unsubscribe(`room:${roomId}`);
-        peer.unsubscribe(`participant:${peer.id}:room:${roomId}`);
-
         peer.publish(`room:${roomId}`, {
             event: 'participantDisconnected',
-            payload: {
-                participantId: peer.id
-            }
+            payload: { participantId: peer.id }
         });
+
+        peer.unsubscribe(`room:${roomId}`);
+        peer.unsubscribe(`participant:${peer.id}:room:${roomId}`);
     },
     offer({ roomId, targetParticipantId, ...payload }, peer) {
         peer.publish(`participant:${targetParticipantId}:room:${roomId}`, {
             event: 'incomingOffer',
             payload: {
-                ...payload,
-                senderParticipantId: peer.id
+                senderParticipantId: peer.id,
+                ...payload
             }
         });
     },
     answer({ roomId, targetParticipantId, ...payload }, peer) {
         peer.publish(`participant:${targetParticipantId}:room:${roomId}`, {
             event: 'incomingAnswer',
-            payload
+            payload: {
+                senderParticipantId: peer.id,
+                ...payload
+            }
         });
     },
     iceCandidate({ roomId, targetParticipantId, ...payload }, peer) {
         peer.publish(`participant:${targetParticipantId}:room:${roomId}`, {
             event: 'incomingIceCandidate',
-            payload
+            payload: {
+                senderParticipantId: peer.id,
+                ...payload
+            }
         });
     },
     syncParticipant({ roomId, participant: payload }, peer) {
@@ -67,9 +71,6 @@ const handlers: EventHandlers = {
             event: 'participantSynced',
             payload
         });
-    },
-    disconnect(payload, peer) {
-        console.log('disconnect ?');
     }
 };
 
@@ -96,9 +97,7 @@ export function useSocketHandler(app: H3) {
                 handler(payload, peer);
             },
 
-            close(peer, event) {
-                console.log('[ws] close', peer, peer.topics.values());
-
+            close(peer) {
                 for (const channel of peer.topics) {
                     if (channel.startsWith('room')) {
                         peer.publish(channel, {

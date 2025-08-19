@@ -49,7 +49,6 @@ declare global {
 
     /** Socket: */
     interface ClientToServerEvents {
-        disconnect: () => void;
         requestConnection: (payload: { roomId: string }) => void;
         connectParticipant: (payload: { roomId: string }) => void;
         disconnectParticipant: (payload: {

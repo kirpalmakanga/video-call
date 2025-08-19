@@ -152,16 +152,6 @@ export function useRoom(
         emit('connectParticipant', { roomId });
     });
 
-    subscribe('participantSynced', async (participant) => {
-        const { id: targetParticipantId } = participant;
-
-        if (hasParticipant(targetParticipantId)) {
-            updateParticipant(participant);
-        } else {
-            addParticipant(participant);
-        }
-    });
-
     subscribe('participantConnected', async ({ participantId }) => {
         syncLocalParticipant();
 
@@ -197,13 +187,17 @@ export function useRoom(
         }
     );
 
-    subscribe('participantDisconnected', ({ participantId }) => {
-        console.log(
-            'current',
-            participants.value.map(({ id }) => id)
-        );
-        console.log('disconnected', participantId);
+    subscribe('participantSynced', async (participant) => {
+        const { id: targetParticipantId } = participant;
 
+        if (hasParticipant(targetParticipantId)) {
+            updateParticipant(participant);
+        } else {
+            addParticipant(participant);
+        }
+    });
+
+    subscribe('participantDisconnected', ({ participantId }) => {
         disconnectFromPeer(participantId);
 
         removeParticipant(participantId);
