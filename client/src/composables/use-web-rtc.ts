@@ -26,14 +26,14 @@ function closeStream(stream: MediaStream) {
 }
 
 function usePeerConnections() {
-    const peerConnections: { [peerId: string]: RTCPeerConnection } = {};
+    const peerConnections: Map<string, RTCPeerConnection> = new Map();
 
     function hasPeer(peerId: string) {
-        return !!peerConnections[peerId];
+        return peerConnections.has(peerId);
     }
 
     function getPeer(peerId: string) {
-        const connection = peerConnections[peerId];
+        const connection = peerConnections.get(peerId);
 
         assertIsDefined(
             connection,
@@ -51,7 +51,7 @@ function usePeerConnections() {
 
             const connection = new RTCPeerConnection();
 
-            peerConnections[peerId] = connection;
+            peerConnections.set(peerId, connection);
 
             return connection;
         },
@@ -60,14 +60,14 @@ function usePeerConnections() {
 
             connection.close();
 
-            delete peerConnections[peerId];
+            peerConnections.delete(peerId);
         },
         getAllPeerIds() {
-            return Object.keys(peerConnections);
+            return [...peerConnections.keys()];
         },
         getPeer,
         hasPeers() {
-            return !!Object.values(peerConnections).length;
+            return peerConnections.size > 0;
         },
         hasPeer
     };
