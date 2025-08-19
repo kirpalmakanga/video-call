@@ -11,6 +11,10 @@ export class Socket {
         this.connect();
     }
 
+    delay(t: number) {
+        return new Promise((resolve) => setTimeout(resolve, t));
+    }
+
     getBackoffDelay(attempt: number) {
         const base = 500; // 0.5 second
         const max = 30000; // 30 seconds
@@ -26,44 +30,59 @@ export class Socket {
         return this.listeners.get(event);
     }
 
-    removeListener(event: string, callback: Function) {
-        this.listeners.get(event)?.delete(callback);
-
-        console.log(this.listeners.get(event)?.values());
-    }
-
     clearListeners(event: string) {
         this.listeners.get(event)?.clear();
 
         this.listeners.delete(event);
     }
 
+    addListener(event: string, callback: Function) {
+        if (!this.hasListeners(event)) {
+            this.listeners.set(event, new Set());
+        }
+
+        this.listeners.get(event)?.add(callback);
+    }
+
+    removeListener(event: string, callback: Function) {
+        this.listeners.get(event)?.delete(callback);
+
+        if (!this.hasListeners(event)) {
+            this.clearListeners(event);
+        }
+    }
+
     connect() {
         this.socket = new WebSocket(this.url);
 
         this.socket.onopen = () => {
-            console.log('WebSocket connected');
             this.attempt = 0;
 
             this.socket?.send('ping');
         };
 
-        this.socket.onmessage = ({ data }) => {
+        this.socket.onmessage = async ({ data }) => {
             try {
                 if (data === 'pong') {
-                    setTimeout(() => this.socket?.send('ping'), 20000);
+                    await this.delay(20000);
+
+                    this.socket?.send('ping'), 20000;
+
+                    return;
                 }
 
                 const { event, payload } = JSON.parse(data);
 
                 const listeners = this.getListeners(event);
 
-                if (listeners) {
+                if (listeners?.size) {
                     for (const callback of listeners) {
                         callback(payload);
                     }
                 }
-            } catch (error) {}
+            } catch (error) {
+                console.error(error);
+            }
         };
 
         this.socket.onclose = () => {
@@ -94,11 +113,7 @@ export class Socket {
     }
 
     on(event: string, callback: Function) {
-        if (!this.listeners.get(event)) {
-            this.listeners.set(event, new Set());
-        }
-
-        this.listeners.get(event)?.add(callback);
+        this.addListener(event, callback);
     }
 
     off(event: string, callback?: Function) {
@@ -110,14 +125,12 @@ export class Socket {
 
         if (callback) {
             this.removeListener(event, callback);
-        }
-
-        if (!callback || !this.hasListeners(event)) {
+        } else {
             this.clearListeners(event);
         }
     }
 
-    send(event: string, payload: unknown) {
+    emit(event: string, payload: unknown) {
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
             this.socket.send(JSON.stringify({ event, payload }));
         } else {

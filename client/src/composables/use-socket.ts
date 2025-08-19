@@ -1,4 +1,4 @@
-import { onBeforeMount, onBeforeUnmount } from 'vue';
+import { onBeforeUnmount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from './store/use-auth-store';
 import { Socket } from '../utils/socket';
@@ -17,15 +17,15 @@ export function useSocket() {
             /** TODO: authentication */
             socket = new Socket(`${import.meta.env.VITE_SOCKET_URI}/_ws`);
 
-            socket.on('error', async (err) => {
-                if (err.message === 'unauthorized') {
-                    const accessToken = await refreshAccessToken();
+            // socket.on('error', async (err) => {
+            //     if (err.message === 'unauthorized') {
+            //         const accessToken = await refreshAccessToken();
 
-                    socket.auth = { token: accessToken };
+            //         socket.auth = { token: accessToken };
 
-                    socket.connect();
-                }
-            });
+            //         socket.connect();
+            //     }
+            // });
         }
 
         return socket;
@@ -47,6 +47,10 @@ export function useSocket() {
 
     function clearSubscriptions() {
         if (subscriptions.size) {
+            for (const [_, unsubscribe] of subscriptions) {
+                unsubscribe();
+            }
+
             subscriptions.clear();
         } else {
             console.error('No current subscriptions.');
@@ -60,7 +64,7 @@ export function useSocket() {
             event: E,
             payload: ClientToServerEventPayload<E>
         ) {
-            getSocket().send(event, payload);
+            getSocket().emit(event, payload);
         },
         subscribe<E extends ServerToClientEventId>(
             event: E,
