@@ -45,10 +45,6 @@ function usePeerConnections() {
 
     return {
         createPeer(peerId: string) {
-            if (hasPeer(peerId)) {
-                throw new Error('Peer connection already exists.');
-            }
-
             const connection = new RTCPeerConnection();
 
             peerConnections.set(peerId, connection);
@@ -77,8 +73,14 @@ export function useWebRTC(
     localStream: Ref<MediaStream | undefined>,
     { onIceCandidate, onDisconnection }: RTCOptions
 ) {
-    const { createPeer, removePeer, getAllPeerIds, getPeer, hasPeers } =
-        usePeerConnections();
+    const {
+        createPeer,
+        removePeer,
+        getAllPeerIds,
+        getPeer,
+        hasPeer,
+        hasPeers
+    } = usePeerConnections();
 
     const peerStreams = ref<{ [peerId: string]: MediaStream }>({});
 
@@ -169,6 +171,10 @@ export function useWebRTC(
     return {
         peerStreams,
         connectToPeer(peerId: string) {
+            if (hasPeer(peerId)) {
+                disconnectFromPeer(peerId);
+            }
+
             const connection = createPeer(peerId);
 
             connection.onicecandidate = ({ candidate }) => {
