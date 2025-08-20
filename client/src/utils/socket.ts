@@ -1,140 +1,201 @@
 export class Socket {
-    url: string;
-    socket: WebSocket | null = null;
-    maxReconnectionAttempts: number = 10;
-    attempt: number = 0;
-    listeners: Map<string, Set<Function>> = new Map();
+    private _url: string;
+    private _socket: WebSocket | null = null;
+    private _maxReconnectionAttempts: number = 10;
+    private _attempt: number = 0;
+    private _listeners: Map<string, Set<Function>> = new Map();
+    private _messageQueue: unknown[] = [];
+    private _maxEnqueuedMessages: number = Infinity;
 
     constructor(url: string) {
-        this.url = url;
+        this._url = url;
 
-        this.connect();
+        this._connect();
     }
 
-    delay(t: number) {
+    private _delay(t: number) {
         return new Promise((resolve) => setTimeout(resolve, t));
     }
 
-    getBackoffDelay(attempt: number) {
+    private _getBackoffDelay(attempt: number) {
         const base = 500; // 0.5 second
         const max = 30000; // 30 seconds
         const jitter = Math.random() * 1000;
         return Math.min(base * 2 ** attempt + jitter, max);
     }
 
-    hasListeners(event: string) {
-        return !!this.listeners.get(event)?.size;
+    private _hasEventListeners(event: string) {
+        return !!this._listeners.get(event)?.size;
     }
 
-    getListeners(event: string) {
-        return this.listeners.get(event);
+    private _getEventListeners(event: string) {
+        return this._listeners.get(event);
     }
 
-    clearListeners(event: string) {
-        this.listeners.get(event)?.clear();
+    private _clearEventListeners(event: string) {
+        this._listeners.get(event)?.clear();
 
-        this.listeners.delete(event);
+        this._listeners.delete(event);
     }
 
-    addListener(event: string, callback: Function) {
-        if (!this.hasListeners(event)) {
-            this.listeners.set(event, new Set());
+    private _addEventListener(event: string, callback: Function) {
+        if (!this._hasEventListeners(event)) {
+            this._listeners.set(event, new Set());
         }
 
-        this.listeners.get(event)?.add(callback);
+        this._listeners.get(event)?.add(callback);
     }
 
-    removeListener(event: string, callback: Function) {
-        this.listeners.get(event)?.delete(callback);
+    private _removeEventListener(event: string, callback: Function) {
+        this._listeners.get(event)?.delete(callback);
 
-        if (!this.hasListeners(event)) {
-            this.clearListeners(event);
+        if (!this._hasEventListeners(event)) {
+            this._clearEventListeners(event);
         }
     }
 
-    connect() {
-        this.socket = new WebSocket(this.url);
+    private _triggerListeners(event: string, payload: unknown) {
+        if (this._hasEventListeners(event)) {
+            const listeners = this._getEventListeners(event);
 
-        this.socket.onopen = () => {
-            this.attempt = 0;
-
-            this.socket?.send('ping');
-        };
-
-        this.socket.onmessage = async ({ data }) => {
-            try {
-                if (data === 'pong') {
-                    await this.delay(20000);
-
-                    this.socket?.send('ping'), 20000;
-
-                    return;
+            if (listeners?.size) {
+                for (const callback of listeners) {
+                    callback(payload);
                 }
-
-                const { event, payload } = JSON.parse(data);
-
-                const listeners = this.getListeners(event);
-
-                if (listeners?.size) {
-                    for (const callback of listeners) {
-                        callback(payload);
-                    }
-                }
-            } catch (error) {
-                console.error(error);
             }
-        };
-
-        this.socket.onclose = () => {
-            console.warn('WebSocket closed. Reconnecting...');
-            this.reconnect();
-        };
-
-        this.socket.onerror = (err) => {
-            console.error('WebSocket error:', err);
-
-            this.socket?.close();
-        };
+        }
     }
 
-    reconnect() {
-        if (this.attempt >= this.maxReconnectionAttempts) {
+    private _clearListeners() {
+        if (this._socket) {
+            this._socket.onopen = null;
+            this._socket.onmessage = null;
+            this._socket.onclose = null;
+            this._socket.onerror = null;
+            this._listeners.clear();
+        }
+    }
+
+    private _sendMessage(message: unknown) {
+        this._socket?.send(JSON.stringify(message));
+    }
+
+    private _sendMessageQueue() {
+        if (this._messageQueue) {
+            for (const data of this._messageQueue) {
+                this._sendMessage(data);
+            }
+
+            this._messageQueue = [];
+        }
+    }
+
+    private _onConnectionOpened = (openEvent: Event) => {
+        this._attempt = 0;
+
+        this._socket?.send('ping');
+
+        this._sendMessageQueue();
+
+        this._triggerListeners('open', openEvent);
+    };
+
+    private _onMessageReceived = async ({ data }: MessageEvent) => {
+        try {
+            if (data === 'pong') {
+                await this._delay(20000);
+
+                this._socket?.send('ping'), 20000;
+
+                return;
+            }
+
+            const { event, payload } = JSON.parse(data);
+
+            this._triggerListeners(event, payload);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    private _onConnectionClosed = (closeEvent: Event) => {
+        console.warn('WebSocket closed. Reconnecting...');
+
+        this._triggerListeners('close', closeEvent);
+
+        this.reconnect();
+    };
+
+    private _onConnectionError = (errorEvent: Event) => {
+        console.error('WebSocket error:', errorEvent);
+
+        this._triggerListeners('error', errorEvent);
+
+        this._socket?.close();
+    };
+
+    private _connect() {
+        this._socket = new WebSocket(this._url);
+
+        this._socket.onopen = this._onConnectionOpened;
+        this._socket.onmessage = this._onMessageReceived;
+        this._socket.onclose = this._onConnectionClosed;
+        this._socket.onerror = this._onConnectionError;
+    }
+
+    public async reconnect() {
+        if (this._attempt >= this._maxReconnectionAttempts) {
             console.error('Max reconnection attempts reached.');
             return;
         }
 
-        const delay = this.getBackoffDelay(this.attempt);
-        console.log(`Reconnecting in ${delay}ms`);
+        const backoffDelay = this._getBackoffDelay(this._attempt);
+        console.log(`Reconnecting in ${backoffDelay}ms`);
 
-        setTimeout(() => {
-            this.attempt++;
-            this.connect();
-        }, delay);
+        await this._delay(backoffDelay);
+
+        this._attempt++;
+        this._connect();
     }
 
-    on(event: string, callback: Function) {
-        this.addListener(event, callback);
+    public close() {
+        if (!this._socket) {
+            console.log('WebSocket close enqueued: no ws instance');
+            return;
+        }
+        if (this._socket.readyState === WebSocket.CLOSED) {
+            console.log('WebSocket close: already closed');
+            return;
+        }
+
+        this._clearListeners();
+
+        this._socket.close();
     }
 
-    off(event: string, callback?: Function) {
-        if (!this.hasListeners(event)) {
+    public on(event: string, callback: Function) {
+        this._addEventListener(event, callback);
+    }
+
+    public off(event: string, callback?: Function) {
+        if (!this._hasEventListeners(event)) {
             console.error(`Event ${event} has no listeners`);
 
             return;
         }
 
         if (callback) {
-            this.removeListener(event, callback);
+            this._removeEventListener(event, callback);
         } else {
-            this.clearListeners(event);
+            this._clearEventListeners(event);
         }
     }
 
-    emit(event: string, payload: unknown) {
-        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-            this.socket.send(JSON.stringify({ event, payload }));
-        } else {
-            console.warn('WebSocket not connected');
+    public emit(event: string, payload: unknown) {
+        if (this._socket?.readyState === WebSocket.OPEN) {
+            this._sendMessage({ event, payload });
+        } else if (this._messageQueue.length < this._maxEnqueuedMessages) {
+            this._messageQueue.push(payload);
         }
     }
 }
