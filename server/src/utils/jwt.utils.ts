@@ -2,7 +2,8 @@ import { jwtVerify, SignJWT } from 'jose';
 import { randomBytes } from 'crypto';
 import { assertIsDefined } from '../../../utils/assert';
 
-const { JWT_ACCESS_SECRET, JWT_ISSUER, JWT_AUDIENCE } = process.env;
+const { JWT_ACCESS_SECRET, JWT_ISSUER, JWT_AUDIENCE, JWT_DURATION } =
+    process.env;
 
 function getSecretKey(secret: string) {
     return new TextEncoder().encode(secret);
@@ -16,7 +17,7 @@ export async function generateAccessToken(user: User) {
     const jwt = await new SignJWT({ id: user.id })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime('1h')
+        .setExpirationTime(JWT_DURATION)
         .setIssuer(JWT_ISSUER)
         .setAudience(JWT_AUDIENCE)
         .sign(getSecretKey(JWT_ACCESS_SECRET));
