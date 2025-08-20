@@ -102,6 +102,7 @@ watch(
 
         if (
             lastParticipant &&
+            !lastParticipant.isLocalParticipant &&
             lastParticipant.id !== state.activeParticipantId
         ) {
             setActiveParticipant(lastParticipant.id);
