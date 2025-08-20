@@ -13,7 +13,12 @@ const {
 } = useRoute();
 const router = useRouter();
 
-const { data: room, isLoading, error } = useRoomQuery(roomId as string);
+const {
+    data: room,
+    isLoading,
+    error,
+    refetch
+} = useRoomQuery(roomId as string);
 
 const settingsStore = useSettingsStore();
 const { audioDeviceId, videoDeviceId } = storeToRefs(settingsStore);
@@ -38,7 +43,7 @@ const { audioDeviceId, videoDeviceId } = storeToRefs(settingsStore);
             </div>
         </div>
 
-        <PageError v-else-if="error" />
+        <PageError v-else-if="error" @reload="refetch" />
 
         <div
             v-else-if="room"

@@ -13,7 +13,12 @@ const {
     params: { roomId }
 } = useRoute();
 
-const { data: room, isLoading, error } = useRoomQuery(roomId as string);
+const {
+    data: room,
+    isLoading,
+    error,
+    refetch
+} = useRoomQuery(roomId as string);
 
 const isOnline = useOnline();
 </script>
@@ -40,7 +45,7 @@ const isOnline = useOnline();
             </div>
         </template>
 
-        <PageError v-else-if="error" />
+        <PageError v-else-if="error" @reload="refresh" />
 
         <template v-else-if="room">
             <h1 class="text-xl font-bold">{{ room.name }}</h1>

@@ -7,7 +7,7 @@ import { useRoomsListQuery } from '../services/queries';
 import CreateRoomButton from '../components/CreateRoomButton.vue';
 import PageError from '../components/page/PageError.vue';
 
-const { data: rooms, isLoading, error } = useRoomsListQuery();
+const { data: rooms, isLoading, error, refetch } = useRoomsListQuery();
 
 const filter = ref<string>('');
 
@@ -37,7 +37,7 @@ const currentRooms = computed(() => {
 
             <RoomsGridSkeleton v-if="isLoading" />
 
-            <PageError v-else-if="error" />
+            <PageError v-else-if="error" @reload="refetch" />
 
             <template v-else-if="rooms?.length">
                 <SearchForm

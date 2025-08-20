@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
 import Placeholder from '../base/Placeholder.vue';
 
-const router = useRouter();
+const emit = defineEmits<{ reload: [e: void] }>();
 </script>
 
 <template>
@@ -11,7 +10,9 @@ const router = useRouter();
             icon="i-mdi-alert-circle-outline"
             text="An error has occured, try to reload the page."
         >
-            <UButton icon="i-mdi-reload" @click="router.go()">Reload</UButton>
+            <UButton icon="i-mdi-reload" @click="emit('reload')">
+                Reload
+            </UButton>
         </Placeholder>
     </div>
 </template>
