@@ -81,15 +81,15 @@ const handlers: EventHandlers = {
     }
 };
 
-// async function authenticatePeer(peer: Peer) {
-//     const { token } = getUrlParams(peer.request.url);
+async function authenticatePeer(peer: Peer) {
+    const { token } = getUrlParams(peer.request.url);
 
-//     if (token) {
-//         await authenticate(token);
-//     } else {
-//         throw new Error('Invalid token');
-//     }
-// }
+    if (token) {
+        await authenticate(token);
+    } else {
+        throw new Error('Invalid token');
+    }
+}
 
 export function useSocketHandler(app: H3) {
     app.get(
@@ -98,16 +98,14 @@ export function useSocketHandler(app: H3) {
             async open(peer) {
                 console.log('[ws] open', peer);
 
-                // try {
-                //     await authenticatePeer(peer);
-                // } catch (error) {
-                //     peer.send({
-                //         event: 'error',
-                //         payload: { message: 'unauthorized' }
-                //     });
-
-                //     peer.terminate();
-                // }
+                try {
+                    await authenticatePeer(peer);
+                } catch (error) {
+                    peer.send({
+                        event: 'error',
+                        payload: { message: 'unauthorized' }
+                    });
+                }
             },
 
             async message(peer, message) {
@@ -117,18 +115,16 @@ export function useSocketHandler(app: H3) {
                     return;
                 }
 
-                // try {
-                //     await authenticatePeer(peer);
-                // } catch (error) {
-                //     peer.send({
-                //         event: 'error',
-                //         payload: { message: 'unauthorized' }
-                //     });
+                try {
+                    await authenticatePeer(peer);
+                } catch (error) {
+                    peer.send({
+                        event: 'error',
+                        payload: { message: 'unauthorized' }
+                    });
 
-                //     peer.terminate();
-
-                //     return;
-                // }
+                    return;
+                }
 
                 const { event, payload } = message.json() as Event;
 

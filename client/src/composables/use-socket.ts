@@ -14,18 +14,19 @@ export function useSocket() {
 
     function getSocket() {
         if (!socket) {
-            /** TODO: authentication */
-            socket = new Socket(`${import.meta.env.VITE_SOCKET_URI}/_ws`);
+            socket = new Socket(`${import.meta.env.VITE_SOCKET_URI}/_ws`, {
+                auth: { token: accessToken.value }
+            });
 
-            // socket.on('error', async (err) => {
-            //     if (err.message === 'unauthorized') {
-            //         const accessToken = await refreshAccessToken();
+            socket.on('error', async (err) => {
+                if (err.message === 'unauthorized') {
+                    await refreshAccessToken();
 
-            //         socket.auth = { token: accessToken };
+                    socket?.setAuth({ token: accessToken.value });
 
-            //         socket.connect();
-            //     }
-            // });
+                    socket?.connect();
+                }
+            });
         }
 
         return socket;

@@ -26,7 +26,7 @@ export class Socket {
             Object.assign(this._options, options);
         }
 
-        this._connect();
+        this.connect();
     }
 
     private _delay(t: number) {
@@ -88,7 +88,6 @@ export class Socket {
             this._socket.onmessage = null;
             this._socket.onclose = null;
             this._socket.onerror = null;
-            this._listeners.clear();
         }
     }
 
@@ -111,35 +110,37 @@ export class Socket {
 
         this._attempt = 0;
 
-        this._socket?.send('ping');
+        this._socket?.send('');
 
         this._sendMessageQueue();
 
-        this._triggerListeners('open', openEvent);
+        this._triggerListeners('connect', openEvent);
     };
 
     private _onMessageReceived = async ({ data }: MessageEvent) => {
         try {
-            if (data === 'pong') {
-                await this._delay(20000);
+            switch (data) {
+                case '':
+                    await this._delay(20000);
 
-                this._socket?.send('ping'), 20000;
+                    this._socket?.send('');
+                    break;
 
-                return;
+                default:
+                    const { event, payload } = JSON.parse(data);
+
+                    this._triggerListeners(event, payload);
+                    break;
             }
-
-            const { event, payload } = JSON.parse(data);
-
-            this._triggerListeners(event, payload);
         } catch (error) {
             console.error(error);
         }
     };
 
     private _onConnectionClosed = (closeEvent: Event) => {
-        console.warn('WebSocket closed. Reconnecting...');
+        console.warn('WebSocket closed. Reconnecting...', closeEvent);
 
-        this._triggerListeners('close', closeEvent);
+        this._triggerListeners('disconnect', closeEvent);
 
         this.reconnect();
     };
@@ -162,13 +163,21 @@ export class Socket {
         return url;
     }
 
-    private _connect() {
+    public setAuth(auth: Partial<SocketOptions['auth']>) {
+        Object.assign(this._options.auth, auth);
+    }
+
+    public connect() {
         if (this._isConnecting) {
-            console.error('WebSocket is already connecting');
             return;
         }
 
         this._isConnecting = true;
+
+        if (this._socket) {
+            this._clearListeners();
+            this._socket.close();
+        }
 
         this._socket = new WebSocket(this._getSocketUrl());
 
@@ -176,10 +185,6 @@ export class Socket {
         this._socket.onmessage = this._onMessageReceived;
         this._socket.onclose = this._onConnectionClosed;
         this._socket.onerror = this._onConnectionError;
-    }
-
-    public setAuth(auth: Partial<SocketOptions['auth']>) {
-        Object.assign(this._options.auth, auth);
     }
 
     public async reconnect() {
@@ -194,7 +199,7 @@ export class Socket {
         await this._delay(backoffDelay);
 
         this._attempt++;
-        this._connect();
+        this.connect();
     }
 
     public close() {
