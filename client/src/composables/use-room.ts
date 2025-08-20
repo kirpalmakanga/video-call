@@ -137,7 +137,6 @@ export function useRoom(
     });
 
     subscribe('connect', () => {
-        /** TODO: add connect special event to Socket class */
         if (!isConnecting.value) {
             connect();
         }
