@@ -1,6 +1,8 @@
 import { defineWebSocketHandler, type H3 } from 'h3';
 import { plugin as ws } from 'crossws/server';
 import type { Peer } from 'crossws';
+import { getUrlParams } from './utils/helpers.utils';
+import { authenticate } from './utils/jwt.utils';
 
 interface Event {
     event: ClientToServerEventId;
@@ -15,53 +17,58 @@ type EventHandlers = {
 };
 
 const handlers: EventHandlers = {
-    requestConnection({ roomId }, peer) {
+    requestConnection({ roomId, participantId }, peer) {
+        peer.context.participantId = participantId;
+
         peer.subscribe(`room:${roomId}`);
-        peer.subscribe(`participant:${peer.id}:room:${roomId}`);
+        peer.subscribe(`participant:${participantId}:room:${roomId}`);
 
         peer.send({
             event: 'connectionConfirmed',
-            payload: { participantId: peer.id }
+            payload: { participantId }
         });
     },
-    connectParticipant({ roomId }, peer) {
+    connectParticipant({ roomId, participantId }, peer) {
         peer.publish(`room:${roomId}`, {
             event: 'participantConnected',
-            payload: { participantId: peer.id }
+            payload: { participantId }
         });
     },
-    disconnectParticipant({ roomId }, peer) {
+    disconnectParticipant({ roomId, participantId }, peer) {
         peer.publish(`room:${roomId}`, {
             event: 'participantDisconnected',
-            payload: { participantId: peer.id }
+            payload: { participantId }
         });
 
         peer.unsubscribe(`room:${roomId}`);
-        peer.unsubscribe(`participant:${peer.id}:room:${roomId}`);
+        peer.unsubscribe(`participant:${participantId}:room:${roomId}`);
     },
-    offer({ roomId, targetParticipantId, ...payload }, peer) {
+    offer({ roomId, participantId, targetParticipantId, ...payload }, peer) {
         peer.publish(`participant:${targetParticipantId}:room:${roomId}`, {
             event: 'incomingOffer',
             payload: {
-                senderParticipantId: peer.id,
+                senderParticipantId: participantId,
                 ...payload
             }
         });
     },
-    answer({ roomId, targetParticipantId, ...payload }, peer) {
+    answer({ roomId, participantId, targetParticipantId, ...payload }, peer) {
         peer.publish(`participant:${targetParticipantId}:room:${roomId}`, {
             event: 'incomingAnswer',
             payload: {
-                senderParticipantId: peer.id,
+                senderParticipantId: participantId,
                 ...payload
             }
         });
     },
-    iceCandidate({ roomId, targetParticipantId, ...payload }, peer) {
+    iceCandidate(
+        { roomId, participantId, targetParticipantId, ...payload },
+        peer
+    ) {
         peer.publish(`participant:${targetParticipantId}:room:${roomId}`, {
             event: 'incomingIceCandidate',
             payload: {
-                senderParticipantId: peer.id,
+                senderParticipantId: participantId,
                 ...payload
             }
         });
@@ -74,27 +81,64 @@ const handlers: EventHandlers = {
     }
 };
 
+// async function authenticatePeer(peer: Peer) {
+//     const { token } = getUrlParams(peer.request.url);
+
+//     if (token) {
+//         await authenticate(token);
+//     } else {
+//         throw new Error('Invalid token');
+//     }
+// }
+
 export function useSocketHandler(app: H3) {
     app.get(
         '/_ws',
         defineWebSocketHandler({
-            open(peer) {
+            async open(peer) {
                 console.log('[ws] open', peer);
-                // peer.send({ user: 'server', message: `Welcome ${peer}!` });
+
+                // try {
+                //     await authenticatePeer(peer);
+                // } catch (error) {
+                //     peer.send({
+                //         event: 'error',
+                //         payload: { message: 'unauthorized' }
+                //     });
+
+                //     peer.terminate();
+                // }
             },
 
-            message(peer, message) {
-                if (message.text() === 'ping') {
-                    peer.send('pong');
+            async message(peer, message) {
+                if (message.text() === '') {
+                    peer.send('');
 
                     return;
                 }
+
+                // try {
+                //     await authenticatePeer(peer);
+                // } catch (error) {
+                //     peer.send({
+                //         event: 'error',
+                //         payload: { message: 'unauthorized' }
+                //     });
+
+                //     peer.terminate();
+
+                //     return;
+                // }
 
                 const { event, payload } = message.json() as Event;
 
                 const handler = handlers[event];
 
-                handler(payload, peer);
+                if (handler) {
+                    handler(payload, peer);
+                } else {
+                    peer;
+                }
             },
 
             close(peer) {
@@ -102,7 +146,9 @@ export function useSocketHandler(app: H3) {
                     if (channel.startsWith('room')) {
                         peer.publish(channel, {
                             event: 'participantDisconnected',
-                            payload: { participantId: peer.id }
+                            payload: {
+                                participantId: peer.context.participantId
+                            }
                         });
                     }
 

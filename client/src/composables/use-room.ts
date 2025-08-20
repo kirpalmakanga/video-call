@@ -58,6 +58,7 @@ export function useRoom(
         onIceCandidate(peerId, candidate) {
             emit('iceCandidate', {
                 roomId,
+                participantId: localParticipant.id,
                 targetParticipantId: peerId,
                 sdpMLineIndex: candidate.sdpMLineIndex,
                 candidate: candidate.candidate
@@ -113,7 +114,8 @@ export function useRoom(
         }
 
         emit('requestConnection', {
-            roomId
+            roomId,
+            participantId: localParticipant.id
         });
     }
 
@@ -124,12 +126,10 @@ export function useRoom(
 
         clearParticipants();
 
-        if (isOnline.value) {
-            emit('disconnectParticipant', {
-                roomId,
-                participantId: localParticipant.id
-            });
-        }
+        emit('disconnectParticipant', {
+            roomId,
+            participantId: localParticipant.id
+        });
     }
 
     subscribe('disconnect', () => {
@@ -142,13 +142,14 @@ export function useRoom(
         }
     });
 
-    subscribe('connectionConfirmed', ({ participantId }) => {
-        localParticipant.id = participantId;
-
+    subscribe('connectionConfirmed', () => {
         isConnecting.value = false;
         isConnected.value = true;
 
-        emit('connectParticipant', { roomId });
+        emit('connectParticipant', {
+            roomId,
+            participantId: localParticipant.id
+        });
     });
 
     subscribe('participantConnected', async ({ participantId }) => {
@@ -158,6 +159,7 @@ export function useRoom(
 
         emit('offer', {
             roomId,
+            participantId: localParticipant.id,
             targetParticipantId: participantId,
             offer: await createOffer(participantId)
         });
@@ -170,6 +172,7 @@ export function useRoom(
 
         emit('answer', {
             roomId,
+            participantId: localParticipant.id,
             targetParticipantId: senderParticipantId,
             answer: await createAnswer(senderParticipantId, offer)
         });
