@@ -1,14 +1,25 @@
+interface SocketOptions {
+    maxReconnectionAttempts: number;
+    maxEnqueuedMessages: number;
+}
+
 export class Socket {
     private _url: string;
     private _socket: WebSocket | null = null;
-    private _maxReconnectionAttempts: number = 10;
     private _attempt: number = 0;
     private _listeners: Map<string, Set<Function>> = new Map();
     private _messageQueue: unknown[] = [];
-    private _maxEnqueuedMessages: number = Infinity;
+    private _options: SocketOptions = {
+        maxReconnectionAttempts: 10,
+        maxEnqueuedMessages: Infinity
+    };
 
-    constructor(url: string) {
+    constructor(url: string, options?: Partial<SocketOptions>) {
         this._url = url;
+
+        if (options) {
+            Object.assign(this._options, options);
+        }
 
         this._connect();
     }
@@ -81,7 +92,7 @@ export class Socket {
     }
 
     private _sendMessageQueue() {
-        if (this._messageQueue) {
+        if (this._messageQueue.length) {
             for (const data of this._messageQueue) {
                 this._sendMessage(data);
             }
@@ -144,7 +155,7 @@ export class Socket {
     }
 
     public async reconnect() {
-        if (this._attempt >= this._maxReconnectionAttempts) {
+        if (this._attempt >= this._options.maxReconnectionAttempts) {
             console.error('Max reconnection attempts reached.');
             return;
         }
@@ -194,7 +205,9 @@ export class Socket {
     public emit(event: string, payload: unknown) {
         if (this._socket?.readyState === WebSocket.OPEN) {
             this._sendMessage({ event, payload });
-        } else if (this._messageQueue.length < this._maxEnqueuedMessages) {
+        } else if (
+            this._messageQueue.length < this._options.maxEnqueuedMessages
+        ) {
             this._messageQueue.push(payload);
         }
     }
