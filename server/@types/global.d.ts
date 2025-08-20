@@ -16,6 +16,7 @@ declare global {
             JWT_ACCESS_SECRET: string;
             JWT_ISSUER: string;
             JWT_AUDIENCE: string;
+            JWT_DURATION: string;
 
             //Email
             SMTP_HOST: string;
