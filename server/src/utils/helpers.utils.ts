@@ -34,3 +34,9 @@ export function omit<T extends object, K extends keyof T>(
 export function addHours(date: Date, hours: number) {
     return new Date(date.getTime() + hours * 60 * 60 * 1000);
 }
+
+export function getUrlParams(url: string) {
+    const urlObject = new URL(url);
+
+    return Object.fromEntries(urlObject.searchParams.entries());
+}
