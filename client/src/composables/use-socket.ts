@@ -31,6 +31,21 @@ export function useSocket() {
         return socket;
     }
 
+    function addSubscription(
+        event: ServerToClientEventId,
+        callback: ServerToClientEvents[ServerToClientEventId]
+    ) {
+        if (subscriptions.has(event)) {
+            throw new Error(`Subscription for event "${event}" already exists`);
+        } else {
+            const socket = getSocket();
+
+            socket.on(event, callback);
+
+            subscriptions.set(event, () => socket.off(event, callback));
+        }
+    }
+
     function removeSubscription(event: ServerToClientEventId) {
         const unsubscribe = subscriptions.get(event);
 
@@ -70,19 +85,7 @@ export function useSocket() {
             event: E,
             callback: ServerToClientEvents[E]
         ) {
-            if (subscriptions.has(event)) {
-                throw new Error(
-                    `Subscription for event "${event}" already exists`
-                );
-            } else {
-                const socket = getSocket();
-
-                socket.on(event, callback as any);
-
-                subscriptions.set(event, () =>
-                    socket.off(event, callback as any)
-                );
-            }
+            addSubscription(event, callback);
         },
         unsubscribe(event?: ServerToClientEventId) {
             if (event) {
