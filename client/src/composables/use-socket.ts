@@ -3,16 +3,7 @@ import { storeToRefs } from 'pinia';
 import { useAuthStore } from './store/use-auth-store';
 import { Socket } from '../utils/socket';
 
-let connectionCount: number = 0;
 let socket: Socket | null = null;
-
-function removeSocket() {
-    if (socket) {
-        socket.close();
-
-        socket = null;
-    }
-}
 
 export function useSocket() {
     const authStore = useAuthStore();
@@ -20,8 +11,6 @@ export function useSocket() {
     const { accessToken } = storeToRefs(authStore);
 
     const subscriptions = new Map<ServerToClientEventId, Function>();
-
-    connectionCount++;
 
     function getSocket() {
         if (!socket) {
@@ -83,16 +72,7 @@ export function useSocket() {
         }
     }
 
-    onBeforeUnmount(() => {
-        clearSubscriptions();
-
-        connectionCount--;
-
-        if (connectionCount === 0) {
-            console.log('closeSocket');
-            removeSocket();
-        }
-    });
+    onBeforeUnmount(clearSubscriptions);
 
     return {
         emit<E extends ClientToServerEventId>(
