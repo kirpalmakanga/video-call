@@ -6,6 +6,7 @@ interface SocketOptions {
 export class Socket {
     private _url: string;
     private _socket: WebSocket | null = null;
+    private _isConnecting: boolean = false;
     private _attempt: number = 0;
     private _listeners: Map<string, Set<Function>> = new Map();
     private _messageQueue: unknown[] = [];
@@ -102,6 +103,8 @@ export class Socket {
     }
 
     private _onConnectionOpened = (openEvent: Event) => {
+        this._isConnecting = false;
+
         this._attempt = 0;
 
         this._socket?.send('ping');
@@ -146,6 +149,13 @@ export class Socket {
     };
 
     private _connect() {
+        if (this._isConnecting) {
+            console.error('WebSocket is already connecting');
+            return;
+        }
+
+        this._isConnecting = true;
+
         this._socket = new WebSocket(this._url);
 
         this._socket.onopen = this._onConnectionOpened;
@@ -208,7 +218,7 @@ export class Socket {
         } else if (
             this._messageQueue.length < this._options.maxEnqueuedMessages
         ) {
-            this._messageQueue.push(payload);
+            this._messageQueue.push({ event, payload });
         }
     }
 }
