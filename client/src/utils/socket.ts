@@ -1,6 +1,7 @@
 interface SocketOptions {
     maxReconnectionAttempts: number;
     maxEnqueuedMessages: number;
+    auth: { token: string | null };
 }
 
 export class Socket {
@@ -12,7 +13,10 @@ export class Socket {
     private _messageQueue: unknown[] = [];
     private _options: SocketOptions = {
         maxReconnectionAttempts: 10,
-        maxEnqueuedMessages: Infinity
+        maxEnqueuedMessages: Infinity,
+        auth: {
+            token: null
+        }
     };
 
     constructor(url: string, options?: Partial<SocketOptions>) {
@@ -148,6 +152,16 @@ export class Socket {
         this._socket?.close();
     };
 
+    private _getSocketUrl() {
+        let url = this._url;
+
+        if (this._options.auth.token) {
+            return url.concat(`?token=${this._options.auth.token}`);
+        }
+
+        return url;
+    }
+
     private _connect() {
         if (this._isConnecting) {
             console.error('WebSocket is already connecting');
@@ -156,12 +170,16 @@ export class Socket {
 
         this._isConnecting = true;
 
-        this._socket = new WebSocket(this._url);
+        this._socket = new WebSocket(this._getSocketUrl());
 
         this._socket.onopen = this._onConnectionOpened;
         this._socket.onmessage = this._onMessageReceived;
         this._socket.onclose = this._onConnectionClosed;
         this._socket.onerror = this._onConnectionError;
+    }
+
+    public setAuth(auth: Partial<SocketOptions['auth']>) {
+        Object.assign(this._options.auth, auth);
     }
 
     public async reconnect() {
