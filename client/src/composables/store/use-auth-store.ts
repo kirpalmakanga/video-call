@@ -56,8 +56,6 @@ export const useAuthStore = defineStore(
                 const tokens = await refreshAccessToken(state.refreshToken);
 
                 Object.assign(state, tokens);
-
-                return tokens.accessToken;
             },
             async logIn(credentials: LoginFormData) {
                 const tokens = await logIn(credentials);
