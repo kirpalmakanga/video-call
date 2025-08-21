@@ -1,13 +1,8 @@
 import { defineWebSocketHandler, type H3 } from 'h3';
 import { plugin as ws } from 'crossws/server';
-import type { Peer } from 'crossws';
+import type { Message, Peer } from 'crossws';
 import { getUrlParams } from './utils/helpers.utils';
 import { authenticate } from './utils/jwt.utils';
-
-interface Event {
-    event: ClientToServerEventId;
-    payload: ClientToServerEventPayload<ClientToServerEventId>;
-}
 
 type EventHandlers = {
     [K in keyof ClientToServerEvents]: (
@@ -84,11 +79,24 @@ const handlers: EventHandlers = {
 async function authenticatePeer(peer: Peer) {
     const { token } = getUrlParams(peer.request.url);
 
-    if (token) {
-        await authenticate(token);
-    } else {
-        throw new Error('Invalid token');
+    try {
+        if (token) {
+            await authenticate(token);
+        } else {
+            throw new Error('Invalid token');
+        }
+    } catch (error) {
+        peer.send({
+            event: 'error',
+            payload: { message: 'unauthorized' }
+        });
     }
+}
+
+function parseMessage<E extends ClientToServerEventId>(
+    message: Message
+): { event: E; payload: ClientToServerEventPayload<E> } {
+    return message.json();
 }
 
 export function useSocketHandler(app: H3) {
@@ -96,16 +104,7 @@ export function useSocketHandler(app: H3) {
         '/_ws',
         defineWebSocketHandler({
             async open(peer) {
-                console.log('[ws] open', peer);
-
-                try {
-                    await authenticatePeer(peer);
-                } catch (error) {
-                    peer.send({
-                        event: 'error',
-                        payload: { message: 'unauthorized' }
-                    });
-                }
+                await authenticatePeer(peer);
             },
 
             async message(peer, message) {
@@ -117,23 +116,16 @@ export function useSocketHandler(app: H3) {
 
                 try {
                     await authenticatePeer(peer);
-                } catch (error) {
-                    peer.send({
-                        event: 'error',
-                        payload: { message: 'unauthorized' }
-                    });
-
+                } catch {
                     return;
                 }
 
-                const { event, payload } = message.json() as Event;
+                const { event, payload } = parseMessage(message);
 
                 const handler = handlers[event];
 
                 if (handler) {
-                    handler(payload, peer);
-                } else {
-                    peer;
+                    handler(payload as any, peer);
                 }
             },
 
