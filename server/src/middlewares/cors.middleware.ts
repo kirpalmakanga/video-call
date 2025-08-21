@@ -3,8 +3,7 @@ import {
     type H3,
     type CorsOptions,
     type H3Event,
-    onError,
-    onResponse
+    onError
 } from 'h3';
 
 const corsResponseHeaderKeys = [

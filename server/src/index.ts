@@ -15,7 +15,8 @@ const { PORT, CLIENT_URI } = process.env;
 const app = new H3();
 
 useCors(app, {
-    origin: [CLIENT_URI]
+    origin: [CLIENT_URI],
+    methods: ['GET', 'POST', 'PUT', 'DELETE']
 });
 
 app.use(useRequestLogger());
