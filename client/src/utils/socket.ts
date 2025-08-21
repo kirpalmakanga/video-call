@@ -82,13 +82,22 @@ export class Socket {
         }
     }
 
-    private _clearListeners() {
+    private _closeSocket() {
         if (this._socket) {
             this._socket.onopen = null;
             this._socket.onmessage = null;
             this._socket.onclose = null;
             this._socket.onerror = null;
+            this._socket.close();
         }
+    }
+
+    private _createSocket() {
+        this._socket = new WebSocket(this._getSocketUrl());
+        this._socket.onopen = this._onConnectionOpened;
+        this._socket.onmessage = this._onMessageReceived;
+        this._socket.onclose = this._onConnectionClosed;
+        this._socket.onerror = this._onConnectionError;
     }
 
     private _sendMessage(message: unknown) {
@@ -174,17 +183,9 @@ export class Socket {
 
         this._isConnecting = true;
 
-        if (this._socket) {
-            this._clearListeners();
-            this._socket.close();
-        }
+        this._closeSocket();
 
-        this._socket = new WebSocket(this._getSocketUrl());
-
-        this._socket.onopen = this._onConnectionOpened;
-        this._socket.onmessage = this._onMessageReceived;
-        this._socket.onclose = this._onConnectionClosed;
-        this._socket.onerror = this._onConnectionError;
+        this._createSocket();
     }
 
     public async reconnect() {
@@ -212,9 +213,7 @@ export class Socket {
             return;
         }
 
-        this._clearListeners();
-
-        this._socket.close();
+        this._closeSocket();
     }
 
     public on(event: string, callback: Function) {
