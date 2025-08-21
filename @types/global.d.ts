@@ -77,8 +77,7 @@ declare global {
             roomId: string;
             participantId: string;
             targetParticipantId: string;
-            sdpMLineIndex: number | null | undefined;
-            candidate: string | undefined;
+            iceCandidate: RTCIceCandidate;
         }) => void;
         syncParticipant: (payload: {
             roomId: string;
@@ -106,8 +105,7 @@ declare global {
         }) => void;
         incomingIceCandidate: (payload: {
             senderParticipantId: string;
-            sdpMLineIndex: number | null | undefined;
-            candidate: string | undefined;
+            iceCandidate: RTCIceCandidate;
         }) => void;
     }
 

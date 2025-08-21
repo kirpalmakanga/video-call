@@ -236,19 +236,10 @@ export function useWebRTC(
                 new RTCSessionDescription(answer)
             );
         },
-        async addIceCandidate(
-            peerId: string,
-            sdpMLineIndex: number | null | undefined,
-            candidate: string | undefined
-        ) {
+        async addIceCandidate(peerId: string, candidate: RTCIceCandidate) {
             const connection = getPeer(peerId);
 
-            await connection.addIceCandidate(
-                new RTCIceCandidate({
-                    sdpMLineIndex,
-                    candidate
-                })
-            );
+            await connection.addIceCandidate(new RTCIceCandidate(candidate));
         },
         disconnectFromPeer,
         disconnectFromAllPeers

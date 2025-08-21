@@ -55,13 +55,12 @@ export function useRoom(
         addIceCandidate,
         connectToPeer
     } = useWebRTC(localStream, {
-        onIceCandidate(peerId, candidate) {
+        onIceCandidate(peerId, iceCandidate) {
             emit('iceCandidate', {
                 roomId,
                 participantId: localParticipant.id,
                 targetParticipantId: peerId,
-                sdpMLineIndex: candidate.sdpMLineIndex,
-                candidate: candidate.candidate
+                iceCandidate
             });
         }
     });
@@ -184,8 +183,8 @@ export function useRoom(
 
     subscribe(
         'incomingIceCandidate',
-        ({ senderParticipantId, sdpMLineIndex, candidate }) => {
-            addIceCandidate(senderParticipantId, sdpMLineIndex, candidate);
+        ({ senderParticipantId, iceCandidate }) => {
+            addIceCandidate(senderParticipantId, iceCandidate);
         }
     );
 
