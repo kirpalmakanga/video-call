@@ -130,15 +130,14 @@ export function useRoom(
             participantId: localParticipant.id
         });
     }
-
-    subscribe('disconnect', () => {
-        isConnected.value = false;
-    });
-
     subscribe('connect', () => {
         if (!isConnecting.value) {
             connect();
         }
+    });
+
+    subscribe('disconnect', () => {
+        isConnected.value = false;
     });
 
     subscribe('connectionConfirmed', () => {
