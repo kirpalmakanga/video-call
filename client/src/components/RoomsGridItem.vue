@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
+import RoomsGridSkeleton from './RoomsGridSkeleton.vue';
 
-defineProps<{ id: string; name: string }>();
+defineProps<{
+    id: string;
+    name: string;
+    creator: { id: string; firstName: string; lastName: string };
+}>();
 </script>
 
 <template>
@@ -16,9 +21,13 @@ defineProps<{ id: string; name: string }>();
         </span>
 
         <span
-            class="flex flex-col grow bg-gray-700 group-hover:bg-gray-600 w-full p-3 transition-colors"
+            class="flex flex-col grow bg-gray-700 group-hover:bg-gray-600 w-full p-3 transition-colors gap-2"
         >
-            <span>{{ name }}</span>
+            <span class="leading-none">{{ name }}</span>
+
+            <span class="text-xs leading-none">
+                Hosted by: {{ creator.firstName }} {{ creator.lastName }}
+            </span>
         </span>
     </RouterLink>
 </template>

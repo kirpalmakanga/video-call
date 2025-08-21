@@ -12,7 +12,20 @@ export function updateRoom(
 }
 
 export function getAllRooms() {
-    return db.room.findMany();
+    return db.room.findMany({
+        select: {
+            id: true,
+            name: true,
+            creatorId: false,
+            creator: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true
+                }
+            }
+        }
+    });
 }
 
 export function getRoomById(id: string) {

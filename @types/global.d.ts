@@ -38,9 +38,11 @@ declare global {
     interface Room {
         id: string;
         name: string;
-        creatorId: string;
-        createdAt: Date;
-        updatedAt: Date;
+        creator: {
+            id: string;
+            firstName: string;
+            lastName: string;
+        };
     }
 
     interface RoomFormData {
