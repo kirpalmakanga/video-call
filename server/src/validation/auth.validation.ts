@@ -27,9 +27,15 @@ export const refreshTokenSchema = object({
 export type RefreshTokenSchema = InferType<typeof refreshTokenSchema>;
 
 export const updatePasswordSchema = object({
-    password: string()
+    currentPassword: string()
         .min(8, 'Password must be at least 8 characters')
-        .required('Password is required')
+        .required('Password is required'),
+    password: string()
+        .min(8, 'New password must be at least 8 characters')
+        .required('New password is required'),
+    confirmPassword: string()
+        .required()
+        .oneOf([ref('password')], 'Must match password')
 }).exact();
 
 export type UpdatePasswordSchema = InferType<typeof updatePasswordSchema>;

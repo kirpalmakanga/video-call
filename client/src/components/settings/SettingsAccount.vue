@@ -7,6 +7,7 @@ import {
 import type { FormSubmitEvent } from '@nuxt/ui';
 import { updatePassword } from '../../services/api';
 import { useAuthStore } from '../../composables/store/use-auth-store';
+import { pick } from '../../utils/helpers';
 
 const toast = useToast();
 
@@ -18,11 +19,9 @@ const state = reactive<UpdatePasswordFormData>({
     confirmPassword: ''
 });
 
-async function onSubmit({
-    data: { password }
-}: FormSubmitEvent<UpdatePasswordFormData>) {
+async function onSubmit({ data }: FormSubmitEvent<UpdatePasswordFormData>) {
     try {
-        await updatePassword(password);
+        await updatePassword(data);
 
         toast.add({
             title: 'Success',
@@ -32,7 +31,7 @@ async function onSubmit({
         toast.add({
             title: 'Error',
             description:
-                error?.response?.data.error || `Couldn't update password.`,
+                error?.response?.data.message || `Couldn't update password.`,
             color: 'error'
         });
     }
@@ -57,13 +56,13 @@ async function onSubmit({
         />
 
         <PasswordField
-            label="Password"
+            label="New password"
             name="password"
             v-model="state.password"
         />
 
         <PasswordField
-            label="Confirm password"
+            label="Confirm new password"
             name="confirmPassword"
             v-model="state.confirmPassword"
         />
@@ -73,7 +72,7 @@ async function onSubmit({
             icon="i-mdi-content-save-outline"
             type="submit"
         >
-            Save modifications
+            Save password
         </UButton>
     </UForm>
 </template>

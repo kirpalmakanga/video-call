@@ -180,9 +180,27 @@ interface UpdatePasswordRequest {
 }
 
 export async function updatePassword(event: H3Event<UpdatePasswordRequest>) {
-    const { password } = await readValidatedBody(event, updatePasswordSchema);
+    const { currentPassword, password } = await readValidatedBody(
+        event,
+        updatePasswordSchema
+    );
 
-    await updateUserPassword(event.context.userId, password);
+    const user = await getUserById(event.context.userId);
+
+    if (!user) {
+        return badRequest('Unknown user.');
+    }
+
+    const isValidPassword = await validatePassword(
+        currentPassword,
+        user.password
+    );
+
+    if (isValidPassword) {
+        await updateUserPassword(event.context.userId, password);
+    } else {
+        forbidden('Invalid current password.');
+    }
 }
 
 interface PasswordResetRequest {

@@ -3,6 +3,7 @@ import type {
     LoginFormData,
     RegisterFormData,
     ResetPasswordFormData,
+    UpdatePasswordFormData,
     UpdateProfileFormData
 } from '../utils/validation';
 
@@ -49,8 +50,8 @@ export async function resetPassword(
 }
 
 /** Authenticated API Requests */
-export async function updatePassword(password: string) {
-    await apiInstance.put('/auth/password', { password });
+export async function updatePassword(data: UpdatePasswordFormData) {
+    await apiInstance.put('/auth/password', data);
 }
 
 export async function getCurrentUserProfile() {
