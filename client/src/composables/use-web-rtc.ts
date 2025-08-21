@@ -2,7 +2,7 @@ import { onBeforeUnmount, ref, watch, type Ref } from 'vue';
 import { assertIsDefined } from '../../../utils/assert';
 import { omit } from '../utils/helpers';
 
-const { VITE_STUN_SERVERS } = process.env;
+const { VITE_STUN_SERVERS } = import.meta.env;
 
 const connectionConfiguration: RTCConfiguration = VITE_STUN_SERVERS
     ? {
