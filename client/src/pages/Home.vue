@@ -35,19 +35,17 @@ const currentRooms = computed(() => {
                 <CreateRoomButton />
             </div>
 
+            <SearchForm
+                class="bg-gray-900 p-4 rounded mb-4"
+                label="Find a room"
+                v-model="filter"
+            />
+
             <RoomsGridSkeleton v-if="isLoading" />
 
             <PageError v-else-if="error" @reload="refetch" />
 
-            <template v-else-if="rooms?.length">
-                <SearchForm
-                    class="bg-gray-900 p-4 rounded mb-4"
-                    label="Find a room"
-                    v-model="filter"
-                />
-
-                <RoomsGrid :items="currentRooms" />
-            </template>
+            <RoomsGrid v-else-if="rooms?.length" :items="currentRooms" />
 
             <Placeholder
                 v-else
