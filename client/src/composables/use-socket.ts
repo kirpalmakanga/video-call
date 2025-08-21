@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia';
 import { useAuthStore } from './store/use-auth-store';
 import { Socket } from '../utils/socket';
 
-let socket: Socket | null = null;
+let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 
 export function useSocket() {
     const authStore = useAuthStore();
@@ -18,7 +18,7 @@ export function useSocket() {
                 auth: { token: accessToken.value }
             });
 
-            socket.on('error', async (err) => {
+            socket.on('connectError', async (err) => {
                 if (err.message === 'unauthorized') {
                     await refreshAccessToken();
 

@@ -1,15 +1,34 @@
+export interface EventsMap {
+    [event: string]: any;
+}
+export interface DefaultEventsMap {
+    [event: string]: (...args: any[]) => void;
+}
+
+interface SocketReservedEvents {
+    connect: () => void;
+    connectError: (err: Error) => void;
+    disconnect: () => void;
+}
+
 interface SocketOptions {
     maxReconnectionAttempts: number;
     maxEnqueuedMessages: number;
     auth: { token: string | null };
 }
 
-export class Socket {
+export class Socket<
+    ListenEvents extends EventsMap = DefaultEventsMap,
+    EmitEvents extends EventsMap = ListenEvents
+> {
     private _url: string;
     private _socket: WebSocket | null = null;
     private _isConnecting: boolean = false;
     private _attempt: number = 0;
-    private _listeners: Map<string, Set<Function>> = new Map();
+    private _listeners: Map<
+        keyof ListenEvents,
+        Set<ListenEvents[keyof ListenEvents]>
+    > = new Map();
     private _messageQueue: unknown[] = [];
     private _options: SocketOptions = {
         maxReconnectionAttempts: 10,
@@ -40,21 +59,24 @@ export class Socket {
         return Math.min(base * 2 ** attempt + jitter, max);
     }
 
-    private _hasEventListeners(event: string) {
+    private _hasEventListeners(event: keyof ListenEvents) {
         return !!this._listeners.get(event)?.size;
     }
 
-    private _getEventListeners(event: string) {
+    private _getEventListeners(event: keyof ListenEvents) {
         return this._listeners.get(event);
     }
 
-    private _clearEventListeners(event: string) {
+    private _clearEventListeners(event: keyof ListenEvents) {
         this._listeners.get(event)?.clear();
 
         this._listeners.delete(event);
     }
 
-    private _addEventListener(event: string, callback: Function) {
+    private _addEventListener<E extends keyof ListenEvents>(
+        event: E,
+        callback: ListenEvents[E]
+    ) {
         if (!this._hasEventListeners(event)) {
             this._listeners.set(event, new Set());
         }
@@ -62,7 +84,10 @@ export class Socket {
         this._listeners.get(event)?.add(callback);
     }
 
-    private _removeEventListener(event: string, callback: Function) {
+    private _removeEventListener<E extends keyof ListenEvents>(
+        event: E,
+        callback: ListenEvents[E]
+    ) {
         this._listeners.get(event)?.delete(callback);
 
         if (!this._hasEventListeners(event)) {
@@ -70,7 +95,7 @@ export class Socket {
         }
     }
 
-    private _triggerListeners(event: string, payload: unknown) {
+    private _triggerListeners(event: keyof ListenEvents, payload: unknown) {
         if (this._hasEventListeners(event)) {
             const listeners = this._getEventListeners(event);
 
@@ -157,7 +182,10 @@ export class Socket {
     private _onConnectionError = (errorEvent: Event) => {
         console.error('WebSocket error:', errorEvent);
 
-        this._triggerListeners('error', errorEvent);
+        this._triggerListeners(
+            'connectError',
+            new Error((errorEvent as Event & { message: string }).message)
+        );
 
         this._socket?.close();
     };
@@ -216,13 +244,19 @@ export class Socket {
         this._closeSocket();
     }
 
-    public on(event: string, callback: Function) {
+    public on<E extends keyof (ListenEvents & SocketReservedEvents)>(
+        event: E,
+        callback: (ListenEvents & SocketReservedEvents)[E]
+    ) {
         this._addEventListener(event, callback);
     }
 
-    public off(event: string, callback?: Function) {
+    public off<E extends keyof ListenEvents>(
+        event: E,
+        callback?: ListenEvents[E]
+    ) {
         if (!this._hasEventListeners(event)) {
-            console.error(`Event ${event} has no listeners`);
+            console.error(`Event ${event as string} has no listeners`);
 
             return;
         }
@@ -234,7 +268,7 @@ export class Socket {
         }
     }
 
-    public emit(event: string, payload: unknown) {
+    public emit<E extends keyof EmitEvents>(event: E, payload: unknown) {
         if (this._socket?.readyState === WebSocket.OPEN) {
             this._sendMessage({ event, payload });
         } else if (

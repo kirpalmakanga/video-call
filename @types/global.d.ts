@@ -92,9 +92,6 @@ declare global {
         Parameters<ClientToServerEvents[K]>[0];
 
     interface ServerToClientEvents {
-        disconnect: () => void;
-        connect: () => void;
-        unauthorized: () => void;
         participantSynced: (payload: ClientParticipant) => void;
         connectionConfirmed: (payload: { participantId: string }) => void;
         participantConnected: (payload: { participantId: string }) => void;
