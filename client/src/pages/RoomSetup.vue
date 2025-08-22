@@ -5,7 +5,7 @@ import MediaSettings from '../components/room/MediaSettings.vue';
 import MediaSettingsSkeleton from '../components/room/MediaSettingsSkeleton.vue';
 import PageError from '../components/page/PageError.vue';
 import { useRoomQuery } from '../services/queries';
-import { useSettingsStore } from '../composables/store/use-settings-store';
+import { useMediaSettingsStore } from '../composables/store/use-media-settings-store';
 import { storeToRefs } from 'pinia';
 
 const {
@@ -20,8 +20,8 @@ const {
     refetch
 } = useRoomQuery(roomId as string);
 
-const settingsStore = useSettingsStore();
-const { audioDeviceId, videoDeviceId } = storeToRefs(settingsStore);
+const mediaSettingsStore = useMediaSettingsStore();
+const { audioDeviceId, videoDeviceId } = storeToRefs(mediaSettingsStore);
 </script>
 
 <template>

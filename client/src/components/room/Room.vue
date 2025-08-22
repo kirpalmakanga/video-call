@@ -8,7 +8,7 @@ import MediaSettings from './MediaSettings.vue';
 import Participant from '../../components/room/Participant.vue';
 import AutoGrid from '../../components/base/AutoGrid.vue';
 import { useRoom } from '../../composables/use-room';
-import { useSettingsStore } from '../../composables/store/use-settings-store';
+import { useMediaSettingsStore } from '../../composables/store/use-media-settings-store';
 import { useAuthStore } from '../../composables/store/use-auth-store';
 
 const props = defineProps<{ roomId: string }>();
@@ -30,9 +30,9 @@ interface State {
 const authStore = useAuthStore();
 const { fullName } = storeToRefs(authStore);
 
-const settingsStore = useSettingsStore();
+const mediaSettingsStore = useMediaSettingsStore();
 const { audioDeviceId, videoDeviceId, isAudioEnabled, isVideoEnabled } =
-    storeToRefs(settingsStore);
+    storeToRefs(mediaSettingsStore);
 
 const state = reactive<State>({
     viewMode: 'sidebar',

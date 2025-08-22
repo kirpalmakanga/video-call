@@ -5,11 +5,11 @@ import { storeToRefs } from 'pinia';
 import SettingsSkeleton from './MediaSettingsSkeleton.vue';
 import AudioPreview from '../base/AudioPreview.vue';
 import VideoPreview from '../base/VideoPreview.vue';
-import { useSettingsStore } from '../../composables/store/use-settings-store';
+import { useMediaSettingsStore } from '../../composables/store/use-media-settings-store';
 
-const settingsStore = useSettingsStore();
+const mediaSettingsStore = useMediaSettingsStore();
 const { audioDeviceId, videoDeviceId, isAudioEnabled, isVideoEnabled } =
-    storeToRefs(settingsStore);
+    storeToRefs(mediaSettingsStore);
 
 const { permissionGranted, videoInputs, audioInputs, ensurePermissions } =
     useDevicesList({

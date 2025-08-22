@@ -1,4 +1,4 @@
-import { reactive, toRefs, watch } from 'vue';
+import { reactive, toRefs } from 'vue';
 import { defineStore } from 'pinia';
 
 interface State {
@@ -6,6 +6,7 @@ interface State {
     audioDeviceId: string;
     isVideoEnabled: boolean;
     videoDeviceId: string;
+    microphoneVolume: number;
 }
 
 function getInitialState(): State {
@@ -13,11 +14,12 @@ function getInitialState(): State {
         isAudioEnabled: true,
         audioDeviceId: '',
         isVideoEnabled: true,
-        videoDeviceId: ''
+        videoDeviceId: '',
+        microphoneVolume: 100
     };
 }
 
-export const useSettingsStore = defineStore(
+export const useMediaSettingsStore = defineStore(
     'settings',
     () => {
         const state = reactive<State>(getInitialState());
