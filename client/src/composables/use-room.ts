@@ -27,7 +27,7 @@ export function useRoom(
         constraints: streamConfig,
         isVideoEnabled,
         isAudioEnabled,
-        volume: ref(1)
+        volume: ref(100)
     });
 
     const { emit, subscribe } = useSocket();
