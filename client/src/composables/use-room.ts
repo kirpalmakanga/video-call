@@ -4,6 +4,7 @@ import { useSocket } from './use-socket';
 import { useWebRTC } from './use-web-rtc';
 import { pick } from '../utils/helpers';
 import { useParticipantsList } from './use-participants-list';
+import { useMediaStream } from './use-media-stream';
 
 interface RoomConfig {
     displayName: string;
@@ -22,8 +23,11 @@ export function useRoom(
         stream: localStream,
         start: startStream,
         stop: stopStream
-    } = useUserMedia({
-        constraints: streamConfig
+    } = useMediaStream({
+        constraints: streamConfig,
+        isVideoEnabled,
+        isAudioEnabled,
+        volume: ref(1)
     });
 
     const { emit, subscribe } = useSocket();
@@ -80,36 +84,11 @@ export function useRoom(
         });
     }
 
-    function setVideoStatus() {
-        const videoTracks = localStream.value?.getVideoTracks();
-
-        if (videoTracks?.length) {
-            for (const track of videoTracks) {
-                track.enabled = isVideoEnabled.value;
-            }
-        }
-    }
-
-    function setAudioStatus() {
-        const audioTracks = localStream.value?.getAudioTracks();
-
-        if (audioTracks?.length) {
-            for (const track of audioTracks) {
-                track.enabled = isAudioEnabled.value;
-            }
-        }
-
-        localParticipant.isMuted = !isAudioEnabled.value;
-    }
-
     async function connect() {
         isConnecting.value = true;
 
         if (!localStream.value) {
             await startStream();
-
-            setAudioStatus();
-            setVideoStatus();
         }
 
         emit('requestConnection', {
@@ -213,17 +192,10 @@ export function useRoom(
 
     watch(localStream, (stream) => {
         localParticipant.stream = stream;
-
-        if (stream) {
-            setAudioStatus();
-            setVideoStatus();
-        }
     });
 
-    watch(isVideoEnabled, setVideoStatus);
-
     watch(isAudioEnabled, () => {
-        setAudioStatus();
+        localParticipant.isMuted = !isAudioEnabled.value;
 
         syncLocalParticipant();
     });
