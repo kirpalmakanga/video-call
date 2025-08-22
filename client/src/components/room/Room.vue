@@ -261,7 +261,7 @@ onMounted(() => {
                     </UTooltip>
 
                     <div
-                        class="absolute bottom-full left-1/2 -translate-x-1/2 transition-opacity group-hover:opacity-100 p-4 bg-gray-900 shadow rounded"
+                        class="absolute bottom-full left-1/2 -translate-x-1/2 transition-opacity opacity-0 group-hover:opacity-100 p-4 bg-gray-900 shadow rounded"
                         @wheel="handleWheelVolume"
                     >
                         <USlider
