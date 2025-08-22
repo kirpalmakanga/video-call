@@ -76,3 +76,14 @@ export function isEqual(a: unknown, b: unknown): boolean {
 
     return false;
 }
+
+export function nextFrame() {
+    return new Promise((resolve) => requestAnimationFrame(resolve));
+}
+
+export function keepInRange(
+    number: number,
+    [min, max]: [min: number, max: number]
+) {
+    return Math.min(max, Math.max(min, number));
+}

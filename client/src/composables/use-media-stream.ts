@@ -33,8 +33,16 @@ export function useMediaStream({
     let controlledStream: MediaStream | null = null;
 
     function setGain() {
-        if (gainFilter) {
+        if (!gainFilter) {
+            return;
+        }
+
+        if (volume.value >= 0 && volume.value <= 100) {
             gainFilter.gain.value = volume.value / 100;
+        } else {
+            console.error(
+                'useMediaStream error: volume value must be between 0 and 100'
+            );
         }
     }
 
@@ -48,6 +56,8 @@ export function useMediaStream({
         gainFilter.connect(destination);
 
         controlledStream = destination.stream;
+
+        gainFilter.gain.value = 1;
 
         setGain();
 

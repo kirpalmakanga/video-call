@@ -10,6 +10,7 @@ import AutoGrid from '../../components/base/AutoGrid.vue';
 import { useRoom } from '../../composables/use-room';
 import { useMediaSettingsStore } from '../../composables/store/use-media-settings-store';
 import { useAuthStore } from '../../composables/store/use-auth-store';
+import { keepInRange, nextFrame } from '../../utils/helpers';
 
 const props = defineProps<{ roomId: string }>();
 
@@ -31,8 +32,13 @@ const authStore = useAuthStore();
 const { fullName } = storeToRefs(authStore);
 
 const mediaSettingsStore = useMediaSettingsStore();
-const { audioDeviceId, videoDeviceId, isAudioEnabled, isVideoEnabled } =
-    storeToRefs(mediaSettingsStore);
+const {
+    audioDeviceId,
+    videoDeviceId,
+    isAudioEnabled,
+    isVideoEnabled,
+    microphoneVolume
+} = storeToRefs(mediaSettingsStore);
 
 const state = reactive<State>({
     viewMode: 'sidebar',
@@ -53,7 +59,8 @@ const { isConnecting, participants, toggleMuteParticipant, connect } = useRoom(
             }
         })),
         isVideoEnabled,
-        isAudioEnabled
+        isAudioEnabled,
+        microphoneVolume
     }
 );
 
@@ -87,6 +94,15 @@ function setActiveParticipant(id: string | null) {
 
 function leaveRoom() {
     emit('leave');
+}
+
+async function handleWheelVolume({ deltaY }: WheelEvent) {
+    await nextFrame();
+
+    microphoneVolume.value = keepInRange(
+        microphoneVolume.value + (deltaY < 0 ? 5 : -5),
+        [0, 100]
+    );
 }
 
 watch(
@@ -219,27 +235,43 @@ onMounted(() => {
                         />
                     </UButton>
                 </UTooltip>
-                <UTooltip
-                    :text="
-                        isAudioEnabled
-                            ? 'Disable microphone'
-                            : 'Enable microphone'
-                    "
-                >
-                    <UButton
-                        color="neutral"
-                        @click="isAudioEnabled = !isAudioEnabled"
+
+                <div class="relative group">
+                    <UTooltip
+                        :text="
+                            isAudioEnabled
+                                ? 'Disable microphone'
+                                : 'Enable microphone'
+                        "
                     >
-                        <UIcon
-                            class="size-5"
-                            :name="
-                                isAudioEnabled
-                                    ? 'i-mdi-microphone'
-                                    : 'i-mdi-microphone-off'
-                            "
+                        <UButton
+                            class="rounded-none"
+                            color="neutral"
+                            @click="isAudioEnabled = !isAudioEnabled"
+                        >
+                            <UIcon
+                                class="size-5"
+                                :name="
+                                    isAudioEnabled
+                                        ? 'i-mdi-microphone'
+                                        : 'i-mdi-microphone-off'
+                                "
+                            />
+                        </UButton>
+                    </UTooltip>
+
+                    <div
+                        class="absolute bottom-full left-1/2 -translate-x-1/2 transition-opacity group-hover:opacity-100 p-4 bg-gray-900 shadow rounded"
+                        @wheel="handleWheelVolume"
+                    >
+                        <USlider
+                            class="h-48 mb-2"
+                            color="neutral"
+                            orientation="vertical"
+                            v-model="microphoneVolume"
                         />
-                    </UButton>
-                </UTooltip>
+                    </div>
+                </div>
                 <UTooltip
                     :text="
                         state.viewMode === 'sidebar'
@@ -256,7 +288,7 @@ onMounted(() => {
                 </UTooltip>
             </UButtonGroup>
 
-            <div class="flex gap-4">
+            <div class="flex gap-2">
                 <UTooltip text="Settings">
                     <UButton color="neutral" @click="toggleFullscreen">
                         <UIcon

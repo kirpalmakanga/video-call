@@ -1,5 +1,5 @@
 import { computed, onBeforeUnmount, reactive, ref, watch, type Ref } from 'vue';
-import { useOnline, useUserMedia } from '@vueuse/core';
+import { useOnline } from '@vueuse/core';
 import { useSocket } from './use-socket';
 import { useWebRTC } from './use-web-rtc';
 import { pick } from '../utils/helpers';
@@ -11,11 +11,18 @@ interface RoomConfig {
     isVideoEnabled: Ref<boolean>;
     isAudioEnabled: Ref<boolean>;
     streamConfig: Ref<MediaStreamConstraints>;
+    microphoneVolume: Ref<number>;
 }
 
 export function useRoom(
     roomId: string,
-    { displayName, isVideoEnabled, isAudioEnabled, streamConfig }: RoomConfig
+    {
+        displayName,
+        isVideoEnabled,
+        isAudioEnabled,
+        streamConfig,
+        microphoneVolume
+    }: RoomConfig
 ) {
     const isOnline = useOnline();
 
@@ -27,7 +34,7 @@ export function useRoom(
         constraints: streamConfig,
         isVideoEnabled,
         isAudioEnabled,
-        volume: ref(100)
+        volume: microphoneVolume
     });
 
     const { emit, subscribe } = useSocket();
