@@ -6,3 +6,7 @@ interface ImportMeta {
         VITE_STUN_SERVERS: string;
     };
 }
+
+interface Window {
+    currentAudioContext?: AudioContext;
+}

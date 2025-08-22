@@ -1,5 +1,5 @@
-import { useUserMedia } from '@vueuse/core';
 import { watch, type Ref } from 'vue';
+import { useUserMedia } from '@vueuse/core';
 
 interface MediastreamOptions {
     constraints: Ref<MediaStreamConstraints>;
@@ -8,14 +8,12 @@ interface MediastreamOptions {
     volume: Ref<number>;
 }
 
-let audioContext: AudioContext | null = null;
-
 function getAudioContext() {
-    if (!audioContext) {
-        audioContext = new AudioContext();
+    if (!window.currentAudioContext) {
+        window.currentAudioContext = new AudioContext();
     }
 
-    return audioContext;
+    return window.currentAudioContext;
 }
 
 export function useMediaStream({
