@@ -42,10 +42,11 @@ export function useMediaStream({
 
     function createControlledStream(sourceStream: MediaStream) {
         source = audioContext.createMediaStreamSource(sourceStream);
-        destination = audioContext.createMediaStreamDestination();
-        gainFilter = audioContext.createGain();
 
+        gainFilter = audioContext.createGain();
         source.connect(gainFilter);
+
+        destination = audioContext.createMediaStreamDestination();
         gainFilter.connect(destination);
 
         controlledStream = destination.stream;
