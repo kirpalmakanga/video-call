@@ -13,7 +13,6 @@ export const useSocketInstance = defineStore('socket', () => {
     let instancesCount: number = 0;
 
     function removeSocket() {
-        console.log('removeSocket');
         socket?.close();
 
         socket = null;
