@@ -1,5 +1,5 @@
 import { createWebHistory, createRouter } from 'vue-router';
-const Home = () => import('./pages/Home.vue');
+const Rooms = () => import('./pages/Rooms.vue');
 const RoomSetup = () => import('./pages/RoomSetup.vue');
 const Room = () => import('./pages/Room.vue');
 const Login = () => import('./pages/Login.vue');
@@ -13,7 +13,8 @@ const Settings = () => import('./pages/Settings.vue');
 const router = createRouter({
     history: createWebHistory(),
     routes: [
-        { path: '/', component: Home, name: 'home' },
+        { path: '/', redirect: '/rooms' },
+        { path: '/rooms/:tab?', component: Rooms, name: 'rooms' },
         {
             path: '/room/:roomId/setup',
             component: RoomSetup,
@@ -27,7 +28,6 @@ const router = createRouter({
             component: ForgotPassword,
             name: 'auth-forgot-password'
         },
-        ,
         {
             path: '/reset-password',
             component: ResetPassword,
