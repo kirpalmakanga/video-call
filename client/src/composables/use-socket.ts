@@ -1,9 +1,29 @@
-import { onBeforeUnmount } from 'vue';
+import { onBeforeMount, onBeforeUnmount, onUnmounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from './store/use-auth-store';
 import { Socket } from '../utils/socket';
 
 let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+let instancesCount: number = 0;
+
+export function removeSocket() {
+    socket?.close();
+
+    socket = null;
+    instancesCount = 0;
+}
+
+function increaseInstancesCount() {
+    instancesCount++;
+}
+
+function decreaseInstancesCount() {
+    instancesCount--;
+
+    if (instancesCount === 0) {
+        removeSocket();
+    }
+}
 
 export function useSocket() {
     const authStore = useAuthStore();
@@ -73,7 +93,11 @@ export function useSocket() {
         }
     }
 
+    onBeforeMount(increaseInstancesCount);
+
     onBeforeUnmount(clearSubscriptions);
+
+    onUnmounted(decreaseInstancesCount);
 
     return {
         emit<E extends ClientToServerEventId>(

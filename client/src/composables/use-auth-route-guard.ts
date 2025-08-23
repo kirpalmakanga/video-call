@@ -2,6 +2,7 @@ import { watch } from 'vue';
 import { useRouter, type RouteRecordNameGeneric } from 'vue-router';
 import { useAuthStore } from './store/use-auth-store';
 import { storeToRefs } from 'pinia';
+import { removeSocket } from './use-socket';
 
 export function useAuthRouteGuard() {
     const authStore = useAuthStore();
@@ -27,6 +28,8 @@ export function useAuthRouteGuard() {
             router.replace('/');
         } else {
             router.replace('/login');
+
+            removeSocket();
         }
     });
 }
