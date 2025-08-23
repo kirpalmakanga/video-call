@@ -114,6 +114,7 @@ export class Socket<
             this._socket.onclose = null;
             this._socket.onerror = null;
             this._socket.close();
+            this._socket = null;
         }
     }
 
