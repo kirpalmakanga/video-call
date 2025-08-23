@@ -1,77 +1,31 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import type { TabsItem } from '@nuxt/ui';
 import Placeholder from '../components/base/Placeholder.vue';
-import RoomsGrid from '../components/RoomsGrid.vue';
-import RoomsGridSkeleton from '../components/RoomsGridSkeleton.vue';
-import { useRoomsListQuery } from '../services/queries';
+import RoomsGrid from '../components/rooms/RoomsGrid.vue';
+import RoomsGridSkeleton from '../components/rooms/RoomsGridSkeleton.vue';
 import CreateRoomButton from '../components/CreateRoomButton.vue';
 import PageError from '../components/page/PageError.vue';
-import type { TabsItem } from '@nuxt/ui';
-import { useAuthStore } from '../composables/store/use-auth-store';
-import { storeToRefs } from 'pinia';
-
-const router = useRouter();
-const route = useRoute();
+import { useRoomsListQuery } from '../services/queries';
+import AllRooms from '../components/rooms/AllRooms.vue';
+import FavoriteRooms from '../components/rooms/FavoriteRooms.vue';
+import CreatedRooms from '../components/rooms/CreatedRooms.vue';
 
 const { data: rooms, isLoading, error, refetch } = useRoomsListQuery();
-
-const authStore = useAuthStore();
-const { id: currentUserId } = storeToRefs(authStore);
 
 const tabs: TabsItem[] = [
     {
         label: 'All',
-        value: '/rooms'
+        value: 'all'
     },
     {
         label: 'Favorites',
-        value: '/rooms/favorites'
+        value: 'favorites'
     },
     {
         label: 'Created',
-        value: '/rooms/created'
+        value: 'created'
     }
 ];
-
-const activeTab = computed<string>({
-    get() {
-        return route.path;
-    },
-    set(path) {
-        filter.value = '';
-
-        router.push({ path });
-    }
-});
-
-const filter = ref<string>('');
-
-const currentRooms = computed<Room[]>(() => {
-    let items: Room[] = rooms.value || [];
-
-    if (filter.value) {
-        items = items.filter(({ name }) => {
-            name.toLowerCase().includes(filter.value.toLowerCase());
-        });
-    }
-
-    switch (route.params.tab) {
-        case 'created':
-            items = items.filter((room: Room) => {
-                return room.creator.id === currentUserId.value;
-            });
-            break;
-
-        case 'favorites':
-            items = items.filter((room: Room) => {
-                return room.isFavorite;
-            });
-            break;
-    }
-
-    return items;
-});
 </script>
 
 <template>
@@ -83,31 +37,13 @@ const currentRooms = computed<Room[]>(() => {
                 <CreateRoomButton />
             </div>
 
-            <UTabs
-                v-model="activeTab"
-                :content="false"
-                :items="tabs"
-                class="w-full mb-4"
-            />
-
-            <SearchForm
-                class="bg-gray-900 p-4 rounded mb-4"
-                label="Find a room"
-                v-model="filter"
-            />
-
-            <RoomsGridSkeleton v-if="isLoading" />
-
-            <PageError v-else-if="error" @reload="refetch" />
-
-            <RoomsGrid v-else-if="rooms?.length" :items="currentRooms" />
-
-            <Placeholder
-                v-else
-                class="bg-slate-700 text-neutral-100 rounded"
-                icon="i-mdi-format-list-bulleted"
-                text="No available rooms."
-            />
+            <UTabs :items="tabs" default-value="all" class="gap-4">
+                <template #content="{ item: { value } }">
+                    <AllRooms v-if="value === 'all'" />
+                    <FavoriteRooms v-else-if="value === 'favorites'" />
+                    <CreatedRooms v-else-if="value === 'created'" />
+                </template>
+            </UTabs>
         </div>
     </div>
 </template>
