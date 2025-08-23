@@ -87,9 +87,11 @@ async function authenticatePeer(peer: Peer) {
         }
     } catch (error) {
         peer.send({
-            event: 'error',
+            event: 'connectError',
             payload: { message: 'unauthorized' }
         });
+
+        throw error;
     }
 }
 
@@ -108,24 +110,18 @@ export function useSocketHandler(app: H3) {
             },
 
             async message(peer, message) {
-                if (message.text() === '') {
-                    peer.send('');
+                switch (message.text()) {
+                    case '':
+                        peer.send('');
+                        break;
 
-                    return;
-                }
+                    default:
+                        await authenticatePeer(peer);
 
-                try {
-                    await authenticatePeer(peer);
-                } catch {
-                    return;
-                }
+                        const { event, payload } = parseMessage(message);
 
-                const { event, payload } = parseMessage(message);
-
-                const handler = handlers[event];
-
-                if (handler) {
-                    handler(payload as any, peer);
+                        handlers[event]?.(payload as any, peer);
+                        break;
                 }
             },
 
@@ -146,6 +142,7 @@ export function useSocketHandler(app: H3) {
 
             error(peer, error) {
                 console.log('[ws] error', peer, error);
+                console.error(error);
             }
         })
     );
