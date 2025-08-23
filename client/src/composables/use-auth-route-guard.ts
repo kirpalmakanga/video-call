@@ -1,12 +1,14 @@
 import { watch } from 'vue';
 import { useRouter, type RouteRecordNameGeneric } from 'vue-router';
-import { useAuthStore } from './store/use-auth-store';
 import { storeToRefs } from 'pinia';
-import { removeSocket } from './use-socket';
+import { useAuthStore } from './store/use-auth-store';
+import { useSocketInstance } from './use-socket';
 
 export function useAuthRouteGuard() {
     const authStore = useAuthStore();
     const { isLoggedIn } = storeToRefs(authStore);
+    const { removeSocket } = useSocketInstance();
+
     const router = useRouter();
 
     function isAuthRoute(name: RouteRecordNameGeneric) {

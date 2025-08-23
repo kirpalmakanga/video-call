@@ -1,56 +1,66 @@
 import { onBeforeMount, onBeforeUnmount, onUnmounted } from 'vue';
-import { storeToRefs } from 'pinia';
+import { defineStore, storeToRefs } from 'pinia';
 import { useAuthStore } from './store/use-auth-store';
 import { Socket } from '../utils/socket';
 
-let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
-let instancesCount: number = 0;
-
-export function removeSocket() {
-    socket?.close();
-
-    socket = null;
-    instancesCount = 0;
-}
-
-function increaseInstancesCount() {
-    instancesCount++;
-}
-
-function decreaseInstancesCount() {
-    instancesCount--;
-
-    if (instancesCount === 0) {
-        removeSocket();
-    }
-}
-
-export function useSocket() {
+export const useSocketInstance = defineStore('socket', () => {
     const authStore = useAuthStore();
     const { refreshAccessToken } = authStore;
     const { accessToken } = storeToRefs(authStore);
 
-    const subscriptions = new Map<ServerToClientEventId, Function>();
+    let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null =
+        null;
+    let instancesCount: number = 0;
 
-    function getSocket() {
-        if (!socket) {
-            socket = new Socket(`${import.meta.env.VITE_SOCKET_URI}/_ws`, {
-                auth: { token: accessToken.value }
-            });
+    function removeSocket() {
+        console.log('removeSocket');
+        socket?.close();
 
-            socket.on('connectError', async (err) => {
-                if (err.message === 'unauthorized') {
-                    await refreshAccessToken();
-
-                    socket?.setAuth({ token: accessToken.value });
-
-                    socket?.connect();
-                }
-            });
-        }
-
-        return socket;
+        socket = null;
+        instancesCount = 0;
     }
+
+    return {
+        getSocket() {
+            if (!socket) {
+                socket = new Socket(`${import.meta.env.VITE_SOCKET_URI}/_ws`, {
+                    auth: { token: accessToken.value }
+                });
+
+                socket.on('connectError', async (err) => {
+                    if (err.message === 'unauthorized') {
+                        await refreshAccessToken();
+
+                        socket?.setAuth({ token: accessToken.value });
+
+                        socket?.connect();
+                    }
+                });
+            }
+
+            return socket;
+        },
+        increaseInstancesCount() {
+            instancesCount++;
+        },
+        decreaseInstancesCount() {
+            if (instancesCount > 0) {
+                instancesCount--;
+            }
+
+            if (socket && instancesCount === 0) {
+                removeSocket();
+            }
+        },
+        removeSocket
+    };
+});
+
+export function useSocket() {
+    const { getSocket, increaseInstancesCount, decreaseInstancesCount } =
+        useSocketInstance();
+
+    const subscriptions = new Map<ServerToClientEventId, Function>();
 
     function addSubscription(
         event: ServerToClientEventId,
