@@ -37,13 +37,15 @@ const tabs: TabsItem[] = [
                 <CreateRoomButton />
             </div>
 
-            <UTabs :items="tabs" default-value="all" class="gap-4">
+            <AllRooms />
+
+            <!-- <UTabs :items="tabs" default-value="all" class="gap-4">
                 <template #content="{ item: { value } }">
                     <AllRooms v-if="value === 'all'" />
                     <FavoriteRooms v-else-if="value === 'favorites'" />
                     <CreatedRooms v-else-if="value === 'created'" />
                 </template>
-            </UTabs>
+            </UTabs> -->
         </div>
     </div>
 </template>
