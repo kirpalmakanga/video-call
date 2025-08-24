@@ -1,4 +1,4 @@
-import { watch, type Ref } from 'vue';
+import { onBeforeUnmount, watch, type Ref } from 'vue';
 import { useUserMedia } from '@vueuse/core';
 
 interface MediastreamOptions {
@@ -30,7 +30,6 @@ export function useMediaStream({
     let source: MediaStreamAudioSourceNode | null = null;
     let destination: MediaStreamAudioDestinationNode | null = null;
     let gainFilter: GainNode | null = null;
-    let controlledStream: MediaStream | null = null;
 
     function setGain() {
         if (!gainFilter) {
@@ -46,7 +45,9 @@ export function useMediaStream({
         }
     }
 
-    function createControlledStream(sourceStream: MediaStream) {
+    async function createControlledStream(sourceStream: MediaStream) {
+        await audioContext.resume();
+
         source = audioContext.createMediaStreamSource(sourceStream);
 
         gainFilter = audioContext.createGain();
@@ -55,13 +56,11 @@ export function useMediaStream({
         destination = audioContext.createMediaStreamDestination();
         gainFilter.connect(destination);
 
-        controlledStream = destination.stream;
-
         gainFilter.gain.value = 1;
 
         setGain();
 
-        const [controlledAudioTrack] = controlledStream.getAudioTracks();
+        const [controlledAudioTrack] = destination.stream.getAudioTracks();
         const [sourceAudioTrack] = sourceStream.getAudioTracks();
 
         if (controlledAudioTrack && sourceAudioTrack) {
@@ -71,20 +70,16 @@ export function useMediaStream({
     }
 
     function removeControlledStream() {
-        if (controlledStream) {
-            for (const track of controlledStream.getTracks()) {
-                track.stop();
-            }
-
-            controlledStream = null;
-        }
-
         if (gainFilter) {
             gainFilter.disconnect();
             gainFilter = null;
         }
 
         if (destination) {
+            for (const track of destination.stream.getTracks()) {
+                track.stop();
+            }
+
             destination.disconnect();
             destination = null;
         }
@@ -93,6 +88,8 @@ export function useMediaStream({
             source.disconnect();
             source = null;
         }
+
+        audioContext.close();
     }
 
     function setVideoStatus() {
@@ -116,6 +113,7 @@ export function useMediaStream({
     }
 
     function handleSourceStreamChange(sourceStream?: MediaStream) {
+        console.log(sourceStream);
         removeControlledStream();
 
         if (sourceStream) {
@@ -132,6 +130,8 @@ export function useMediaStream({
     watch(isAudioEnabled, setAudioStatus);
 
     watch(volume, setGain);
+
+    onBeforeUnmount(removeControlledStream);
 
     return {
         stream,
