@@ -20,3 +20,7 @@ export const refreshTokenSchema = object({
 }).exact();
 
 export type RefreshTokenSchema = InferType<typeof refreshTokenSchema>;
+
+export const toggleFavoriteRoomSchema = object({
+    roomId: string().uuid('Invalid room id').required('Room id is required')
+});

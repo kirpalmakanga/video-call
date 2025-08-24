@@ -29,12 +29,20 @@ model RefreshToken {
 }
 
 model Room {
-  id        String   @id @unique @default(uuid())
-  name      String   @unique
-  creator   User     @relation(fields: [creatorId], references: [id])
+  id        String     @id @unique @default(uuid())
+  name      String     @unique
+  creator   User       @relation(fields: [creatorId], references: [id])
   creatorId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  favorites Favorite[]
+}
+
+model Favorite {
+  userId String @id
+  roomId String
+  user   User   @relation(fields: [userId], references: [id])
+  room   Room   @relation(fields: [roomId], references: [id])
 }
 
 model User {
@@ -50,6 +58,7 @@ model User {
   resetTokenExpiry        DateTime?
   refreshTokens           RefreshToken[]
   rooms                   Room[]
+  favorites               Favorite[]
   createdAt               DateTime       @default(now())
   updatedAt               DateTime       @updatedAt
 }

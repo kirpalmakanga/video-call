@@ -38,7 +38,9 @@ declare global {
     interface Room {
         id: string;
         name: string;
-        creator: {
+        isOwned?: boolean;
+        isFavorite: boolean;
+        creator?: {
             id: string;
             firstName: string;
             lastName: string;

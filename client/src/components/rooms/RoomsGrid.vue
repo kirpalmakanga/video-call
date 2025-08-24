@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import RoomsGridItem from './RoomsGridItem.vue';
+import { usetoggleFavoriteRoomMutation } from '../../services/queries';
+
+const { mutate: toggleFavorite } = usetoggleFavoriteRoomMutation();
 
 defineProps<{ items: Room[] }>();
 </script>
@@ -9,7 +12,7 @@ defineProps<{ items: Room[] }>();
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
     >
         <li v-for="item of items">
-            <RoomsGridItem v-bind="item" />
+            <RoomsGridItem v-bind="item" @toggle-favorite="toggleFavorite" />
         </li>
     </ul>
 </template>

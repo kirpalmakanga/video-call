@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useRoomsListQuery } from '../../services/queries';
+import { useFavoriteRoomsQuery } from '../../services/queries';
 import SearchableRoomsGrid from './SearchableRoomsGrid.vue';
 
-const { data, isLoading, error, refetch } = useRoomsListQuery();
+const { data, isLoading, error, refetch } = useFavoriteRoomsQuery();
 </script>
 
 <template>

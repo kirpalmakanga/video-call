@@ -1,5 +1,13 @@
 import type { H3 } from 'h3';
-import { index, show, insert, update } from '../controllers/rooms.controller';
+import {
+    index,
+    show,
+    insert,
+    update,
+    getCreated,
+    getFavorite,
+    toggleFavorite
+} from '../controllers/rooms.controller';
 import { bindRoutes } from '../utils/routes.utils';
 
 export default function useRoomsRoutes(app: H3) {
@@ -34,6 +42,30 @@ export default function useRoomsRoutes(app: H3) {
                 method: 'PUT',
                 path: '/:roomId',
                 handler: update,
+                options: {
+                    meta: { authenticated: true }
+                }
+            },
+            {
+                method: 'GET',
+                path: '/created',
+                handler: getCreated,
+                options: {
+                    meta: { authenticated: true }
+                }
+            },
+            {
+                method: 'GET',
+                path: '/favorite',
+                handler: getFavorite,
+                options: {
+                    meta: { authenticated: true }
+                }
+            },
+            {
+                method: 'PUT',
+                path: '/favorite/:roomId',
+                handler: toggleFavorite,
                 options: {
                     meta: { authenticated: true }
                 }

@@ -1,15 +1,39 @@
-import { getRouterParams, readValidatedBody, type H3Event } from 'h3';
+import {
+    getRouterParams,
+    getValidatedRouterParams,
+    readValidatedBody,
+    type H3Event
+} from 'h3';
 import {
     createRoom,
+    updateRoom,
     getAllRooms,
     getRoomById,
-    updateRoom
+    getUserCreatedRooms
 } from '../services/rooms.service';
 import { notFound } from '../utils/response.utils';
-import { createRoomSchema } from '../validation/rooms.validation';
+import {
+    createRoomSchema,
+    toggleFavoriteRoomSchema
+} from '../validation/rooms.validation';
+import {
+    addFavorite,
+    checkIfFavoriteExists,
+    deleteFavorite,
+    getUserFavoriteRooms,
+    getUserFavorites
+} from '../services/favorite.service';
 
-export async function index() {
-    return await getAllRooms();
+export async function index(event: H3Event) {
+    const { userId } = event.context;
+    const favoriteRoomsIds = await getUserFavorites(userId);
+    const rooms = await getAllRooms();
+
+    return rooms.map((room) => ({
+        ...room,
+        isOwned: room.creator.id === userId,
+        isFavorite: favoriteRoomsIds.includes(room.id)
+    }));
 }
 
 export async function show(event: H3Event) {
@@ -52,4 +76,35 @@ export async function update(event: H3Event<UpdateRoomRequest>) {
     );
 
     return updatedRoom;
+}
+
+export async function getCreated(event: H3Event) {
+    const items = await getUserCreatedRooms(event.context.userId);
+
+    return items.map((room) => ({ ...room, isOwned: true }));
+}
+
+export async function getFavorite(event: H3Event) {
+    const items = await getUserFavoriteRooms(event.context.userId);
+
+    return items.map(({ room }) => ({
+        ...room,
+        isFavorite: true
+    }));
+}
+
+export async function toggleFavorite(event: H3Event) {
+    const { userId } = event.context;
+    const { roomId } = await getValidatedRouterParams(
+        event,
+        toggleFavoriteRoomSchema
+    );
+
+    const hasFavorite = await checkIfFavoriteExists(roomId, userId);
+
+    if (hasFavorite) {
+        await deleteFavorite(roomId, userId);
+    } else {
+        await addFavorite(roomId, userId);
+    }
 }

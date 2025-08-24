@@ -70,6 +70,18 @@ export async function getAllRooms() {
     return data as Room[];
 }
 
+export async function getCreatedRooms() {
+    const { data } = await apiInstance.get('/rooms/created');
+
+    return data as Room[];
+}
+
+export async function getFavoriteRooms() {
+    const { data } = await apiInstance.get('/rooms/favorite');
+
+    return data as Room[];
+}
+
 export async function getRoomById(roomId: string) {
     const { data } = await apiInstance.get(`/rooms/${roomId}`);
 
@@ -86,4 +98,8 @@ export async function updateRoom(roomId: string, body: RoomFormData) {
     const { data } = await apiInstance.put(`/rooms/${roomId}`, body);
 
     return data as Room;
+}
+
+export async function toggleFavoriteRoom(roomId: string) {
+    await apiInstance.put(`/rooms/favorite/${roomId}`);
 }

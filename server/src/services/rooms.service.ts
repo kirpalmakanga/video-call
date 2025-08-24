@@ -16,7 +16,6 @@ export function getAllRooms() {
         select: {
             id: true,
             name: true,
-            creatorId: false,
             creator: {
                 select: {
                     id: true,
@@ -24,6 +23,16 @@ export function getAllRooms() {
                     lastName: true
                 }
             }
+        }
+    });
+}
+
+export function getUserCreatedRooms(creatorId: string) {
+    return db.room.findMany({
+        where: { creatorId },
+        select: {
+            id: true,
+            name: true
         }
     });
 }

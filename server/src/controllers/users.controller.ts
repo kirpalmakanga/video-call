@@ -6,6 +6,7 @@ import {
 } from '../validation/user.validation';
 import { omit } from '../utils/helpers.utils';
 import { notFound } from '../utils/response.utils';
+
 export async function getProfile(event: H3Event) {
     const user = await getUserById(event.context.userId);
 
