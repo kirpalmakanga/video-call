@@ -13,8 +13,8 @@ const Settings = () => import('./pages/Settings.vue');
 const router = createRouter({
     history: createWebHistory(),
     routes: [
-        { path: '/', redirect: '/rooms' },
-        { path: '/rooms/:tab?', component: Rooms, name: 'rooms' },
+        { path: '/', redirect: '/rooms', name: 'home' },
+        { path: '/rooms', component: Rooms, name: 'rooms' },
         {
             path: '/room/:roomId/setup',
             component: RoomSetup,
