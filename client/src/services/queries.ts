@@ -10,17 +10,18 @@ import {
 
 const queryCache = useQueryCache();
 
-export function useRoomsListQuery() {
-    return useQuery({
-        key: () => ['rooms'],
-        query: getAllRooms
-    });
-}
-
 export function useRoomQuery(roomId: string) {
     return useQuery({
         key: () => ['room', roomId],
-        query: () => getRoomById(roomId)
+        query: () => getRoomById(roomId),
+        staleTime: undefined
+    });
+}
+
+export function useAllRoomsQuery() {
+    return useQuery({
+        key: () => ['rooms'],
+        query: getAllRooms
     });
 }
 
