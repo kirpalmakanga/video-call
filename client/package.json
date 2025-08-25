@@ -9,6 +9,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "@iconify-json/ic": "^1.2.4",
         "@iconify-json/mdi": "^1.2.3",
         "@iconify-json/svg-spinners": "^1.2.2",
         "@nuxt/ui": "^3.3.2",
