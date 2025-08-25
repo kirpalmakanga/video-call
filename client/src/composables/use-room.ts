@@ -28,8 +28,8 @@ export function useRoom(
 
     const {
         stream: localStream,
-        start: startStream,
-        stop: stopStream
+        start: startLocalStream,
+        stop: stopLocalStream
     } = useMediaStream({
         constraints: streamConfig,
         isVideoEnabled,
@@ -58,13 +58,13 @@ export function useRoom(
 
     const {
         peerStreams,
+        connectToPeer,
         disconnectFromPeer,
         disconnectFromAllPeers,
         createOffer,
         createAnswer,
         processAnswer,
-        addIceCandidate,
-        connectToPeer
+        addIceCandidate
     } = useWebRTC(localStream, {
         onIceCandidate(peerId, iceCandidate) {
             emit('iceCandidate', {
@@ -78,16 +78,11 @@ export function useRoom(
 
     const isConnecting = ref<boolean>(true);
     const isConnected = ref<boolean>(false);
-    const isReconnecting = ref<boolean>(false);
-
-    function getLocalParticipantForServer(): Participant {
-        return pick(localParticipant, 'id', 'name', 'isMuted');
-    }
 
     function syncLocalParticipant() {
         emit('syncParticipant', {
             roomId,
-            participant: getLocalParticipantForServer()
+            participant: pick(localParticipant, 'id', 'name', 'isMuted')
         });
     }
 
@@ -95,7 +90,7 @@ export function useRoom(
         isConnecting.value = true;
 
         if (!localStream.value) {
-            await startStream();
+            await startLocalStream();
         }
 
         emit('requestConnection', {
@@ -105,7 +100,7 @@ export function useRoom(
     }
 
     function disconnect() {
-        stopStream();
+        stopLocalStream();
 
         disconnectFromAllPeers();
 
@@ -211,12 +206,11 @@ export function useRoom(
 
     return {
         isConnecting,
-        isReconnecting,
         participants: computed(() => [
             localParticipant,
             ...participants.value.map((item) => ({
                 ...item,
-                stream: peerStreams.value[item.id] || null
+                stream: peerStreams.value[item.id]
             }))
         ]),
         toggleMuteParticipant,

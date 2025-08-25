@@ -133,10 +133,7 @@ export function useMediaStream({
 
     watch(volume, setGain);
 
-    onBeforeUnmount(() => {
-        stop();
-        removeControlledStream();
-    });
+    onBeforeUnmount(removeControlledStream);
 
     return {
         stream,
