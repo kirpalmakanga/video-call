@@ -7,6 +7,28 @@ export function useScreenCapture(sourceStream: Ref<MediaStream | undefined>) {
     let sourceVideoTrack: MediaStreamTrack | null = null;
     let screenVideoTrack: MediaStreamTrack | null = null;
 
+    function stop() {
+        isSharingScreen.value = false;
+
+        if (!sourceStream.value) {
+            return;
+        }
+
+        if (screenStream) {
+            screenStream = null;
+        }
+
+        if (sourceVideoTrack && screenVideoTrack) {
+            sourceStream.value.removeTrack(screenVideoTrack);
+            sourceStream.value.addTrack(sourceVideoTrack);
+
+            screenVideoTrack.onended = null;
+            screenVideoTrack.stop();
+            sourceVideoTrack = null;
+            screenVideoTrack = null;
+        }
+    }
+
     async function start() {
         try {
             if (isSharingScreen.value) {
@@ -22,6 +44,8 @@ export function useScreenCapture(sourceStream: Ref<MediaStream | undefined>) {
             screenVideoTrack = screenStream.getVideoTracks().at(0) || null;
 
             if (sourceVideoTrack && screenVideoTrack) {
+                screenVideoTrack.onended = stop;
+
                 sourceStream.value.removeTrack(sourceVideoTrack);
                 sourceStream.value.addTrack(screenVideoTrack);
 
@@ -34,34 +58,11 @@ export function useScreenCapture(sourceStream: Ref<MediaStream | undefined>) {
         }
     }
 
-    function stop() {
-        isSharingScreen.value = false;
+    onBeforeUnmount(() => {
+        sourceVideoTrack?.stop();
 
-        if (!sourceStream.value) {
-            return;
-        }
-
-        if (screenStream) {
-            for (const track of screenStream.getVideoTracks()) {
-                sourceStream.value.removeTrack(track);
-
-                track.stop();
-            }
-
-            screenStream = null;
-        }
-
-        if (sourceVideoTrack && screenVideoTrack) {
-            sourceStream.value.removeTrack(screenVideoTrack);
-            sourceStream.value.addTrack(sourceVideoTrack);
-
-            screenVideoTrack.stop();
-            sourceVideoTrack = null;
-            screenVideoTrack = null;
-        }
-    }
-
-    onBeforeUnmount(stop);
+        stop();
+    });
 
     return {
         isSharingScreen,
