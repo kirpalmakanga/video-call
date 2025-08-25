@@ -73,6 +73,9 @@ export function useRoom(
                 targetParticipantId: peerId,
                 iceCandidate
             });
+        },
+        onPeerDisconnection(peerId) {
+            removeParticipant(peerId);
         }
     });
 

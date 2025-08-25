@@ -16,7 +16,7 @@ const connectionConfiguration: RTCConfiguration = VITE_STUN_SERVERS
 
 interface RTCOptions {
     onIceCandidate: (peerId: string, candidate: RTCIceCandidate) => void;
-    onDisconnection?: (peerId: string) => void;
+    onPeerDisconnection: (peerId: string) => void;
 }
 
 function closeStream(stream: MediaStream) {
@@ -44,15 +44,36 @@ function usePeerConnections() {
     }
 
     return {
-        createPeer(peerId: string) {
+        createPeer(
+            peerId: string,
+            events: {
+                onIceStateChange: (state: RTCIceConnectionState) => void;
+                onIceCandidate: (candidate: RTCIceCandidate) => void;
+                onTrack: (event: RTCTrackEvent) => void;
+            }
+        ) {
             const connection = new RTCPeerConnection(connectionConfiguration);
 
             peerConnections.set(peerId, connection);
+
+            connection.oniceconnectionstatechange = () => {
+                events.onIceStateChange(connection.iceConnectionState);
+            };
+            connection.onicecandidate = ({ candidate }) => {
+                if (candidate) {
+                    events.onIceCandidate(candidate);
+                }
+            };
+            connection.ontrack = events.onTrack;
 
             return connection;
         },
         removePeer(peerId: string) {
             const connection = getPeer(peerId);
+
+            connection.onicecandidate = null;
+            connection.oniceconnectionstatechange = null;
+            connection.ontrack = null;
 
             connection.close();
 
@@ -65,13 +86,17 @@ function usePeerConnections() {
         hasPeers() {
             return peerConnections.size > 0;
         },
-        hasPeer
+        hasPeer,
+        hasActivePeer(peerId: string) {
+            const connection = getPeer(peerId);
+            return connection.iceConnectionState === 'connected';
+        }
     };
 }
 
 export function useWebRTC(
     localStream: Ref<MediaStream | undefined>,
-    { onIceCandidate, onDisconnection }: RTCOptions
+    { onIceCandidate, onPeerDisconnection }: RTCOptions
 ) {
     const {
         createPeer,
@@ -175,31 +200,23 @@ export function useWebRTC(
                 disconnectFromPeer(peerId);
             }
 
-            const connection = createPeer(peerId);
-
-            connection.onicecandidate = ({ candidate }) => {
-                if (candidate) {
+            createPeer(peerId, {
+                onIceCandidate: (candidate) => {
                     onIceCandidate(peerId, candidate);
-                }
-            };
+                },
+                onTrack: ({ streams: [stream = null] }) => {
+                    setPeerStream(peerId, stream);
+                },
+                onIceStateChange: (state) => {
+                    // TODO: handle state === 'failed'
 
-            if (onDisconnection) {
-                connection.oniceconnectionstatechange = () => {
-                    const { iceConnectionState } = connection;
+                    if (['closed', 'disconnected'].includes(state)) {
+                        disconnectFromPeer(peerId);
 
-                    if (
-                        iceConnectionState === 'failed' ||
-                        iceConnectionState === 'closed' ||
-                        iceConnectionState === 'disconnected'
-                    ) {
-                        onDisconnection(peerId);
+                        onPeerDisconnection(peerId);
                     }
-                };
-            }
-
-            connection.ontrack = ({ streams: [stream = null] }) => {
-                setPeerStream(peerId, stream);
-            };
+                }
+            });
 
             bindLocalStreamToPeer(peerId);
         },
