@@ -55,6 +55,7 @@ export function useScreenCapture(sourceStream: Ref<MediaStream | undefined>) {
             sourceStream.value.removeTrack(screenVideoTrack);
             sourceStream.value.addTrack(sourceVideoTrack);
 
+            screenVideoTrack.stop();
             sourceVideoTrack = null;
             screenVideoTrack = null;
         }
