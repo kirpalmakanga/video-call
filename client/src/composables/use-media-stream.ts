@@ -9,7 +9,10 @@ interface MediastreamOptions {
 }
 
 function getAudioContext() {
-    if (!window.currentAudioContext) {
+    if (
+        !window.currentAudioContext ||
+        window.currentAudioContext.state === 'closed'
+    ) {
         window.currentAudioContext = new AudioContext();
     }
 
@@ -30,6 +33,7 @@ export function useMediaStream({
     let source: MediaStreamAudioSourceNode | null = null;
     let destination: MediaStreamAudioDestinationNode | null = null;
     let gainFilter: GainNode | null = null;
+    let sourceAudioTrack: MediaStreamTrack | null = null;
 
     function setGain() {
         if (!gainFilter) {
@@ -45,9 +49,7 @@ export function useMediaStream({
         }
     }
 
-    async function createControlledStream(sourceStream: MediaStream) {
-        await audioContext.resume();
-
+    function createControlledStream(sourceStream: MediaStream) {
         source = audioContext.createMediaStreamSource(sourceStream);
 
         gainFilter = audioContext.createGain();
@@ -60,28 +62,26 @@ export function useMediaStream({
 
         setGain();
 
+        const [sourceStreamAudioTrack] = sourceStream.getAudioTracks();
         const [controlledAudioTrack] = destination.stream.getAudioTracks();
-        const [sourceAudioTrack] = sourceStream.getAudioTracks();
 
-        if (controlledAudioTrack && sourceAudioTrack) {
+        if (sourceStreamAudioTrack && controlledAudioTrack) {
+            sourceAudioTrack = sourceStreamAudioTrack;
+
             sourceStream.addTrack(controlledAudioTrack);
-            sourceStream.removeTrack(sourceAudioTrack);
+            sourceStream.removeTrack(sourceStreamAudioTrack);
         }
     }
 
-    function removeControlledStream() {
+    async function removeControlledStream() {
+        if (sourceAudioTrack) {
+            sourceAudioTrack.stop();
+            sourceAudioTrack = null;
+        }
+
         if (gainFilter) {
             gainFilter.disconnect();
             gainFilter = null;
-        }
-
-        if (destination) {
-            for (const track of destination.stream.getTracks()) {
-                track.stop();
-            }
-
-            destination.disconnect();
-            destination = null;
         }
 
         if (source) {
@@ -89,7 +89,10 @@ export function useMediaStream({
             source = null;
         }
 
-        audioContext.close();
+        if (destination) {
+            destination.disconnect();
+            destination = null;
+        }
     }
 
     function setVideoStatus() {
@@ -113,7 +116,6 @@ export function useMediaStream({
     }
 
     function handleSourceStreamChange(sourceStream?: MediaStream) {
-        console.log(sourceStream);
         removeControlledStream();
 
         if (sourceStream) {
@@ -131,7 +133,10 @@ export function useMediaStream({
 
     watch(volume, setGain);
 
-    onBeforeUnmount(removeControlledStream);
+    onBeforeUnmount(() => {
+        stop();
+        removeControlledStream();
+    });
 
     return {
         stream,
