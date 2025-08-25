@@ -162,16 +162,18 @@ export function useWebRTC(
     }
 
     function bindLocalStreamToAllPeers() {
-        assertIsDefined(localStream.value);
-
-        for (const peerId of getAllPeerIds()) {
-            bindLocalStreamToPeer(peerId);
+        if (hasPeers()) {
+            for (const peerId of getAllPeerIds()) {
+                bindLocalStreamToPeer(peerId);
+            }
         }
     }
 
     function unbindLocalStreamFromAllPeers() {
-        for (const peerId of getAllPeerIds()) {
-            unbindLocalStreamFromPeer(peerId);
+        if (hasPeers()) {
+            for (const peerId of getAllPeerIds()) {
+                unbindLocalStreamFromPeer(peerId);
+            }
         }
     }
 
@@ -184,9 +186,9 @@ export function useWebRTC(
     }
 
     watch(localStream, () => {
-        if (hasPeers()) {
-            unbindLocalStreamFromAllPeers();
+        unbindLocalStreamFromAllPeers();
 
+        if (localStream.value) {
             bindLocalStreamToAllPeers();
         }
     });
