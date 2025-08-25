@@ -14,7 +14,8 @@ export function useRoomQuery(roomId: string) {
     return useQuery({
         key: () => ['room', roomId],
         query: () => getRoomById(roomId),
-        staleTime: undefined
+        staleTime: undefined,
+        refetchOnWindowFocus: undefined
     });
 }
 
