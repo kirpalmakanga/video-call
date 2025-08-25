@@ -4,6 +4,7 @@ import SearchForm from '../base/SearchForm.vue';
 import RoomsGrid from './RoomsGrid.vue';
 
 const props = defineProps<{
+    isPending: boolean;
     isLoading: boolean;
     hasError: boolean;
     items: Room[];
@@ -33,7 +34,7 @@ const currentItems = computed<Room[]>(() => {
         v-model="search"
     />
 
-    <RoomsGridSkeleton v-if="isLoading" />
+    <RoomsGridSkeleton v-if="isPending" />
 
     <PageError v-else-if="hasError" @reload="emit('reload')" />
 
