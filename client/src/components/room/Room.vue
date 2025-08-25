@@ -11,6 +11,8 @@ import { useRoom } from '../../composables/use-room';
 import { useMediaSettingsStore } from '../../composables/store/use-media-settings-store';
 import { useAuthStore } from '../../composables/store/use-auth-store';
 import { keepInRange, nextFrame } from '../../utils/helpers';
+import { useMediaStream } from '../../composables/use-media-stream';
+import { useScreenCapture } from '../../composables/use-screen-capture';
 
 const props = defineProps<{ roomId: string }>();
 
@@ -46,21 +48,35 @@ const state = reactive<State>({
     activeParticipantId: null
 });
 
+const { stream: localStream, start: startLocalStream } = useMediaStream({
+    constraints: computed(() => ({
+        video: {
+            deviceId: videoDeviceId.value
+        },
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            deviceId: audioDeviceId.value
+        }
+    })),
+    isVideoEnabled,
+    isAudioEnabled,
+    volume: microphoneVolume
+});
+
+const {
+    isSharingScreen,
+    start: startSharingScreen,
+    stop: stopSharingScreen
+} = useScreenCapture(localStream);
+
 const { isConnecting, participants, toggleMuteParticipant, connect } = useRoom(
     props.roomId,
     {
+        localStream,
         displayName: fullName.value,
-        streamConfig: computed(() => ({
-            video: {
-                deviceId: videoDeviceId.value
-            },
-            audio: {
-                deviceId: audioDeviceId.value
-            }
-        })),
         isVideoEnabled,
-        isAudioEnabled,
-        microphoneVolume
+        isAudioEnabled
     }
 );
 
@@ -92,6 +108,14 @@ function setActiveParticipant(id: string | null) {
     state.activeParticipantId = id;
 }
 
+async function connectToRoom() {
+    if (!localStream.value) {
+        await startLocalStream();
+    }
+
+    connect();
+}
+
 function leaveRoom() {
     emit('leave');
 }
@@ -103,6 +127,14 @@ async function handleWheelVolume({ deltaY }: WheelEvent) {
         microphoneVolume.value + (deltaY < 0 ? 5 : -5),
         [0, 100]
     );
+}
+
+async function toggleScreenSharing() {
+    if (isSharingScreen.value) {
+        stopSharingScreen();
+    } else {
+        await startSharingScreen();
+    }
 }
 
 watch(
@@ -128,13 +160,13 @@ watch(
 
 watch([audioDeviceId, videoDeviceId], ([audio, video]) => {
     if (audio && video) {
-        connect();
+        connectToRoom();
     }
 });
 
 onMounted(() => {
     if (audioDeviceId.value && videoDeviceId.value) {
-        connect();
+        connectToRoom();
     } else {
         toggleSettings();
     }
@@ -283,6 +315,25 @@ onMounted(() => {
                         <UIcon
                             class="size-5"
                             :name="viewModeIcons[state.viewMode]"
+                        />
+                    </UButton>
+                </UTooltip>
+
+                <UTooltip
+                    :text="
+                        isSharingScreen
+                            ? 'Stop sharing screen'
+                            : 'Start sharing screen'
+                    "
+                >
+                    <UButton color="neutral" @click="toggleScreenSharing">
+                        <UIcon
+                            class="size-5"
+                            :name="
+                                isSharingScreen
+                                    ? 'i-ic-outline-stop-screen-share'
+                                    : 'i-ic-outline-screen-share'
+                            "
                         />
                     </UButton>
                 </UTooltip>

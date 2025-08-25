@@ -7,35 +7,17 @@ import { useParticipantsList } from './use-participants-list';
 import { useMediaStream } from './use-media-stream';
 
 interface RoomConfig {
+    localStream: Ref<MediaStream | undefined>;
     displayName: string;
     isVideoEnabled: Ref<boolean>;
     isAudioEnabled: Ref<boolean>;
-    streamConfig: Ref<MediaStreamConstraints>;
-    microphoneVolume: Ref<number>;
 }
 
 export function useRoom(
     roomId: string,
-    {
-        displayName,
-        isVideoEnabled,
-        isAudioEnabled,
-        streamConfig,
-        microphoneVolume
-    }: RoomConfig
+    { localStream, displayName, isVideoEnabled, isAudioEnabled }: RoomConfig
 ) {
     const isOnline = useOnline();
-
-    const {
-        stream: localStream,
-        start: startLocalStream,
-        stop: stopLocalStream
-    } = useMediaStream({
-        constraints: streamConfig,
-        isVideoEnabled,
-        isAudioEnabled,
-        volume: microphoneVolume
-    });
 
     const { emit, subscribe } = useSocket();
 
@@ -92,10 +74,6 @@ export function useRoom(
     async function connect() {
         isConnecting.value = true;
 
-        if (!localStream.value) {
-            await startLocalStream();
-        }
-
         emit('requestConnection', {
             roomId,
             participantId: localParticipant.id
@@ -103,8 +81,6 @@ export function useRoom(
     }
 
     function disconnect() {
-        stopLocalStream();
-
         disconnectFromAllPeers();
 
         clearParticipants();
@@ -114,6 +90,7 @@ export function useRoom(
             participantId: localParticipant.id
         });
     }
+
     subscribe('connect', () => {
         if (!isConnecting.value) {
             connect();
