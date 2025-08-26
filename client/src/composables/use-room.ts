@@ -40,6 +40,7 @@ export function useRoom(
     const {
         peerStreams,
         connectToPeer,
+        bindLocalStreamToAllPeers,
         disconnectFromPeer,
         disconnectFromAllPeers,
         createOffer,
@@ -193,6 +194,7 @@ export function useRoom(
             }))
         ]),
         toggleMuteParticipant,
+        bindLocalStreamToAllPeers,
         connect,
         disconnect
     };

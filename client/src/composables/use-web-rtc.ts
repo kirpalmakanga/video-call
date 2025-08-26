@@ -140,13 +140,34 @@ export function useWebRTC(
         removePeerStream(peerId);
     }
 
-    function bindLocalStreamToPeer(peerId: string) {
+    function setPeerConnectionTrack(
+        peerId: string,
+        newTrack: MediaStreamTrack
+    ) {
         assertIsDefined(localStream.value, 'Local stream unavailable.');
 
         const connection = getPeer(peerId);
+        const senders = connection.getSenders();
+        const sender = senders.find(
+            ({ track }) => track?.kind === newTrack.kind
+        );
 
-        for (const track of localStream.value.getTracks()) {
-            connection.addTrack(track, localStream.value);
+        if (sender && sender.track?.id !== newTrack.id) {
+            sender.replaceTrack(newTrack);
+        } else if (!sender) {
+            connection.addTrack(newTrack, localStream.value);
+        }
+    }
+
+    function bindLocalStreamToPeer(peerId: string) {
+        assertIsDefined(localStream.value, 'Local stream unavailable.');
+
+        const videoTrack = localStream.value.getVideoTracks().at(0);
+        const audioTrack = localStream.value.getAudioTracks().at(0);
+
+        if (videoTrack && audioTrack) {
+            setPeerConnectionTrack(peerId, videoTrack);
+            setPeerConnectionTrack(peerId, audioTrack);
         }
     }
 
@@ -222,6 +243,7 @@ export function useWebRTC(
 
             bindLocalStreamToPeer(peerId);
         },
+        bindLocalStreamToAllPeers,
         async createOffer(peerId: string) {
             const connection = getPeer(peerId);
 

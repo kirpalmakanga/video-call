@@ -70,15 +70,18 @@ const {
     stop: stopSharingScreen
 } = useScreenCapture(localStream);
 
-const { isConnecting, participants, toggleMuteParticipant, connect } = useRoom(
-    props.roomId,
-    {
-        localStream,
-        displayName: fullName.value,
-        isVideoEnabled,
-        isAudioEnabled
-    }
-);
+const {
+    isConnecting,
+    participants,
+    toggleMuteParticipant,
+    bindLocalStreamToAllPeers,
+    connect
+} = useRoom(props.roomId, {
+    localStream,
+    displayName: fullName.value,
+    isVideoEnabled,
+    isAudioEnabled
+});
 
 const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
 
@@ -136,6 +139,8 @@ async function toggleScreenSharing() {
         await startSharingScreen();
     }
 }
+
+watch(isSharingScreen, bindLocalStreamToAllPeers);
 
 watch(
     () => participants.value.length,
