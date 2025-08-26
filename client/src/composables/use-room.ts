@@ -4,7 +4,6 @@ import { useSocket } from './use-socket';
 import { useWebRTC } from './use-web-rtc';
 import { pick } from '../utils/helpers';
 import { useParticipantsList } from './use-participants-list';
-import { useMediaStream } from './use-media-stream';
 
 interface RoomConfig {
     localStream: Ref<MediaStream | undefined>;
