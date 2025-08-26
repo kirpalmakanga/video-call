@@ -45,7 +45,7 @@ const isOnline = useOnline();
             </div>
         </template>
 
-        <PageError v-else-if="error" @reload="refresh" />
+        <PageError v-else-if="error" @reload="refetch" />
 
         <template v-else-if="room">
             <h1 class="text-xl font-bold">{{ room.name }}</h1>
