@@ -135,9 +135,11 @@ export function useWebRTC(
     }
 
     function disconnectFromPeer(peerId: string) {
-        removePeer(peerId);
+        unbindLocalStreamFromPeer(peerId);
 
         removePeerStream(peerId);
+
+        removePeer(peerId);
     }
 
     function setPeerConnectionTrack(
@@ -211,6 +213,8 @@ export function useWebRTC(
         if (stream) {
             stream.addEventListener('addtrack', syncLocalStreamWithPeers);
             stream.addEventListener('removetrack', syncLocalStreamWithPeers);
+
+            syncLocalStreamWithPeers();
 
             return;
         }
