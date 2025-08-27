@@ -166,12 +166,6 @@ watch(
     }
 );
 
-watch([audioDeviceId, videoDeviceId], ([audio, video]) => {
-    if (audio && video) {
-        connectToRoom();
-    }
-});
-
 onMounted(() => {
     if (audioDeviceId.value && videoDeviceId.value) {
         connectToRoom();
