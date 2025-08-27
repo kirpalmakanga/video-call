@@ -143,7 +143,7 @@ async function toggleScreenSharing() {
     }
 }
 
-// watch(isSharingScreen, syncLocalStream);
+watch(isSharingScreen, syncLocalStream);
 
 watch(
     () => participants.value.length,
