@@ -1,32 +1,28 @@
-import { onBeforeUnmount, ref, type Ref } from 'vue';
-import { assertIsDefined } from '../../../utils/assert';
+import { onBeforeUnmount, ref, watch, type Ref } from 'vue';
+import { assertIsDefined } from '../../../../utils/assert';
 
-export function useScreenCapture(sourceStream: Ref<MediaStream | undefined>) {
+export function useScreenCapture(stream: Ref<MediaStream | undefined>) {
     const isSharingScreen = ref<boolean>(false);
     let screenStream: MediaStream | null = null;
     let sourceVideoTrack: MediaStreamTrack | null = null;
     let screenVideoTrack: MediaStreamTrack | null = null;
 
     function stop() {
-        isSharingScreen.value = false;
-
-        if (!sourceStream.value) {
-            return;
-        }
-
         if (screenStream) {
             screenStream = null;
         }
 
         if (sourceVideoTrack && screenVideoTrack) {
-            sourceStream.value.removeTrack(screenVideoTrack);
-            sourceStream.value.addTrack(sourceVideoTrack);
+            stream.value?.removeTrack(screenVideoTrack);
+            stream.value?.addTrack(sourceVideoTrack);
 
             screenVideoTrack.onended = null;
             screenVideoTrack.stop();
             sourceVideoTrack = null;
             screenVideoTrack = null;
         }
+
+        isSharingScreen.value = false;
     }
 
     async function start() {
@@ -35,19 +31,18 @@ export function useScreenCapture(sourceStream: Ref<MediaStream | undefined>) {
                 throw new Error('Screen is already being shared');
             }
 
-            assertIsDefined(sourceStream.value, 'Source stream unavailable');
+            assertIsDefined(stream.value, 'Source stream unavailable');
 
             screenStream = await navigator.mediaDevices.getDisplayMedia();
 
-            sourceVideoTrack =
-                sourceStream.value.getVideoTracks().at(0) || null;
+            sourceVideoTrack = stream.value.getVideoTracks().at(0) || null;
             screenVideoTrack = screenStream.getVideoTracks().at(0) || null;
 
             if (sourceVideoTrack && screenVideoTrack) {
                 screenVideoTrack.onended = stop;
 
-                sourceStream.value.removeTrack(sourceVideoTrack);
-                sourceStream.value.addTrack(screenVideoTrack);
+                stream.value.removeTrack(sourceVideoTrack);
+                stream.value.addTrack(screenVideoTrack);
 
                 isSharingScreen.value = true;
             }
@@ -59,6 +54,12 @@ export function useScreenCapture(sourceStream: Ref<MediaStream | undefined>) {
     }
 
     onBeforeUnmount(() => {
+        sourceVideoTrack?.stop();
+
+        stop();
+    });
+
+    watch(stream, () => {
         sourceVideoTrack?.stop();
 
         stop();

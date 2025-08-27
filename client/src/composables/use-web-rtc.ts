@@ -182,7 +182,8 @@ export function useWebRTC(
         }
     }
 
-    function bindLocalStreamToAllPeers() {
+    function syncLocalStreamWithPeers() {
+        console.log('syncLocalStreamWithPeers');
         if (hasPeers()) {
             for (const peerId of getAllPeerIds()) {
                 bindLocalStreamToPeer(peerId);
@@ -206,12 +207,26 @@ export function useWebRTC(
         }
     }
 
-    watch(localStream, () => {
-        unbindLocalStreamFromAllPeers();
+    watch(localStream, (stream, previousStream) => {
+        if (stream) {
+            stream.addEventListener('addtrack', syncLocalStreamWithPeers);
+            stream.addEventListener('removetrack', syncLocalStreamWithPeers);
 
-        if (localStream.value) {
-            bindLocalStreamToAllPeers();
+            return;
         }
+
+        if (previousStream) {
+            previousStream.removeEventListener(
+                'addtrack',
+                syncLocalStreamWithPeers
+            );
+            previousStream.removeEventListener(
+                'removetrack',
+                syncLocalStreamWithPeers
+            );
+        }
+
+        unbindLocalStreamFromAllPeers();
     });
 
     onBeforeUnmount(disconnectFromAllPeers);
@@ -243,7 +258,7 @@ export function useWebRTC(
 
             bindLocalStreamToPeer(peerId);
         },
-        bindLocalStreamToAllPeers,
+        syncLocalStreamWithPeers,
         async createOffer(peerId: string) {
             const connection = getPeer(peerId);
 

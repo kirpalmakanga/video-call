@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
 import { useFullscreen } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 
@@ -11,8 +11,9 @@ import { useRoom } from '../../composables/use-room';
 import { useMediaSettingsStore } from '../../composables/store/use-media-settings-store';
 import { useAuthStore } from '../../composables/store/use-auth-store';
 import { keepInRange, nextFrame } from '../../utils/helpers';
-import { useMediaStream } from '../../composables/use-media-stream';
-import { useScreenCapture } from '../../composables/use-screen-capture';
+import { useMediaStream } from '../../composables/media/use-media-stream';
+import { useScreenCapture } from '../../composables/media/use-screen-capture';
+import { useVolumeControl } from '../../composables/media/use-volume-control';
 
 const props = defineProps<{ roomId: string }>();
 
@@ -64,6 +65,8 @@ const { stream: localStream, start: startLocalStream } = useMediaStream({
     volume: microphoneVolume
 });
 
+useVolumeControl({ stream: localStream, volume: microphoneVolume });
+
 const {
     isSharingScreen,
     start: startSharingScreen,
@@ -74,7 +77,7 @@ const {
     isConnecting,
     participants,
     toggleMuteParticipant,
-    bindLocalStreamToAllPeers,
+    syncLocalStream,
     connect
 } = useRoom(props.roomId, {
     localStream,
@@ -140,7 +143,7 @@ async function toggleScreenSharing() {
     }
 }
 
-watch(isSharingScreen, bindLocalStreamToAllPeers);
+// watch(isSharingScreen, syncLocalStream);
 
 watch(
     () => participants.value.length,
@@ -174,6 +177,12 @@ onMounted(() => {
         connectToRoom();
     } else {
         toggleSettings();
+    }
+});
+
+onBeforeUnmount(() => {
+    if (isFullscreen.value) {
+        toggleFullscreen();
     }
 });
 </script>
