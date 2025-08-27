@@ -185,7 +185,6 @@ export function useWebRTC(
     }
 
     function syncLocalStreamWithPeers() {
-        console.log('syncLocalStreamWithPeers');
         if (hasPeers()) {
             for (const peerId of getAllPeerIds()) {
                 bindLocalStreamToPeer(peerId);
