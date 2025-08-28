@@ -21,8 +21,9 @@ import { keepInRange, nextFrame } from '../../utils/helpers';
 import { useMediaStream } from '../../composables/media/use-media-stream';
 import { useScreenCapture } from '../../composables/media/use-screen-capture';
 import { useVolumeControl } from '../../composables/media/use-volume-control';
+import LeaveRoomModal from './LeaveRoomModal.vue';
 
-const props = defineProps<{ roomId: string }>();
+const props = defineProps<{ id: string; name: string }>();
 
 const emit = defineEmits<{ leave: [e: void] }>();
 
@@ -86,14 +87,14 @@ const {
     toggleMuteParticipant,
     syncLocalStream,
     connect
-} = useRoom(props.roomId, {
+} = useRoom(props.id, {
     localStream,
     displayName: fullName.value,
     isVideoEnabled,
     isAudioEnabled
 });
 
-const roomContainer = useTemplateRef('roomContainer');
+const roomContainer = useTemplateRef<HTMLDivElement>('roomContainer');
 
 const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(roomContainer);
 
@@ -367,20 +368,25 @@ onMounted(() => {
                         />
                     </UButton>
                 </UTooltip>
+
                 <UTooltip text="Settings">
                     <UButton color="neutral" @click="toggleSettings">
                         <UIcon class="size-5" name="i-mdi-cog" />
                     </UButton>
                 </UTooltip>
-                <UTooltip text="Leave room">
-                    <UButton color="error" @click="leaveRoom">
-                        <UIcon class="size-5" name="i-mdi-phone-off" />
-                    </UButton>
-                </UTooltip>
+
+                <LeaveRoomModal :room-name="name" @confirmed="leaveRoom">
+                    <UTooltip text="Leave room">
+                        <UButton color="error">
+                            <UIcon class="size-5" name="i-mdi-phone-off" />
+                        </UButton>
+                    </UTooltip>
+                </LeaveRoomModal>
             </div>
         </div>
 
         <USlideover
+            :room-name="name"
             title="Settings"
             v-model:open="state.areSettingsVisible"
             :ui="{ body: 'flex flex-col' }"

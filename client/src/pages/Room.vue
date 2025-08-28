@@ -50,7 +50,7 @@ const isOnline = useOnline();
         <template v-else-if="room">
             <h1 class="text-xl font-bold">{{ room.name }}</h1>
 
-            <Room :roomId="room.id" @leave="router.push('/')" />
+            <Room :id="room.id" :name="room.name" @leave="router.push('/')" />
         </template>
 
         <Placeholder
