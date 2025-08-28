@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
+import {
+    computed,
+    onBeforeUnmount,
+    onMounted,
+    reactive,
+    useTemplateRef,
+    watch
+} from 'vue';
 import { useFullscreen } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 
@@ -86,7 +93,9 @@ const {
     isAudioEnabled
 });
 
-const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
+const roomContainer = useTemplateRef('roomContainer');
+
+const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(roomContainer);
 
 const activeParticipant = computed(() => {
     return participants.value.find(
@@ -173,16 +182,14 @@ onMounted(() => {
         toggleSettings();
     }
 });
-
-onBeforeUnmount(() => {
-    if (isFullscreen.value) {
-        toggleFullscreen();
-    }
-});
 </script>
 
 <template>
-    <div class="flex flex-col grow gap-4">
+    <div
+        ref="roomContainer"
+        class="flex flex-col grow gap-4"
+        :class="{ 'bg-gray-900 p-4': isFullscreen }"
+    >
         <div class="relative flex grow gap-4">
             <div
                 v-if="isViewMode('sidebar')"
