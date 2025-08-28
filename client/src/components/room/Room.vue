@@ -1,19 +1,12 @@
 <script setup lang="ts">
-import {
-    computed,
-    onBeforeUnmount,
-    onMounted,
-    reactive,
-    useTemplateRef,
-    watch
-} from 'vue';
+import { computed, onMounted, reactive, ref, useTemplateRef, watch } from 'vue';
 import { useFullscreen } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 
 import Placeholder from '../../components/base/Placeholder.vue';
-import MediaSettings from './MediaSettings.vue';
 import Participant from '../../components/room/Participant.vue';
 import AutoGrid from '../../components/base/AutoGrid.vue';
+import MediaSettings from './MediaSettings.vue';
 import { useRoom } from '../../composables/use-room';
 import { useMediaSettingsStore } from '../../composables/store/use-media-settings-store';
 import { useAuthStore } from '../../composables/store/use-auth-store';
@@ -21,7 +14,7 @@ import { keepInRange, nextFrame } from '../../utils/helpers';
 import { useMediaStream } from '../../composables/media/use-media-stream';
 import { useScreenCapture } from '../../composables/media/use-screen-capture';
 import { useVolumeControl } from '../../composables/media/use-volume-control';
-import LeaveRoomModal from './LeaveRoomModal.vue';
+import Prompt from '../base/Prompt.vue';
 
 const props = defineProps<{ id: string; name: string }>();
 
@@ -98,6 +91,8 @@ const roomContainer = useTemplateRef<HTMLDivElement>('roomContainer');
 
 const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(roomContainer);
 
+const isSharingScreenModalVisible = ref<boolean>(false);
+
 const activeParticipant = computed(() => {
     return participants.value.find(
         ({ id }) => id === state.activeParticipantId
@@ -147,7 +142,7 @@ async function handleWheelVolume({ deltaY }: WheelEvent) {
 
 async function toggleScreenSharing() {
     if (isSharingScreen.value) {
-        stopSharingScreen();
+        isSharingScreenModalVisible.value = true;
     } else {
         await startSharingScreen();
     }
@@ -335,21 +330,11 @@ onMounted(() => {
                     </UButton>
                 </UTooltip>
 
-                <UTooltip
-                    :text="
-                        isSharingScreen
-                            ? 'Stop sharing screen'
-                            : 'Start sharing screen'
-                    "
-                >
+                <UTooltip text="Start sharing screen">
                     <UButton color="neutral" @click="toggleScreenSharing">
                         <UIcon
                             class="size-5"
-                            :name="
-                                isSharingScreen
-                                    ? 'i-ic-outline-stop-screen-share'
-                                    : 'i-ic-outline-screen-share'
-                            "
+                            name="i-ic-outline-screen-share"
                         />
                     </UButton>
                 </UTooltip>
@@ -375,13 +360,20 @@ onMounted(() => {
                     </UButton>
                 </UTooltip>
 
-                <LeaveRoomModal :room-name="name" @confirmed="leaveRoom">
+                <Prompt
+                    :title="`Leave room: ${name}`"
+                    cancel-text="Stay"
+                    cancel-color="neutral"
+                    confirm-color="error"
+                    confirm-text="Leave"
+                    @confirm="leaveRoom"
+                >
                     <UTooltip text="Leave room">
                         <UButton color="error">
                             <UIcon class="size-5" name="i-mdi-phone-off" />
                         </UButton>
                     </UTooltip>
-                </LeaveRoomModal>
+                </Prompt>
             </div>
         </div>
 
@@ -397,5 +389,15 @@ onMounted(() => {
                 </ScrollContainer>
             </template>
         </USlideover>
+
+        <Prompt
+            v-model:is-open="isSharingScreenModalVisible"
+            title="Stop sharing screen ?"
+            cancel-text="Continue"
+            cancel-color="neutral"
+            confirm-text="Stop"
+            confirm-color="error"
+            @confirm="stopSharingScreen"
+        />
     </div>
 </template>
