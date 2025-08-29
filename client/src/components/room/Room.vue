@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, useTemplateRef, watch } from 'vue';
+import {
+    computed,
+    onBeforeUnmount,
+    onMounted,
+    reactive,
+    ref,
+    useTemplateRef,
+    watch
+} from 'vue';
 import { useFullscreen } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 
@@ -178,11 +186,14 @@ onMounted(() => {
         toggleSettings();
     }
 });
+
+onBeforeUnmount(() => {
+    if (isFullscreen) toggleFullscreen();
+});
 </script>
 
 <template>
     <div
-        ref="roomContainer"
         class="flex flex-col grow gap-4"
         :class="{ 'bg-gray-900 p-4': isFullscreen }"
     >
