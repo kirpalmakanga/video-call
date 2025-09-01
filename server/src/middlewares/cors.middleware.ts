@@ -29,7 +29,7 @@ export function useCors(app: H3, options: CorsOptions) {
 
         const corsResponse = handleCors(event, options);
 
-        if (typeof corsResponse === 'string') {
+        if (corsResponse) {
             return corsResponse;
         }
     });

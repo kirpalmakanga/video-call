@@ -24,8 +24,8 @@ importers:
         specifier: ^0.4.1
         version: 0.4.1(srvx@0.8.6)
       h3:
-        specifier: 2.0.0-beta.3
-        version: 2.0.0-beta.3(crossws@0.4.1(srvx@0.8.6))
+        specifier: 2.0.0-beta.4
+        version: 2.0.0-beta.4(crossws@0.4.1(srvx@0.8.6))
       jose:
         specifier: ^6.0.12
         version: 6.0.12
@@ -182,8 +182,8 @@ packages:
     resolution: {integrity: sha512-L5bGsVkxJbJgdnwyuheIunkGatUF/zssUoxxjACCseZYAVbaqdh9Tsmmlkl8vYan09H7sbvKt4pS8GqKLBrEzA==}
     hasBin: true
 
-  h3@2.0.0-beta.3:
-    resolution: {integrity: sha512-AW9ry5z/YOmzuY0R1jk5jwc7jkGkeSOzyQ0+4qzVGdqY6I2JrslzKjAmcqUjfB6f+kdyIvUGOompt/Dl3MI+FA==}
+  h3@2.0.0-beta.4:
+    resolution: {integrity: sha512-/JdwHUGuHjbBXAVxQN7T7QeI9cVlhsqMKVNFHebZVs9RoEYH85Ogh9O1DEy/1ZiJkmMwa1gNg6bBcGhc1Itjdg==}
     engines: {node: '>=20.11.1'}
     peerDependencies:
       crossws: ^0.4.1
@@ -310,6 +310,11 @@ packages:
 
   srvx@0.8.6:
     resolution: {integrity: sha512-jnIxPn5A7ugRKGZ/+TlcD2hKIkMx64aTAk1ct0y+S4MWXIzTbpq+7B1gdpZTwJZvNJu5/ayx7c/1YT0pAmD0Kw==}
+    engines: {node: '>=20.16.0'}
+    hasBin: true
+
+  srvx@0.8.7:
+    resolution: {integrity: sha512-g3+15LlwVOGL2QpoTPZlvRjg+9a5Tx/69CatXjFP6txvhIaW2FmGyzJfb8yft5wyfGddvJmP/Yx+e/uNDMRSLQ==}
     engines: {node: '>=20.16.0'}
     hasBin: true
 
@@ -474,12 +479,12 @@ snapshots:
       nypm: 0.6.1
       pathe: 2.0.3
 
-  h3@2.0.0-beta.3(crossws@0.4.1(srvx@0.8.6)):
+  h3@2.0.0-beta.4(crossws@0.4.1(srvx@0.8.6)):
     dependencies:
       cookie-es: 2.0.0
       fetchdts: 0.1.6
       rou3: 0.7.3
-      srvx: 0.8.6
+      srvx: 0.8.7
     optionalDependencies:
       crossws: 0.4.1(srvx@0.8.6)
 
@@ -592,6 +597,10 @@ snapshots:
   spdx-license-ids@3.0.21: {}
 
   srvx@0.8.6:
+    dependencies:
+      cookie-es: 2.0.0
+
+  srvx@0.8.7:
     dependencies:
       cookie-es: 2.0.0
 
