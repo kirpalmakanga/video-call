@@ -97,7 +97,11 @@ const {
 
 const roomContainer = useTemplateRef<HTMLDivElement>('roomContainer');
 
-const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(roomContainer);
+const {
+    isFullscreen,
+    exit: exitFullscreen,
+    toggle: toggleFullscreen
+} = useFullscreen(roomContainer);
 
 const isSharingScreenModalVisible = ref<boolean>(false);
 
@@ -187,9 +191,7 @@ onMounted(() => {
     }
 });
 
-onBeforeUnmount(() => {
-    if (isFullscreen.value) toggleFullscreen();
-});
+onBeforeUnmount(exitFullscreen);
 </script>
 
 <template>
