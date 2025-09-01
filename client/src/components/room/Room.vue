@@ -188,7 +188,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    if (isFullscreen) toggleFullscreen();
+    if (isFullscreen.value) toggleFullscreen();
 });
 </script>
 
