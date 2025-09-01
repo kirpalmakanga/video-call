@@ -1,9 +1,9 @@
 import {
     handleCors,
-    type H3,
     type CorsOptions,
     type H3Event,
-    onError
+    onError,
+    definePlugin
 } from 'h3';
 
 const corsResponseHeaderKeys = [
@@ -23,7 +23,7 @@ function getCorsHeaders(event: H3Event) {
     return headers;
 }
 
-export function useCors(app: H3, options: CorsOptions) {
+export const cors = definePlugin((app, options: CorsOptions) => {
     app.use((event: H3Event) => {
         if (event.req.headers.get('upgrade') === 'websocket') return;
 
@@ -47,4 +47,4 @@ export function useCors(app: H3, options: CorsOptions) {
             });
         })
     );
-}
+});
