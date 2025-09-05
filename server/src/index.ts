@@ -36,5 +36,3 @@ serve(app, {
     port: PORT,
     plugins: [useSocketPlugin(app)]
 });
-
-export default app;
