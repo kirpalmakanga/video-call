@@ -13,16 +13,51 @@ const Settings = () => import('./pages/Settings.vue');
 const router = createRouter({
     history: createWebHistory(),
     routes: [
-        { path: '/', redirect: '/rooms', name: 'home' },
-        { path: '/rooms', component: Rooms, name: 'rooms' },
+        {
+            path: '/',
+            redirect: '/rooms',
+            name: 'home',
+            meta: {
+                authenticated: true
+            }
+        },
+        {
+            path: '/rooms',
+            component: Rooms,
+            name: 'rooms',
+            meta: {
+                authenticated: true
+            }
+        },
         {
             path: '/room/:roomId/setup',
             component: RoomSetup,
-            name: 'room-setup'
+            name: 'room-setup',
+            meta: {
+                authenticated: true
+            }
         },
-        { path: '/room/:roomId', component: Room, name: 'room' },
-        { path: '/settings/:tab?', component: Settings, name: 'settings' },
-        { path: '/login', component: Login, name: 'auth-login' },
+        {
+            path: '/room/:roomId',
+            component: Room,
+            name: 'room',
+            meta: {
+                authenticated: true
+            }
+        },
+        {
+            path: '/settings/:tab?',
+            component: Settings,
+            name: 'settings',
+            meta: {
+                authenticated: true
+            }
+        },
+        {
+            path: '/login',
+            component: Login,
+            name: 'auth-login'
+        },
         {
             path: '/forgot-password',
             component: ForgotPassword,
@@ -33,7 +68,11 @@ const router = createRouter({
             component: ResetPassword,
             name: 'auth-reset-password'
         },
-        { path: '/register', component: Register, name: 'auth-register' },
+        {
+            path: '/register',
+            component: Register,
+            name: 'auth-register'
+        },
         {
             path: '/register/success',
             component: RegisterSuccess,

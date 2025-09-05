@@ -1,5 +1,5 @@
 import { watch } from 'vue';
-import { useRouter, type RouteRecordNameGeneric } from 'vue-router';
+import { useRouter, type RouteLocationNormalizedGeneric } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from './store/use-auth-store';
 import { useSocketInstance } from './use-socket';
@@ -11,15 +11,9 @@ export function useAuthRouteGuard() {
 
     const router = useRouter();
 
-    function isAuthRoute(name: RouteRecordNameGeneric) {
-        return name?.toString().startsWith('auth');
-    }
-
-    router.beforeEach(({ name }, _, next) => {
-        if (!isLoggedIn.value && !isAuthRoute(name)) {
+    router.beforeEach((to, _, next) => {
+        if (!isLoggedIn.value && !!to.meta.authenticated) {
             next({ name: 'auth-login' });
-        } else if (isLoggedIn.value && isAuthRoute(name)) {
-            next({ name: 'home' });
         } else {
             next();
         }
