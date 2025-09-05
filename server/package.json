@@ -12,7 +12,8 @@
         "smtp": "docker run --rm -it -p 5000:80 -p 2525:25 rnwood/smtp4dev",
         "prisma:generate": "npx prisma generate",
         "prisma:migrate": "npx prisma migrate dev",
-        "prisma:studio": "npx prisma studio"
+        "prisma:studio": "npx prisma studio",
+        "deploy": "npx wranger deploy"
     },
     "dependencies": {
         "@prisma/client": "^6.13.0",
