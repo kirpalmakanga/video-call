@@ -1,6 +1,6 @@
 import { jwtVerify, SignJWT } from 'jose';
 import { randomBytes } from 'crypto';
-import { assertIsDefined } from '../../../utils/assert';
+import { assertIsDefined } from '../utils/assert.utils';
 
 const { JWT_ACCESS_SECRET, JWT_ISSUER, JWT_AUDIENCE, JWT_DURATION } =
     process.env;
