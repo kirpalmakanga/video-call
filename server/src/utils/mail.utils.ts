@@ -8,7 +8,8 @@ const {
     SMTP_PORT,
     SMTP_SECURE,
     SMTP_USER,
-    SMTP_PASS
+    SMTP_PASS,
+    MAIL_FROM
 } = process.env;
 
 const transporter = createTransport({
@@ -33,7 +34,7 @@ export async function sendMail({ to, subject, template, context }: MailConfig) {
         const html = renderView(`emails/${template}`, context);
 
         await transporter.sendMail({
-            from: process.env.MAIL_FROM,
+            from: MAIL_FROM,
             to,
             subject,
             html
