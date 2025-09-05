@@ -13,7 +13,7 @@
         "prisma:generate": "npx prisma generate",
         "prisma:migrate": "npx prisma migrate dev",
         "prisma:studio": "npx prisma studio",
-        "deploy": "npx wranger deploy"
+        "deploy": "npx wrangler deploy"
     },
     "dependencies": {
         "@prisma/client": "^6.13.0",
