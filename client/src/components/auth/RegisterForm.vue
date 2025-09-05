@@ -51,30 +51,41 @@ async function onSubmit({ data }: FormSubmitEvent<RegisterFormData>) {
         :state="state"
         @submit="onSubmit"
     >
-        <TextField
-            label="First name"
-            name="firstName"
-            v-model="state.firstName"
-        />
+        <template #default="{ loading }">
+            <TextField
+                label="First name"
+                name="firstName"
+                v-model="state.firstName"
+            />
 
-        <TextField label="Last name" name="lastName" v-model="state.lastName" />
+            <TextField
+                label="Last name"
+                name="lastName"
+                v-model="state.lastName"
+            />
 
-        <EmailField label="Email" name="email" v-model="state.email" />
+            <EmailField label="Email" name="email" v-model="state.email" />
 
-        <PasswordField
-            label="Password"
-            name="password"
-            v-model="state.password"
-        />
+            <PasswordField
+                label="Password"
+                name="password"
+                v-model="state.password"
+            />
 
-        <PasswordField
-            label="Confirm password"
-            name="confirmPassword"
-            v-model="state.confirmPassword"
-        />
+            <PasswordField
+                label="Confirm password"
+                name="confirmPassword"
+                v-model="state.confirmPassword"
+            />
 
-        <UButton class="self-end" icon="i-mdi-save" type="submit">
-            Submit
-        </UButton>
+            <UButton
+                class="self-end"
+                type="submit"
+                icon="i-mdi-register-outline"
+                :loading="loading"
+            >
+                {{ loading ? 'Registering...' : 'Register' }}
+            </UButton>
+        </template>
     </UForm>
 </template>

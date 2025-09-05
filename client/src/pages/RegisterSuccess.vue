@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
 import { requestVerificationEmail } from '../services/api';
+import { ref } from 'vue';
 const {
     query: { email }
 } = useRoute();
 
 const toast = useToast();
 
+const isSending = ref<boolean>(false);
+
 async function requestEmail() {
     if (email) {
         try {
+            isSending.value = true;
+
             await requestVerificationEmail(email as string);
 
             toast.add({
@@ -24,6 +29,8 @@ async function requestEmail() {
                     `Couldn't send verification email, please try later.`,
                 color: 'error'
             });
+        } finally {
+            isSending.value = false;
         }
     }
 }
@@ -40,8 +47,13 @@ async function requestEmail() {
                 button below.
             </p>
 
-            <UButton class="self-end" icon="i-mdi-send" @click="requestEmail">
-                Send again
+            <UButton
+                class="self-end"
+                icon="i-mdi-send-variant-outline"
+                :loading="isSending"
+                @click="requestEmail"
+            >
+                {{ isSending ? 'Sending...' : 'Send again' }}
             </UButton>
         </div>
     </div>

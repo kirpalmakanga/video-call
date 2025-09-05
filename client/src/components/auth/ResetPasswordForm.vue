@@ -49,20 +49,29 @@ async function onSubmit({ data }: FormSubmitEvent<ResetPasswordFormData>) {
         :state="state"
         @submit="onSubmit"
     >
-        <input type="hidden" name="email" :value="email" />
+        <template #default="{ loading }">
+            <input type="hidden" name="email" :value="email" />
 
-        <PasswordField
-            label="Password"
-            name="password"
-            v-model="state.password"
-        />
+            <PasswordField
+                label="Password"
+                name="password"
+                v-model="state.password"
+            />
 
-        <PasswordField
-            label="Confirm password"
-            name="confirmPassword"
-            v-model="state.confirmPassword"
-        />
+            <PasswordField
+                label="Confirm password"
+                name="confirmPassword"
+                v-model="state.confirmPassword"
+            />
 
-        <UButton class="self-end" type="submit">Submit</UButton>
+            <UButton
+                class="self-end"
+                type="submit"
+                icon="i-mdi-send-variant-outline"
+                :loading="loading"
+            >
+                {{ loading ? 'Saving...' : 'Save' }}
+            </UButton>
+        </template>
     </UForm>
 </template>

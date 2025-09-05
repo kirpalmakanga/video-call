@@ -38,14 +38,23 @@ async function onSubmit({ data }: FormSubmitEvent<LoginFormData>) {
         :state="state"
         class="flex flex-col gap-4"
     >
-        <EmailField label="Email" name="email" v-model="state.email" />
+        <template #default="{ loading }">
+            <EmailField label="Email" name="email" v-model="state.email" />
 
-        <PasswordField
-            label="Password"
-            name="password"
-            v-model="state.password"
-        />
+            <PasswordField
+                label="Password"
+                name="password"
+                v-model="state.password"
+            />
 
-        <UButton class="self-end" type="submit">Submit</UButton>
+            <UButton
+                class="self-end"
+                type="submit"
+                icon="i-mdi-login"
+                :loading="loading"
+            >
+                {{ loading ? 'Signing in...' : 'Sign in' }}
+            </UButton>
+        </template>
     </UForm>
 </template>

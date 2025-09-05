@@ -38,13 +38,22 @@ async function onSubmit({
 
 <template>
     <UForm
-        @submit="onSubmit"
+        class="flex flex-col gap-4"
         :schema="forgotPasswordSchema"
         :state="state"
-        class="flex flex-col gap-4"
+        @submit="onSubmit"
     >
-        <EmailField label="Email" name="email" v-model="state.email" />
+        <template #default="{ loading }">
+            <EmailField label="Email" name="email" v-model="state.email" />
 
-        <UButton class="self-end" type="submit">Submit</UButton>
+            <UButton
+                class="self-end"
+                type="submit"
+                icon="i-mdi-send-variant-outline"
+                :loading="loading"
+            >
+                {{ loading ? 'Sending...' : 'Send' }}
+            </UButton>
+        </template>
     </UForm>
 </template>
