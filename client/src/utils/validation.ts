@@ -35,7 +35,7 @@ export const updatePasswordSchema = object({
     password: string()
         .required('Required')
         .min(8, 'Must be at least 8 characters')
-        .notOneOf([ref('currentPassword')], 'Must match new password'),
+        .notOneOf([ref('currentPassword')], 'Must be new password'),
     confirmPassword: string()
         .required('Required')
         .oneOf([ref('password')], 'Must match new password')
