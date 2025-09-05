@@ -29,7 +29,9 @@ import {
     loginSchema,
     refreshTokenSchema,
     registerSchema,
+    resetPasswordSchema,
     updatePasswordSchema,
+    type ResetPasswordSchema,
     type UpdatePasswordSchema
 } from '../validation/auth.validation';
 
@@ -176,7 +178,7 @@ export async function refreshAccessToken(event: H3Event<RefreshTokenRequest>) {
 }
 
 interface UpdatePasswordRequest {
-    body: { password: string };
+    body: UpdatePasswordSchema;
 }
 
 export async function updatePassword(event: H3Event<UpdatePasswordRequest>) {
@@ -225,14 +227,14 @@ export async function requestPasswordReset(
 }
 
 interface ResetPasswordRequest {
-    body: UpdatePasswordSchema;
+    body: ResetPasswordSchema;
 }
 
 export async function updatePasswordWithResetToken(
     event: H3Event<ResetPasswordRequest>
 ) {
     const { resetToken } = await getRouterParams(event);
-    const { password } = await readValidatedBody(event, updatePasswordSchema);
+    const { password } = await readValidatedBody(event, resetPasswordSchema);
 
     if (!resetToken) {
         return badRequest('Missing reset token');
