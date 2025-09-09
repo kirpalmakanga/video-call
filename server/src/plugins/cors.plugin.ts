@@ -1,10 +1,11 @@
 import {
+    definePlugin,
     handleCors,
-    type CorsOptions,
-    type H3Event,
     onError,
-    definePlugin
+    type CorsOptions,
+    type H3Event
 } from 'h3';
+import { mergeHeaders } from '../utils/helpers.utils';
 
 const corsResponseHeaderKeys = [
     'access-control-allow-origin',
@@ -14,7 +15,7 @@ const corsResponseHeaderKeys = [
     'origin'
 ];
 
-function getCorsHeaders(event: H3Event) {
+function getCorsResponseHeaders(event: H3Event) {
     const headers = new Headers(
         [...event.res.headers.entries()].filter(([key]) =>
             corsResponseHeaderKeys.includes(key)
@@ -36,14 +37,12 @@ export const cors = definePlugin((app, options: CorsOptions) => {
 
     app.use(
         onError((error, event) => {
-            const headers = getCorsHeaders(event);
-
-            headers.append('content-type', 'application/json;charset=UTF-8');
-
             return new Response(JSON.stringify(error.toJSON(), null, 2), {
                 status: error.status,
                 statusText: error.statusText,
-                headers: headers
+                headers: mergeHeaders(getCorsResponseHeaders(event), {
+                    'content-type': 'application/json;charset=UTF-8'
+                })
             });
         })
     );

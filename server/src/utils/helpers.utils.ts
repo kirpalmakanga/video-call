@@ -40,3 +40,17 @@ export function getUrlParams(url: string) {
 
     return Object.fromEntries(urlObject.searchParams.entries());
 }
+
+export function mergeHeaders(...sources: HeadersInit[]) {
+    let result = new Headers();
+
+    for (let headersInit of sources) {
+        let headers = new Headers(headersInit);
+
+        for (let [key, value] of headers.entries()) {
+            result.set(key, value);
+        }
+    }
+
+    return result;
+}
