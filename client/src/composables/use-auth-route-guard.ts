@@ -1,5 +1,5 @@
 import { watch } from 'vue';
-import { useRouter, type RouteLocationNormalizedGeneric } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from './store/use-auth-store';
 import { useSocketInstance } from './use-socket';
