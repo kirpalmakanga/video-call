@@ -24,8 +24,8 @@
     },
     "devDependencies": {
         "@vitejs/plugin-vue": "^5.0.5",
-        "sass": "^1.77.6",
-        "tailwindcss": "^4.1.12",
+        "sass": "^1.93.2",
+        "tailwindcss": "^4.1.13",
         "vite": "npm:rolldown-vite@latest"
     }
 }
