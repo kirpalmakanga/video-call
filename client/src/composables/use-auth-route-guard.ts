@@ -2,12 +2,12 @@ import { watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from './store/use-auth-store';
-import { useSocketInstance } from './use-socket';
+import { useSocketStore } from './use-socket';
 
 export function useAuthRouteGuard() {
     const authStore = useAuthStore();
     const { isLoggedIn } = storeToRefs(authStore);
-    const { removeSocket } = useSocketInstance();
+    const { removeSocket } = useSocketStore();
 
     const router = useRouter();
 

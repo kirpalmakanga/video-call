@@ -1,45 +1,99 @@
-import { onBeforeMount, onBeforeUnmount, onUnmounted } from 'vue';
+import {
+    computed,
+    onBeforeMount,
+    onBeforeUnmount,
+    onUnmounted,
+    ref,
+    watch
+} from 'vue';
 import { defineStore, storeToRefs } from 'pinia';
 import { useAuthStore } from './store/use-auth-store';
-import { Socket } from '../utils/socket';
+import { useWebSocket } from '@vueuse/core';
 
-export const useSocketInstance = defineStore('socket', () => {
+const { VITE_SOCKET_URI } = import.meta.env;
+
+const HEARTBEAT_MESSAGE = '';
+
+export const useSocketStore = defineStore('socket', () => {
     const authStore = useAuthStore();
     const { refreshAccessToken } = authStore;
     const { accessToken } = storeToRefs(authStore);
 
-    let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null =
-        null;
+    const socketUrl = computed(
+        () => `${VITE_SOCKET_URI}/_ws?token=${accessToken.value}`
+    );
+
+    const { ws, send, open, close } = useWebSocket(socketUrl, {
+        immediate: false,
+        autoConnect: false,
+        heartbeat: { message: HEARTBEAT_MESSAGE, interval: 20000 }
+    });
+
+    const listeners: Map<string, Set<Function>> = new Map();
+
     let instancesCount: number = 0;
 
     function removeSocket() {
-        socket?.close();
+        console.log('close');
+        close();
 
-        socket = null;
         instancesCount = 0;
     }
 
-    return {
-        getSocket() {
-            if (!socket) {
-                socket = new Socket(`${import.meta.env.VITE_SOCKET_URI}/_ws`, {
-                    auth: { token: accessToken.value }
-                });
+    async function handleMessage({ data }: MessageEvent) {
+        if (data === HEARTBEAT_MESSAGE) return;
 
-                socket.on('connectError', async (err) => {
-                    if (err.message === 'unauthorized') {
-                        await refreshAccessToken();
+        const { event, payload } = JSON.parse(data);
 
-                        socket?.setAuth({ token: accessToken.value });
+        if (event === 'connectError' && payload.message === 'unauthorized') {
+            close();
 
-                        socket?.connect();
-                    }
-                });
+            await refreshAccessToken();
+
+            open();
+
+            return;
+        }
+
+        const handlers = listeners.get(event);
+
+        if (handlers) {
+            for (const handler of handlers) {
+                handler(payload);
             }
+        }
+    }
 
-            return socket;
+    function handleSocketChange() {
+        if (ws.value) {
+            ws.value.addEventListener('message', handleMessage);
+        }
+    }
+
+    watch(ws, handleSocketChange, { immediate: true });
+
+    return {
+        on(event: string, handler: Function) {
+            if (!listeners.has(event)) listeners.set(event, new Set());
+
+            listeners.get(event)?.add(handler);
+        },
+        off(event: string, handler?: Function) {
+            if (handler) {
+                listeners.get(event)?.delete(handler);
+            } else if (event) {
+                listeners.delete(event);
+            }
+        },
+        send(event: string, payload: Record<string, unknown>) {
+            send(JSON.stringify({ event, payload }));
         },
         increaseInstancesCount() {
+            if (instancesCount === 0) {
+                console.log('open');
+                open();
+            }
+
             instancesCount++;
         },
         decreaseInstancesCount() {
@@ -47,7 +101,7 @@ export const useSocketInstance = defineStore('socket', () => {
                 instancesCount--;
             }
 
-            if (socket && instancesCount === 0) {
+            if (ws.value && instancesCount === 0) {
                 removeSocket();
             }
         },
@@ -56,8 +110,8 @@ export const useSocketInstance = defineStore('socket', () => {
 });
 
 export function useSocket() {
-    const { getSocket, increaseInstancesCount, decreaseInstancesCount } =
-        useSocketInstance();
+    const { on, off, send, increaseInstancesCount, decreaseInstancesCount } =
+        useSocketStore();
 
     const subscriptions = new Map<ServerToClientEventId, Function>();
 
@@ -68,11 +122,9 @@ export function useSocket() {
         if (subscriptions.has(event)) {
             throw new Error(`Subscription for event "${event}" already exists`);
         } else {
-            const socket = getSocket();
+            on(event, callback);
 
-            socket.on(event, callback);
-
-            subscriptions.set(event, () => socket.off(event, callback));
+            subscriptions.set(event, () => off(event, callback));
         }
     }
 
@@ -113,7 +165,7 @@ export function useSocket() {
             event: E,
             payload: ClientToServerEventPayload<E>
         ) {
-            getSocket().emit(event, payload);
+            send(event, payload);
         },
         subscribe<E extends ServerToClientEventId>(
             event: E,
