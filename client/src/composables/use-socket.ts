@@ -34,7 +34,6 @@ export const useSocketStore = defineStore('socket', () => {
     let instancesCount: number = 0;
 
     function removeSocket() {
-        console.log('close');
         close();
 
         instancesCount = 0;
@@ -90,7 +89,6 @@ export const useSocketStore = defineStore('socket', () => {
         },
         increaseInstancesCount() {
             if (instancesCount === 0) {
-                console.log('open');
                 open();
             }
 
