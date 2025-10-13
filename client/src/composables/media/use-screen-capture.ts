@@ -1,17 +1,16 @@
 import { onBeforeUnmount, ref, watch, type Ref } from 'vue';
+import { useDisplayMedia } from '@vueuse/core';
 import { assertIsDefined } from '../../../../utils/assert';
 
 export function useScreenCapture(stream: Ref<MediaStream | undefined>) {
+    const { stream: displayMediaStream, start: startDisplayMedia } =
+        useDisplayMedia();
+
     const isSharingScreen = ref<boolean>(false);
-    let screenStream: MediaStream | null = null;
     let sourceVideoTrack: MediaStreamTrack | null = null;
     let screenVideoTrack: MediaStreamTrack | null = null;
 
     function stop() {
-        if (screenStream) {
-            screenStream = null;
-        }
-
         if (sourceVideoTrack && screenVideoTrack) {
             stream.value?.removeTrack(screenVideoTrack);
             stream.value?.addTrack(sourceVideoTrack);
@@ -33,10 +32,16 @@ export function useScreenCapture(stream: Ref<MediaStream | undefined>) {
 
             assertIsDefined(stream.value, 'Source stream unavailable');
 
-            screenStream = await navigator.mediaDevices.getDisplayMedia();
+            await startDisplayMedia();
+
+            assertIsDefined(
+                displayMediaStream.value,
+                'Display media stream unavailable'
+            );
 
             sourceVideoTrack = stream.value.getVideoTracks().at(0) || null;
-            screenVideoTrack = screenStream.getVideoTracks().at(0) || null;
+            screenVideoTrack =
+                displayMediaStream.value.getVideoTracks().at(0) || null;
 
             if (sourceVideoTrack && screenVideoTrack) {
                 screenVideoTrack.onended = stop;
@@ -53,17 +58,15 @@ export function useScreenCapture(stream: Ref<MediaStream | undefined>) {
         }
     }
 
-    onBeforeUnmount(() => {
+    function cleanup() {
         sourceVideoTrack?.stop();
 
         stop();
-    });
+    }
 
-    watch(stream, () => {
-        sourceVideoTrack?.stop();
+    onBeforeUnmount(cleanup);
 
-        stop();
-    });
+    watch(stream, () => !stream.value && cleanup());
 
     return {
         isSharingScreen,
