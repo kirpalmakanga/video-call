@@ -39,7 +39,6 @@ export const cors = definePlugin((app, options: CorsOptions) => {
         onError((error, event) => {
             return new Response(JSON.stringify(error.toJSON(), null, 2), {
                 status: error.status,
-                statusText: error.statusText,
                 headers: mergeHeaders(getCorsResponseHeaders(event), {
                     'content-type': 'application/json;charset=UTF-8'
                 })
