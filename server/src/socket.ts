@@ -76,20 +76,26 @@ const handlers: EventHandlers = {
     }
 };
 
-async function authenticatePeer(peer: Peer) {
-    const { token } = getUrlParams(peer.request.url);
+async function authenticateRequest(req: Request) {
+    const { token } = getUrlParams(req.url);
 
+    if (token) {
+        await authenticate(token);
+    } else {
+        throw new Error('Invalid token');
+    }
+}
+
+async function authenticatePeer(peer: Peer) {
     try {
-        if (token) {
-            await authenticate(token);
-        } else {
-            throw new Error('Invalid token');
-        }
+        await authenticateRequest(peer.request);
     } catch (error) {
         peer.send({
             event: 'connectError',
             payload: { message: 'unauthorized' }
         });
+
+        peer.terminate();
 
         throw error;
     }
