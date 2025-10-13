@@ -3,12 +3,12 @@ import {
     onBeforeMount,
     onBeforeUnmount,
     onUnmounted,
-    ref,
     watch
 } from 'vue';
 import { defineStore, storeToRefs } from 'pinia';
-import { useAuthStore } from './store/use-auth-store';
 import { useWebSocket } from '@vueuse/core';
+import { useAuthStore } from './store/use-auth-store';
+import { useOnline } from '@vueuse/core';
 
 const { VITE_SOCKET_URI } = import.meta.env;
 
@@ -28,6 +28,8 @@ export const useSocketStore = defineStore('socket', () => {
         autoConnect: false,
         heartbeat: { message: HEARTBEAT_MESSAGE, interval: 20000 }
     });
+
+    const isOnline = useOnline();
 
     const listeners: Map<string, Set<Function>> = new Map();
 
@@ -70,6 +72,8 @@ export const useSocketStore = defineStore('socket', () => {
     }
 
     watch(ws, handleSocketChange, { immediate: true });
+
+    watch(isOnline, () => isOnline.value && open());
 
     return {
         on(event: string, handler: Function) {
