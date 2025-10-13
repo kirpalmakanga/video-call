@@ -103,7 +103,7 @@ useMutationObserver(container, recalculateLayout, {
         >
             <li
                 v-for="item in items"
-                :key="item[itemKey]"
+                :key="item[itemKey] as string"
                 class="flex w-[var(--autogrid-cell-width)] h-[var(--autogrid-cell-height)]"
             >
                 <slot name="item" v-bind="item" />
