@@ -29,9 +29,7 @@ export function useRoom(
 
     const {
         participants,
-        hasParticipant,
-        addParticipant,
-        updateParticipant,
+        setParticipant,
         removeParticipant,
         toggleMuteParticipant,
         clearParticipants
@@ -148,15 +146,7 @@ export function useRoom(
         }
     );
 
-    subscribe('participantSynced', async (participant) => {
-        const { id: targetParticipantId } = participant;
-
-        if (hasParticipant(targetParticipantId)) {
-            updateParticipant(participant);
-        } else {
-            addParticipant(participant);
-        }
-    });
+    subscribe('participantSynced', setParticipant);
 
     subscribe('participantDisconnected', ({ participantId }) => {
         disconnectFromPeer(participantId);

@@ -6,18 +6,16 @@ export function useParticipantsList() {
 
     return {
         participants,
-        hasParticipant(participantId: string) {
-            return participants.value.some(({ id }) => id === participantId);
-        },
-        addParticipant(participant: ClientParticipant) {
-            participants.value.push(participant);
-        },
-        updateParticipant(participant: ClientParticipant) {
-            participants.value = update(
-                participants.value,
-                ({ id }) => id === participant.id,
-                participant
-            );
+        setParticipant(participant: ClientParticipant) {
+            if (participants.value.some(({ id }) => id === participant.id)) {
+                participants.value = update(
+                    participants.value,
+                    ({ id }) => id === participant.id,
+                    participant
+                );
+            } else {
+                participants.value.push(participant);
+            }
         },
         removeParticipant(participantId: string) {
             participants.value = participants.value.filter(
