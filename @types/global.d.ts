@@ -26,7 +26,7 @@ declare global {
     interface Participant {
         id: string;
         name: string;
-        isMuted?: boolean;
+        isMuted: boolean;
     }
 
     interface ClientParticipant extends Participant {
