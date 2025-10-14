@@ -257,7 +257,7 @@ onBeforeUnmount(exitFullscreen);
                 <AutoGrid
                     class="grow"
                     :items="participants"
-                    :item-key="id"
+                    item-key="id"
                     :item-aspect-ratio="16 / 9"
                 >
                     <template #item="{ id, ...participant }">
