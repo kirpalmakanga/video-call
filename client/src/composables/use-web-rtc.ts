@@ -89,6 +89,7 @@ function usePeerConnections() {
         hasPeer,
         hasActivePeer(peerId: string) {
             const connection = getPeer(peerId);
+
             return connection.iceConnectionState === 'connected';
         }
     };
@@ -124,14 +125,15 @@ export function useWebRTC(
     function removePeerStream(peerId: string) {
         const stream = getPeerStream(peerId);
 
-        assertIsDefined(
-            stream,
-            'Peer stream does not exist or already has been removed.'
-        );
+        if (stream) {
+            closeStream(stream);
 
-        closeStream(stream);
-
-        peerStreams.value = omit(peerStreams.value, peerId);
+            peerStreams.value = omit(peerStreams.value, peerId);
+        } else {
+            console.warn(
+                'Peer stream does not exist or already has been removed.'
+            );
+        }
     }
 
     function disconnectFromPeer(peerId: string) {
@@ -259,7 +261,9 @@ export function useWebRTC(
                 }
             });
 
-            bindLocalStreamToPeer(peerId);
+            if (localStream.value) {
+                bindLocalStreamToPeer(peerId);
+            }
         },
         syncLocalStreamWithPeers,
         async createOffer(peerId: string) {
