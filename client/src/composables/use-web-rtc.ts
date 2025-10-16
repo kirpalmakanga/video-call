@@ -166,11 +166,14 @@ export function useWebRTC(
     function bindLocalStreamToPeer(peerId: string) {
         assertIsDefined(localStream.value, 'Local stream unavailable.');
 
-        const videoTrack = localStream.value.getVideoTracks().at(0);
-        const audioTrack = localStream.value.getAudioTracks().at(0);
+        const [videoTrack] = localStream.value.getVideoTracks();
+        const [audioTrack] = localStream.value.getAudioTracks();
 
-        if (videoTrack && audioTrack) {
+        if (videoTrack) {
             setPeerConnectionTrack(peerId, videoTrack);
+        }
+
+        if (audioTrack) {
             setPeerConnectionTrack(peerId, audioTrack);
         }
     }
@@ -211,27 +214,19 @@ export function useWebRTC(
     }
 
     watch(localStream, (stream, previousStream) => {
+        if (previousStream) {
+            previousStream.onaddtrack = null;
+            previousStream.onremovetrack = null;
+        }
+
         if (stream) {
-            stream.addEventListener('addtrack', syncLocalStreamWithPeers);
-            stream.addEventListener('removetrack', syncLocalStreamWithPeers);
+            stream.onaddtrack = syncLocalStreamWithPeers;
+            stream.onremovetrack = syncLocalStreamWithPeers;
 
             syncLocalStreamWithPeers();
-
-            return;
+        } else {
+            unbindLocalStreamFromAllPeers();
         }
-
-        if (previousStream) {
-            previousStream.removeEventListener(
-                'addtrack',
-                syncLocalStreamWithPeers
-            );
-            previousStream.removeEventListener(
-                'removetrack',
-                syncLocalStreamWithPeers
-            );
-        }
-
-        unbindLocalStreamFromAllPeers();
     });
 
     onBeforeUnmount(disconnectFromAllPeers);
