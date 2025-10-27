@@ -8,16 +8,6 @@ export function useVolumeLevel(stream: Ref<MediaStream | undefined>) {
     let source: MediaStreamAudioSourceNode | null = null;
     let analyser: AnalyserNode | null = null;
 
-    function stopRecording() {
-        analyser?.disconnect();
-        source?.disconnect();
-
-        analyser = null;
-        source = null;
-
-        volume.value = 0;
-    }
-
     function updateVolume(pcmData: Float32Array<ArrayBuffer>) {
         if (analyser) {
             let sumSquares = 0.0;
@@ -52,6 +42,16 @@ export function useVolumeLevel(stream: Ref<MediaStream | undefined>) {
         const pcmData = new Float32Array(analyser.fftSize);
 
         updateVolume(pcmData);
+    }
+
+    function stopRecording() {
+        analyser?.disconnect();
+        source?.disconnect();
+
+        analyser = null;
+        source = null;
+
+        volume.value = 0;
     }
 
     watch(
