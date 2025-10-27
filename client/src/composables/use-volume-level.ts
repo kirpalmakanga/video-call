@@ -18,6 +18,27 @@ export function useVolumeLevel(stream: Ref<MediaStream | undefined>) {
         volume.value = 0;
     }
 
+    function updateVolume(pcmData: Float32Array<ArrayBuffer>) {
+        if (analyser) {
+            let sumSquares = 0.0;
+
+            analyser.getFloatTimeDomainData(pcmData);
+
+            for (const amplitude of pcmData) {
+                sumSquares += amplitude * amplitude;
+            }
+
+            const v = Math.min(
+                200 * Math.sqrt(sumSquares / pcmData.length),
+                100
+            );
+
+            volume.value = v > 100 ? 100 : v;
+
+            requestAnimationFrame(() => updateVolume(pcmData));
+        }
+    }
+
     function startRecording() {
         if (analyser || !stream.value) {
             return;
@@ -30,28 +51,7 @@ export function useVolumeLevel(stream: Ref<MediaStream | undefined>) {
 
         const pcmData = new Float32Array(analyser.fftSize);
 
-        function onFrame() {
-            if (analyser) {
-                let sumSquares = 0.0;
-
-                analyser.getFloatTimeDomainData(pcmData);
-
-                for (const amplitude of pcmData) {
-                    sumSquares += amplitude * amplitude;
-                }
-
-                const v = Math.min(
-                    200 * Math.sqrt(sumSquares / pcmData.length),
-                    100
-                );
-
-                volume.value = v > 100 ? 100 : v;
-
-                requestAnimationFrame(onFrame);
-            }
-        }
-
-        requestAnimationFrame(onFrame);
+        updateVolume(pcmData);
     }
 
     watch(
