@@ -1,0 +1,5 @@
+api.vcall.local {
+	encode gzip
+
+	reverse_proxy localhost:5174
+}

@@ -1,12 +1,14 @@
 {
     "name": "video-call",
-    "private": true,
     "version": "0.0.0",
+    "private": true,
     "type": "module",
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "caddy:run": "caddy run",
+        "caddy:reload": "caddy reload"
     },
     "dependencies": {
         "@iconify-json/ic": "^1.2.4",

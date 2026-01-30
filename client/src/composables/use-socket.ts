@@ -1,10 +1,4 @@
-import {
-    computed,
-    onBeforeMount,
-    onBeforeUnmount,
-    onUnmounted,
-    watch
-} from 'vue';
+import { computed, onBeforeMount, onBeforeUnmount, onUnmounted, watch } from 'vue';
 import { defineStore, storeToRefs } from 'pinia';
 import { useWebSocket } from '@vueuse/core';
 import { useAuthStore } from './store/use-auth-store';
@@ -19,9 +13,7 @@ export const useSocketStore = defineStore('socket', () => {
     const { refreshAccessToken } = authStore;
     const { accessToken } = storeToRefs(authStore);
 
-    const socketUrl = computed(
-        () => `${VITE_SOCKET_URI}/_ws?token=${accessToken.value}`
-    );
+    const socketUrl = computed(() => `${VITE_SOCKET_URI}?token=${accessToken.value}`);
 
     const { ws, send, open, close } = useWebSocket(socketUrl, {
         immediate: false,
@@ -112,8 +104,7 @@ export const useSocketStore = defineStore('socket', () => {
 });
 
 export function useSocket() {
-    const { on, off, send, increaseInstancesCount, decreaseInstancesCount } =
-        useSocketStore();
+    const { on, off, send, increaseInstancesCount, decreaseInstancesCount } = useSocketStore();
 
     const subscriptions = new Map<ServerToClientEventId, Function>();
 
@@ -163,16 +154,10 @@ export function useSocket() {
     onUnmounted(decreaseInstancesCount);
 
     return {
-        emit<E extends ClientToServerEventId>(
-            event: E,
-            payload: ClientToServerEventPayload<E>
-        ) {
+        emit<E extends ClientToServerEventId>(event: E, payload: ClientToServerEventPayload<E>) {
             send(event, payload);
         },
-        subscribe<E extends ServerToClientEventId>(
-            event: E,
-            callback: ServerToClientEvents[E]
-        ) {
+        subscribe<E extends ServerToClientEventId>(event: E, callback: ServerToClientEvents[E]) {
             addSubscription(event, callback);
         },
         unsubscribe(event?: ServerToClientEventId) {
