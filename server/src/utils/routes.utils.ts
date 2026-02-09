@@ -13,11 +13,6 @@ export function bindRoutes(
     { namespace, routes }: { namespace?: string; routes: RouteConfig[] }
 ) {
     for (const { method, path, handler, options } of routes) {
-        app.on(
-            method,
-            namespace ? join('/', namespace, path) : path,
-            handler,
-            options
-        );
+        app.on(method, namespace ? join('/', namespace, path) : path, handler, options);
     }
 }

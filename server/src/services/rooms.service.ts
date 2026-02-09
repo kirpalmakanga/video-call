@@ -4,10 +4,7 @@ export function createRoom(data: { name: string; creatorId: string }) {
     return db.room.create({ data });
 }
 
-export function updateRoom(
-    where: { id: string; creatorId: string },
-    data: { name: string }
-) {
+export function updateRoom(where: { id: string; creatorId: string }, data: { name: string }) {
     return db.room.update({ where: where, data });
 }
 

@@ -43,17 +43,12 @@ export function getUserByEmail(email: string) {
     });
 }
 
-export function setUserVerificationToken(
-    email: string,
-    verificationToken: string | null
-) {
+export function setUserVerificationToken(email: string, verificationToken: string | null) {
     return db.user.update({
         where: { email },
         data: {
             verificationToken,
-            verificationTokenExpiry: verificationToken
-                ? addHours(new Date(), 24)
-                : null
+            verificationTokenExpiry: verificationToken ? addHours(new Date(), 24) : null
         }
     });
 }

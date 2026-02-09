@@ -1,10 +1,7 @@
 import { compare, hash } from 'bcryptjs';
 import { createHash, randomBytes } from 'crypto';
 
-export function validatePassword(
-    targetPassword: string,
-    storedPassword: string
-) {
+export function validatePassword(targetPassword: string, storedPassword: string) {
     return compare(targetPassword, storedPassword);
 }
 

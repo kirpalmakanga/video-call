@@ -8,9 +8,6 @@ const nunjucksEnv = nunjucks.configure(resolve(__dirname, '../views'), {
     autoescape: true
 });
 
-export function renderView(
-    templatePath: string,
-    context?: Record<string, unknown>
-) {
+export function renderView(templatePath: string, context?: Record<string, unknown>) {
     return nunjucksEnv.render(`${templatePath}.njk`, context);
 }

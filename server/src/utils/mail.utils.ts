@@ -1,16 +1,8 @@
 import { createTransport } from 'nodemailer';
 import { renderView } from './views.utils';
 
-const {
-    API_URI,
-    CLIENT_URI,
-    SMTP_HOST,
-    SMTP_PORT,
-    SMTP_SECURE,
-    SMTP_USER,
-    SMTP_PASS,
-    MAIL_FROM
-} = process.env;
+const { API_URI, CLIENT_URI, SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, MAIL_FROM } =
+    process.env;
 
 const transporter = createTransport({
     host: SMTP_HOST,
@@ -45,10 +37,7 @@ export async function sendMail({ to, subject, template, context }: MailConfig) {
     }
 }
 
-export function sendVerificationEmail(
-    email: string,
-    verificationToken: string
-) {
+export function sendVerificationEmail(email: string, verificationToken: string) {
     return sendMail({
         to: email,
         subject: 'Account verification',
