@@ -1,9 +1,6 @@
 import { readValidatedBody, type H3Event } from 'h3';
 import { getUserById, updateUser } from '../services/users.service';
-import {
-    updateProfileSchema,
-    type UpdateProfileFormData
-} from '../validation/user.validation';
+import { updateProfileSchema, type UpdateProfileFormData } from '../validation/user.validation';
 import { omit } from '../utils/helpers.utils';
 import { notFound } from '../utils/response.utils';
 

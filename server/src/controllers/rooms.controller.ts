@@ -1,9 +1,4 @@
-import {
-    getRouterParams,
-    getValidatedRouterParams,
-    readValidatedBody,
-    type H3Event
-} from 'h3';
+import { getRouterParams, getValidatedRouterParams, readValidatedBody, type H3Event } from 'h3';
 import {
     createRoom,
     updateRoom,
@@ -12,10 +7,7 @@ import {
     getUserCreatedRooms
 } from '../services/rooms.service';
 import { notFound } from '../utils/response.utils';
-import {
-    createRoomSchema,
-    toggleFavoriteRoomSchema
-} from '../validation/rooms.validation';
+import { createRoomSchema, toggleFavoriteRoomSchema } from '../validation/rooms.validation';
 import {
     addFavorite,
     checkIfFavoriteExists,
@@ -95,10 +87,7 @@ export async function getFavorite(event: H3Event) {
 
 export async function toggleFavorite(event: H3Event) {
     const { userId } = event.context;
-    const { roomId } = await getValidatedRouterParams(
-        event,
-        toggleFavoriteRoomSchema
-    );
+    const { roomId } = await getValidatedRouterParams(event, toggleFavoriteRoomSchema);
 
     const hasFavorite = await checkIfFavoriteExists(roomId, userId);
 
