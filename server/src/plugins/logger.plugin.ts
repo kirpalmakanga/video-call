@@ -20,9 +20,7 @@ export const logger = definePlugin((app, options?: LoggerOptions) => {
     if (errors) {
         app.use(
             onError((error, event) => {
-                console.error(
-                    `[${event.req.method}] ${event.url.pathname} !! ${error.message}`
-                );
+                console.error(`[${event.req.method}] ${event.url.pathname} !! ${error.message}`);
 
                 if (!isProduction()) {
                     console.error(error.stack);

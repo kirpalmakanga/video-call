@@ -19,10 +19,7 @@ import {
 import { generateTokens } from '../utils/jwt.utils';
 import { createVerificationToken, validatePassword } from '../utils/auth.utils';
 import { omit } from '../utils/helpers.utils';
-import {
-    sendPasswordResetEmail,
-    sendVerificationEmail
-} from '../utils/mail.utils';
+import { sendPasswordResetEmail, sendVerificationEmail } from '../utils/mail.utils';
 import { badRequest, forbidden, unauthorized } from '../utils/response.utils';
 import {
     emailSchema,
@@ -83,9 +80,7 @@ interface SendVerificationRequest {
     body: { email: string };
 }
 
-export async function requestVerificationEmail(
-    event: H3Event<SendVerificationRequest>
-) {
+export async function requestVerificationEmail(event: H3Event<SendVerificationRequest>) {
     const { email } = await readValidatedBody(event, emailSchema);
     const user = await getUserByEmail(email);
 
@@ -182,24 +177,21 @@ interface UpdatePasswordRequest {
 }
 
 export async function updatePassword(event: H3Event<UpdatePasswordRequest>) {
-    const { currentPassword, password } = await readValidatedBody(
-        event,
-        updatePasswordSchema
-    );
+    const {
+        context: { userId }
+    } = event;
+    const { currentPassword, password } = await readValidatedBody(event, updatePasswordSchema);
 
-    const user = await getUserById(event.context.userId);
+    const user = await getUserById(userId as string);
 
     if (!user) {
         return badRequest('Unknown user.');
     }
 
-    const isValidPassword = await validatePassword(
-        currentPassword,
-        user.password
-    );
+    const isValidPassword = await validatePassword(currentPassword, user.password);
 
     if (isValidPassword) {
-        await updateUserPassword(event.context.userId, password);
+        await updateUserPassword(userId as string, password);
     } else {
         forbidden('Invalid current password.');
     }
@@ -209,9 +201,7 @@ interface PasswordResetRequest {
     body: { email: string };
 }
 
-export async function requestPasswordReset(
-    event: H3Event<PasswordResetRequest>
-) {
+export async function requestPasswordReset(event: H3Event<PasswordResetRequest>) {
     const { email } = await readValidatedBody(event, emailSchema);
     const user = await getUserByEmail(email);
 
@@ -230,9 +220,7 @@ interface ResetPasswordRequest {
     body: ResetPasswordSchema;
 }
 
-export async function updatePasswordWithResetToken(
-    event: H3Event<ResetPasswordRequest>
-) {
+export async function updatePasswordWithResetToken(event: H3Event<ResetPasswordRequest>) {
     const { resetToken } = await getRouterParams(event);
     const { password } = await readValidatedBody(event, resetPasswordSchema);
 
