@@ -108,19 +108,6 @@ export function useSocket() {
 
     const subscriptions = new Map<ServerToClientEventId, Function>();
 
-    function addSubscription(
-        event: ServerToClientEventId,
-        callback: ServerToClientEvents[ServerToClientEventId]
-    ) {
-        if (subscriptions.has(event)) {
-            throw new Error(`Subscription for event "${event}" already exists`);
-        } else {
-            on(event, callback);
-
-            subscriptions.set(event, () => off(event, callback));
-        }
-    }
-
     function removeSubscription(event: ServerToClientEventId) {
         const unsubscribe = subscriptions.get(event);
 
@@ -158,7 +145,13 @@ export function useSocket() {
             send(event, payload);
         },
         subscribe<E extends ServerToClientEventId>(event: E, callback: ServerToClientEvents[E]) {
-            addSubscription(event, callback);
+            if (subscriptions.has(event)) {
+                throw new Error(`Subscription for event "${event}" already exists`);
+            } else {
+                on(event, callback);
+
+                subscriptions.set(event, () => off(event, callback));
+            }
         },
         unsubscribe(event?: ServerToClientEventId) {
             if (event) {
