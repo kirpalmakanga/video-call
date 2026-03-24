@@ -13,15 +13,13 @@ export async function generateAccessToken(user: User) {
     assertIsDefined(JWT_ISSUER);
     assertIsDefined(JWT_AUDIENCE);
 
-    const jwt = await new SignJWT({ id: user.id })
+    return await new SignJWT({ id: user.id })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
         .setExpirationTime(JWT_DURATION)
         .setIssuer(JWT_ISSUER)
         .setAudience(JWT_AUDIENCE)
         .sign(getSecretKey(JWT_ACCESS_SECRET));
-
-    return jwt;
 }
 
 export function generateRefreshToken() {
