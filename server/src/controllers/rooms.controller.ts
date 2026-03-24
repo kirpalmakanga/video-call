@@ -4,7 +4,7 @@ import {
     updateRoom,
     getAllRooms,
     getRoomById,
-    getUserCreatedRooms
+    getRoomsByUserId
 } from '../services/rooms.service';
 import { notFound } from '../utils/response.utils';
 import { createRoomSchema, toggleFavoriteRoomSchema } from '../validation/rooms.validation';
@@ -12,7 +12,7 @@ import {
     addFavorite,
     checkIfFavoriteExists,
     deleteFavorite,
-    getUserFavoriteRooms,
+    getFavoriteRoomsByUserId,
     getUserFavorites
 } from '../services/favorite.service';
 
@@ -71,13 +71,13 @@ export async function update(event: H3Event<UpdateRoomRequest>) {
 }
 
 export async function getCreated(event: H3Event) {
-    const items = await getUserCreatedRooms(event.context.userId);
+    const items = await getRoomsByUserId(event.context.userId);
 
     return items.map((room) => ({ ...room, isOwned: true }));
 }
 
 export async function getFavorite(event: H3Event) {
-    const items = await getUserFavoriteRooms(event.context.userId);
+    const items = await getFavoriteRoomsByUserId(event.context.userId);
 
     return items.map(({ room }) => ({
         ...room,

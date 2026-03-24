@@ -182,7 +182,7 @@ export async function updatePassword(event: H3Event<UpdatePasswordRequest>) {
     } = event;
     const { currentPassword, password } = await readValidatedBody(event, updatePasswordSchema);
 
-    const user = await getUserById(userId as string);
+    const user = await getUserById(userId);
 
     if (!user) {
         return badRequest('Unknown user.');
@@ -191,7 +191,7 @@ export async function updatePassword(event: H3Event<UpdatePasswordRequest>) {
     const isValidPassword = await validatePassword(currentPassword, user.password);
 
     if (isValidPassword) {
-        await updateUserPassword(userId as string, password);
+        await updateUserPassword(userId, password);
     } else {
         forbidden('Invalid current password.');
     }

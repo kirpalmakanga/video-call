@@ -24,7 +24,7 @@ export function getAllRooms() {
     });
 }
 
-export function getUserCreatedRooms(creatorId: string) {
+export function getRoomsByUserId(creatorId: string) {
     return db.room.findMany({
         where: { creatorId },
         select: {

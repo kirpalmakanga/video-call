@@ -8,7 +8,7 @@ export async function getUserFavorites(userId: string) {
     return items.map(({ roomId }) => roomId);
 }
 
-export async function getUserFavoriteRooms(userId: string) {
+export async function getFavoriteRoomsByUserId(userId: string) {
     return db.favorite.findMany({
         where: { userId },
         select: {
@@ -34,7 +34,7 @@ export async function checkIfFavoriteExists(roomId: string, userId: string) {
         where: { roomId, userId }
     });
 
-    return !!count;
+    return count > 0;
 }
 
 export async function addFavorite(roomId: string, userId: string) {
