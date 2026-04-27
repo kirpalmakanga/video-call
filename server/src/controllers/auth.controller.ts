@@ -35,7 +35,17 @@ import {
 const { CLIENT_URI } = process.env;
 
 async function generateUserTokens(user: User) {
-    const tokens = await generateTokens(omit(user, 'password'));
+    const tokens = await generateTokens(
+        omit(
+            user,
+            'password',
+            'status',
+            'verificationToken',
+            'verificationTokenExpiry',
+            'resetToken',
+            'resetTokenExpiry'
+        )
+    );
 
     await addRefreshTokenToWhitelist({
         refreshToken: tokens.refreshToken,
