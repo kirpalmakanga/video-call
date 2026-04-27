@@ -2,7 +2,7 @@ export function isProduction() {
     return process.env.NODE_ENV === 'production';
 }
 
-export function update<T extends object>(
+export function update<T extends Record<string, unknown>>(
     arr: T[],
     predicate: (item: T, index: number, array: T[]) => boolean,
     payload: Partial<T>
@@ -16,7 +16,10 @@ export function update<T extends object>(
     return arr;
 }
 
-export function omit<T extends object, K extends keyof T>(base: T, ...keys: K[]): Omit<T, K> {
+export function omit<T extends Record<string, unknown>, K extends keyof T>(
+    base: T,
+    ...keys: K[]
+): Omit<T, K> {
     if (keys.length) {
         const result = { ...base };
 
@@ -33,9 +36,9 @@ export function addHours(date: Date, hours: number) {
 }
 
 export function getUrlParams(url: string) {
-    const urlObject = new URL(url);
+    const { searchParams } = new URL(url);
 
-    return Object.fromEntries(urlObject.searchParams.entries());
+    return Object.fromEntries(searchParams.entries());
 }
 
 export function mergeHeaders(...sources: HeadersInit[]) {
