@@ -1,4 +1,4 @@
-export function omit<T extends object, K extends keyof T>(
+export function omit<T extends Record<string, unknown>, K extends keyof T>(
     base: T,
     ...keys: K[]
 ): Omit<T, K> {
@@ -13,7 +13,7 @@ export function omit<T extends object, K extends keyof T>(
     return base;
 }
 
-export function pick<T extends object, K extends keyof T>(
+export function pick<T extends Record<string, unknown>, K extends keyof T>(
     base: T,
     ...keys: K[]
 ): Pick<T, K> {
@@ -24,7 +24,7 @@ export function pick<T extends object, K extends keyof T>(
     return Object.fromEntries(entries);
 }
 
-export function mergeByKey<T extends object, K extends keyof T>(
+export function mergeByKey<T extends Record<string, unknown>, K extends keyof T>(
     arr1: T[],
     arr2: T[],
     key: K
@@ -34,7 +34,7 @@ export function mergeByKey<T extends object, K extends keyof T>(
     for (const item of arr2) {
         const itemKey = item[key];
 
-        temp.set(itemKey, { ...(temp.get(itemKey) || {}), ...item });
+        temp.set(itemKey, { ...temp.get(itemKey), ...item });
     }
 
     return [...temp.values()];
@@ -81,9 +81,6 @@ export function nextFrame() {
     return new Promise((resolve) => requestAnimationFrame(resolve));
 }
 
-export function keepInRange(
-    number: number,
-    [min, max]: [min: number, max: number]
-) {
+export function keepInRange(number: number, [min, max]: [min: number, max: number]) {
     return Math.min(max, Math.max(min, number));
 }
