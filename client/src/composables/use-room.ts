@@ -12,10 +12,7 @@ interface RoomConfig {
     isAudioEnabled: Ref<boolean>;
 }
 
-export function useRoom(
-    roomId: string,
-    { localStream, displayName, isVideoEnabled, isAudioEnabled }: RoomConfig
-) {
+export function useRoom(roomId: string, { localStream, displayName, isAudioEnabled }: RoomConfig) {
     const isOnline = useOnline();
 
     const { emit, subscribe } = useSocket();
@@ -139,12 +136,9 @@ export function useRoom(
         processAnswer(senderParticipantId, answer);
     });
 
-    subscribe(
-        'incomingIceCandidate',
-        ({ senderParticipantId, iceCandidate }) => {
-            addIceCandidate(senderParticipantId, iceCandidate);
-        }
-    );
+    subscribe('incomingIceCandidate', ({ senderParticipantId, iceCandidate }) => {
+        addIceCandidate(senderParticipantId, iceCandidate);
+    });
 
     subscribe('participantSynced', setParticipant);
 
