@@ -12,13 +12,6 @@ declare global {
         updatedAt: Date;
     }
 
-    interface User {
-        id: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-    }
-
     interface RTCSessionDescriptionInit {
         sdp: string;
         type: string;
@@ -53,18 +46,9 @@ declare global {
 
     /** Socket: */
     interface ClientToServerEvents {
-        requestConnection: (payload: {
-            roomId: string;
-            participantId: string;
-        }) => void;
-        connectParticipant: (payload: {
-            roomId: string;
-            participantId: string;
-        }) => void;
-        disconnectParticipant: (payload: {
-            roomId: string;
-            participantId: string;
-        }) => void;
+        requestConnection: (payload: { roomId: string; participantId: string }) => void;
+        connectParticipant: (payload: { roomId: string; participantId: string }) => void;
+        disconnectParticipant: (payload: { roomId: string; participantId: string }) => void;
         offer: (payload: {
             roomId: string;
             participantId: string;
@@ -83,16 +67,14 @@ declare global {
             targetParticipantId: string;
             iceCandidate: RTCIceCandidate;
         }) => void;
-        syncParticipant: (payload: {
-            roomId: string;
-            participant: Participant;
-        }) => void;
+        syncParticipant: (payload: { roomId: string; participant: Participant }) => void;
     }
 
     type ClientToServerEventId = keyof ClientToServerEvents;
 
-    type ClientToServerEventPayload<K extends ClientToServerEventId> =
-        Parameters<ClientToServerEvents[K]>[0];
+    type ClientToServerEventPayload<K extends ClientToServerEventId> = Parameters<
+        ClientToServerEvents[K]
+    >[0];
 
     interface ServerToClientEvents {
         connect: () => void;
@@ -117,6 +99,7 @@ declare global {
 
     type ServerToClientEventId = keyof ServerToClientEvents;
 
-    type ServerToClientEventPayload<K extends ServerToClientEventId> =
-        Parameters<ServerToClientEvents[K]>[0];
+    type ServerToClientEventPayload<K extends ServerToClientEventId> = Parameters<
+        ServerToClientEvents[K]
+    >[0];
 }
