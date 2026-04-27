@@ -45,28 +45,33 @@ declare global {
     }
 
     /** Socket: */
+    interface BaseEventPayload {
+        roomId: string;
+        participantId: string;
+    }
+
     interface ClientToServerEvents {
-        requestConnection: (payload: { roomId: string; participantId: string }) => void;
-        connectParticipant: (payload: { roomId: string; participantId: string }) => void;
-        disconnectParticipant: (payload: { roomId: string; participantId: string }) => void;
-        offer: (payload: {
-            roomId: string;
-            participantId: string;
-            targetParticipantId: string;
-            offer: RTCSessionDescriptionInit;
-        }) => void;
-        answer: (payload: {
-            roomId: string;
-            participantId: string;
-            targetParticipantId: string;
-            answer: RTCSessionDescriptionInit;
-        }) => void;
-        iceCandidate: (payload: {
-            roomId: string;
-            participantId: string;
-            targetParticipantId: string;
-            iceCandidate: RTCIceCandidate;
-        }) => void;
+        requestConnection: (payload: BaseEventPayload) => void;
+        connectParticipant: (payload: BaseEventPayload) => void;
+        disconnectParticipant: (payload: BaseEventPayload) => void;
+        offer: (
+            payload: BaseEventPayload & {
+                targetParticipantId: string;
+                offer: RTCSessionDescriptionInit;
+            }
+        ) => void;
+        answer: (
+            payload: BaseEventPayload & {
+                targetParticipantId: string;
+                answer: RTCSessionDescriptionInit;
+            }
+        ) => void;
+        iceCandidate: (
+            payload: BaseEventPayload & {
+                targetParticipantId: string;
+                iceCandidate: RTCIceCandidate;
+            }
+        ) => void;
         syncParticipant: (payload: { roomId: string; participant: Participant }) => void;
     }
 
