@@ -19,12 +19,7 @@ const formState = reactive<FormSchema>({
     name: ''
 });
 
-const {
-    mutate: createRoom,
-    status,
-    asyncStatus,
-    error
-} = useCreateRoomMutation();
+const { mutate: createRoom, status, asyncStatus, error } = useCreateRoomMutation();
 
 const onSubmit = useDebounceFn(({ data }: FormSubmitEvent<FormSchema>) => {
     createRoom(data);
@@ -48,8 +43,7 @@ watch(status, (value) => {
             toast.add({
                 title: 'Failed to create room',
                 description:
-                    error.value?.response?.data.error ||
-                    `Couldn't create room, please try later.`,
+                    error.value?.response?.data.error || `Couldn't create room, please try later.`,
                 color: 'error'
             });
             break;
@@ -58,16 +52,8 @@ watch(status, (value) => {
 </script>
 
 <template>
-    <UModal
-        v-model:open="isModalOpen"
-        title="Create room"
-        :ui="{ content: 'max-w-sm' }"
-    >
-        <UButton
-            icon="i-mdi-plus-circle-outline"
-            size="xs"
-            :disabled="asyncStatus === 'pending'"
-        >
+    <UModal v-model:open="isModalOpen" title="Create room" :ui="{ content: 'max-w-sm' }">
+        <UButton icon="i-mdi-plus-circle-outline" size="xs" :disabled="asyncStatus === 'loading'">
             Create room
         </UButton>
 
@@ -78,23 +64,11 @@ watch(status, (value) => {
                 :state="formState"
                 @submit="onSubmit"
             >
-                <UFormField
-                    label="Name"
-                    :disabled="asyncStatus === 'pending'"
-                    name="name"
-                >
-                    <UInput
-                        class="w-full"
-                        variant="soft"
-                        v-model="formState.name"
-                    />
+                <UFormField label="Name" :disabled="asyncStatus === 'loading'" name="name">
+                    <UInput class="w-full" variant="soft" v-model="formState.name" />
                 </UFormField>
 
-                <UButton
-                    class="self-end"
-                    icon="i-mdi-plus-circle-outline"
-                    type="submit"
-                >
+                <UButton class="self-end" icon="i-mdi-plus-circle-outline" type="submit">
                     Create
                 </UButton>
             </UForm>
