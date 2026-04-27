@@ -3,10 +3,7 @@ import { reactive } from 'vue';
 import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
 import EmailField from '../form/EmailField.vue';
 import { requestPasswordReset } from '../../services/api';
-import {
-    forgotPasswordSchema,
-    type ForgotPasswordFormData
-} from '../../utils/validation';
+import { forgotPasswordSchema, type ForgotPasswordFormData } from '../../utils/validation';
 
 const toast = useToast();
 
@@ -14,9 +11,7 @@ const state = reactive<ForgotPasswordFormData>({
     email: ''
 });
 
-async function onSubmit({
-    data: { email }
-}: FormSubmitEvent<ForgotPasswordFormData>) {
+async function onSubmit({ data: { email } }: FormSubmitEvent<ForgotPasswordFormData>) {
     try {
         await requestPasswordReset(email);
 
@@ -28,8 +23,7 @@ async function onSubmit({
         toast.add({
             title: 'Error',
             description:
-                error?.response?.data.error ||
-                `Couldn't send reset link, please try later.`,
+                error?.response?.data.error || `Couldn't send reset link, please try later.`,
             color: 'error'
         });
     }

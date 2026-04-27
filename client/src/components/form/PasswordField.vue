@@ -22,14 +22,8 @@ const isPasswordVisible = ref<boolean>(false);
                     color="neutral"
                     variant="link"
                     size="sm"
-                    :icon="
-                        isPasswordVisible
-                            ? 'i-mdi-eye-off-outline'
-                            : 'i-mdi-eye-outline'
-                    "
-                    :aria-label="
-                        isPasswordVisible ? 'Hide password' : 'Show password'
-                    "
+                    :icon="isPasswordVisible ? 'i-mdi-eye-off-outline' : 'i-mdi-eye-outline'"
+                    :aria-label="isPasswordVisible ? 'Hide password' : 'Show password'"
                     :aria-pressed="isPasswordVisible"
                     aria-controls="password"
                     @click="isPasswordVisible = !isPasswordVisible"

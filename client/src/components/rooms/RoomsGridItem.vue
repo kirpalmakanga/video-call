@@ -18,9 +18,7 @@ const emit = defineEmits<{ 'toggle-favorite': [id: string] }>();
             class="flex flex-col items-center text-neutral-100 rounded transition-colors overflow-hidden"
             :to="`/room/${id}/setup`"
         >
-            <span
-                class="aspect-video bg-gray-900 flex items-center justify-center w-full"
-            >
+            <span class="aspect-video bg-gray-900 flex items-center justify-center w-full">
                 <UIcon class="size-8" name="i-mdi-account-group" />
             </span>
 
@@ -37,11 +35,7 @@ const emit = defineEmits<{ 'toggle-favorite': [id: string] }>();
 
         <UTooltip
             v-if="!isOwned"
-            :text="
-                isFavorite
-                    ? `Remove ${name} from favorites`
-                    : `Add ${name} to favorites`
-            "
+            :text="isFavorite ? `Remove ${name} from favorites` : `Add ${name} to favorites`"
         >
             <UButton
                 class="absolute top-3 right-3 rounded-full"

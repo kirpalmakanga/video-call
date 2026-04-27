@@ -1,10 +1,4 @@
-import {
-    definePlugin,
-    handleCors,
-    onError,
-    type CorsOptions,
-    type H3Event
-} from 'h3';
+import { definePlugin, handleCors, onError, type CorsOptions, type H3Event } from 'h3';
 import { mergeHeaders } from '../utils/helpers.utils';
 
 const corsResponseHeaderKeys = [
@@ -17,9 +11,7 @@ const corsResponseHeaderKeys = [
 
 function getCorsResponseHeaders(event: H3Event) {
     const headers = new Headers(
-        [...event.res.headers.entries()].filter(([key]) =>
-            corsResponseHeaderKeys.includes(key)
-        )
+        [...event.res.headers.entries()].filter(([key]) => corsResponseHeaderKeys.includes(key))
     );
     return headers;
 }

@@ -28,11 +28,7 @@ const currentItems = computed<Room[]>(() => {
 </script>
 
 <template>
-    <SearchForm
-        class="bg-gray-900 p-4 rounded mb-4"
-        label="Find a room"
-        v-model="search"
-    />
+    <SearchForm class="bg-gray-900 p-4 rounded mb-4" label="Find a room" v-model="search" />
 
     <RoomsGridSkeleton v-if="isPending" />
 

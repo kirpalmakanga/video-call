@@ -31,9 +31,7 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
 
 <template>
     <header class="bg-gray-900">
-        <div
-            class="container mx-auto flex items-center justify-between h-12 px-4"
-        >
+        <div class="container mx-auto flex items-center justify-between h-12 px-4">
             <div class="font-bold"><RouterLink to="/">VCall</RouterLink></div>
 
             <UDropdownMenu

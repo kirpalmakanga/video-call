@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
-import {
-    updatePasswordSchema,
-    type UpdatePasswordFormData
-} from '../../utils/validation';
+import { updatePasswordSchema, type UpdatePasswordFormData } from '../../utils/validation';
 import type { FormSubmitEvent } from '@nuxt/ui';
 import { updatePassword } from '../../services/api';
 import { useAuthStore } from '../../composables/store/use-auth-store';
@@ -30,8 +27,7 @@ async function onSubmit({ data }: FormSubmitEvent<UpdatePasswordFormData>) {
     } catch (error: any) {
         toast.add({
             title: 'Error',
-            description:
-                error?.response?.data.message || `Couldn't update password.`,
+            description: error?.response?.data.message || `Couldn't update password.`,
             color: 'error'
         });
     }
@@ -55,11 +51,7 @@ async function onSubmit({ data }: FormSubmitEvent<UpdatePasswordFormData>) {
             v-model="state.currentPassword"
         />
 
-        <PasswordField
-            label="New password"
-            name="password"
-            v-model="state.password"
-        />
+        <PasswordField label="New password" name="password" v-model="state.password" />
 
         <PasswordField
             label="Confirm new password"
@@ -67,11 +59,7 @@ async function onSubmit({ data }: FormSubmitEvent<UpdatePasswordFormData>) {
             v-model="state.confirmPassword"
         />
 
-        <UButton
-            class="self-end"
-            icon="i-mdi-content-save-outline"
-            type="submit"
-        >
+        <UButton class="self-end" icon="i-mdi-content-save-outline" type="submit">
             Save password
         </UButton>
     </UForm>

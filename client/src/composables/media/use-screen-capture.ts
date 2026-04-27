@@ -3,8 +3,7 @@ import { useDisplayMedia } from '@vueuse/core';
 import { assertIsDefined } from '../../../../utils/assert';
 
 export function useScreenCapture(stream: Ref<MediaStream | undefined>) {
-    const { stream: displayMediaStream, start: startDisplayMedia } =
-        useDisplayMedia();
+    const { stream: displayMediaStream, start: startDisplayMedia } = useDisplayMedia();
 
     const isSharingScreen = ref<boolean>(false);
     let sourceVideoTrack: MediaStreamTrack | null = null;
@@ -34,14 +33,10 @@ export function useScreenCapture(stream: Ref<MediaStream | undefined>) {
 
             await startDisplayMedia();
 
-            assertIsDefined(
-                displayMediaStream.value,
-                'Display media stream unavailable'
-            );
+            assertIsDefined(displayMediaStream.value, 'Display media stream unavailable');
 
             sourceVideoTrack = stream.value.getVideoTracks().at(0) || null;
-            screenVideoTrack =
-                displayMediaStream.value.getVideoTracks().at(0) || null;
+            screenVideoTrack = displayMediaStream.value.getVideoTracks().at(0) || null;
 
             if (sourceVideoTrack && screenVideoTrack) {
                 screenVideoTrack.onended = stop;
@@ -52,9 +47,7 @@ export function useScreenCapture(stream: Ref<MediaStream | undefined>) {
                 isSharingScreen.value = true;
             }
         } catch (error) {
-            console.error(
-                `useScreenCapture Error: ${(error as Error).message}`
-            );
+            console.error(`useScreenCapture Error: ${(error as Error).message}`);
         }
     }
 

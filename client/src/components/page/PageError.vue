@@ -10,9 +10,7 @@ const emit = defineEmits<{ reload: [e: void] }>();
             icon="i-mdi-alert-circle-outline"
             text="An error has occured, try to reload the page."
         >
-            <UButton icon="i-mdi-reload" @click="emit('reload')">
-                Reload
-            </UButton>
+            <UButton icon="i-mdi-reload" @click="emit('reload')">Reload</UButton>
         </Placeholder>
     </div>
 </template>

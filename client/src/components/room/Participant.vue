@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-    computed,
-    onBeforeUnmount,
-    onMounted,
-    ref,
-    useTemplateRef,
-    watch
-} from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import Contain from '../base/Contain.vue';
 import { useVolumeLevel } from '../../composables/use-volume-level';
 
@@ -53,19 +46,12 @@ onBeforeUnmount(() => setVideoSource(null));
         :aspect-ratio="aspectRatio"
         :style="useContentRatio ? { aspectRatio: aspectRatio } : null"
     >
-        <div
-            class="relative flex w-full h-full rounded overflow-hidden bg-gray-700 group"
-        >
+        <div class="relative flex w-full h-full rounded overflow-hidden bg-gray-700 group">
             <video
                 ref="video"
                 class="grow"
                 autoplay
-                :muted="
-                    isLocalParticipant ||
-                    isActiveParticipant ||
-                    isMuted ||
-                    isLocallyMuted
-                "
+                :muted="isLocalParticipant || isActiveParticipant || isMuted || isLocallyMuted"
                 @loadeddata="calculateAspectRatio"
             />
 
@@ -101,11 +87,7 @@ onBeforeUnmount(() => setVideoSource(null));
                     >
                         <UIcon
                             class="size-4"
-                            :name="
-                                isLocallyMuted
-                                    ? 'i-mdi-volume-off'
-                                    : 'i-mdi-volume'
-                            "
+                            :name="isLocallyMuted ? 'i-mdi-volume-off' : 'i-mdi-volume'"
                         />
                     </UButton>
                 </UTooltip>

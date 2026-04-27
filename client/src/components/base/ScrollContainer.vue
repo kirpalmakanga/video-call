@@ -20,8 +20,7 @@ const handleScroll = useThrottleFn((e: Event) => {
         return;
     }
 
-    const { scrollTop, scrollHeight, offsetHeight } =
-        currentTarget as HTMLDivElement;
+    const { scrollTop, scrollHeight, offsetHeight } = currentTarget as HTMLDivElement;
 
     if (scrollTop >= scrollHeight - offsetHeight) {
         emit('reached-bottom');

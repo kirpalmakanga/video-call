@@ -3,10 +3,9 @@ import { computed, onBeforeUnmount, watch } from 'vue';
 import { useVolumeLevel } from '../../composables/use-volume-level';
 import { useUserMedia } from '@vueuse/core';
 
-const props = withDefaults(
-    defineProps<{ isEnabled?: boolean; deviceId: string | null }>(),
-    { isEnabled: true }
-);
+const props = withDefaults(defineProps<{ isEnabled?: boolean; deviceId: string | null }>(), {
+    isEnabled: true
+});
 
 const { stream, start, stop } = useUserMedia({
     constraints: computed(() => ({
@@ -44,10 +43,7 @@ onBeforeUnmount(stop);
 
 <template>
     <div class="flex items-center gap-2">
-        <UIcon
-            class="size-5"
-            :name="isEnabled ? 'i-mdi-volume' : 'i-mdi-volume-off'"
-        />
+        <UIcon class="size-5" :name="isEnabled ? 'i-mdi-volume' : 'i-mdi-volume-off'" />
         <UProgress v-model="volume" />
     </div>
 </template>

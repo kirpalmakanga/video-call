@@ -42,9 +42,8 @@ async function requestEmail() {
             <h1 class="mb-6 font-bold text-center">Successfully registered</h1>
 
             <p class="text-sm mb-4">
-                A verification email has been sent to {{ email }}. If you
-                received it, you can close this window. Otherwise, click the
-                button below.
+                A verification email has been sent to {{ email }}. If you received it, you can close
+                this window. Otherwise, click the button below.
             </p>
 
             <UButton

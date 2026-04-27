@@ -2,7 +2,7 @@
 import { useCreatedRoomsQuery } from '../../services/queries';
 import SearchableRoomsGrid from './SearchableRoomsGrid.vue';
 
-const { data, isLoading, isPending,error, refetch } = useCreatedRoomsQuery();
+const { data, isLoading, isPending, error, refetch } = useCreatedRoomsQuery();
 </script>
 
 <template>

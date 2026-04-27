@@ -35,10 +35,7 @@ function usePeerConnections() {
     function getPeer(peerId: string) {
         const connection = peerConnections.get(peerId);
 
-        assertIsDefined(
-            connection,
-            'Peer connection does not exist or has already been closed.'
-        );
+        assertIsDefined(connection, 'Peer connection does not exist or has already been closed.');
 
         return connection;
     }
@@ -99,14 +96,8 @@ export function useWebRTC(
     localStream: Ref<MediaStream | undefined>,
     { onIceCandidate, onPeerDisconnection }: RTCOptions
 ) {
-    const {
-        createPeer,
-        removePeer,
-        getAllPeerIds,
-        getPeer,
-        hasPeer,
-        hasPeers
-    } = usePeerConnections();
+    const { createPeer, removePeer, getAllPeerIds, getPeer, hasPeer, hasPeers } =
+        usePeerConnections();
 
     const peerStreams = ref<{ [peerId: string]: MediaStream }>({});
 
@@ -130,9 +121,7 @@ export function useWebRTC(
 
             peerStreams.value = omit(peerStreams.value, peerId);
         } else {
-            console.warn(
-                'Peer stream does not exist or already has been removed.'
-            );
+            console.warn('Peer stream does not exist or already has been removed.');
         }
     }
 
@@ -144,17 +133,12 @@ export function useWebRTC(
         removePeer(peerId);
     }
 
-    function setPeerConnectionTrack(
-        peerId: string,
-        newTrack: MediaStreamTrack
-    ) {
+    function setPeerConnectionTrack(peerId: string, newTrack: MediaStreamTrack) {
         assertIsDefined(localStream.value, 'Local stream unavailable.');
 
         const connection = getPeer(peerId);
         const senders = connection.getSenders();
-        const sender = senders.find(
-            ({ track }) => track?.kind === newTrack.kind
-        );
+        const sender = senders.find(({ track }) => track?.kind === newTrack.kind);
 
         if (sender && sender.track?.id !== newTrack.id) {
             sender.replaceTrack(newTrack);
@@ -266,33 +250,25 @@ export function useWebRTC(
 
             const offer = await connection.createOffer();
 
-            await connection.setLocalDescription(
-                new RTCSessionDescription(offer)
-            );
+            await connection.setLocalDescription(new RTCSessionDescription(offer));
 
             return offer;
         },
         async createAnswer(peerId: string, offer: RTCSessionDescriptionInit) {
             const connection = getPeer(peerId);
 
-            await connection.setRemoteDescription(
-                new RTCSessionDescription(offer)
-            );
+            await connection.setRemoteDescription(new RTCSessionDescription(offer));
 
             const answer = await connection.createAnswer();
 
-            await connection.setLocalDescription(
-                new RTCSessionDescription(answer)
-            );
+            await connection.setLocalDescription(new RTCSessionDescription(answer));
 
             return answer;
         },
         async processAnswer(peerId: string, answer: RTCSessionDescriptionInit) {
             const connection = getPeer(peerId);
 
-            await connection.setRemoteDescription(
-                new RTCSessionDescription(answer)
-            );
+            await connection.setRemoteDescription(new RTCSessionDescription(answer));
         },
         async addIceCandidate(peerId: string, candidate: RTCIceCandidate) {
             const connection = getPeer(peerId);

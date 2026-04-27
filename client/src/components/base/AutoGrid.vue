@@ -1,10 +1,6 @@
 <script setup lang="ts" generic="T extends Record<string, unknown>">
 import { useTemplateRef } from 'vue';
-import {
-    useDebounceFn,
-    useMutationObserver,
-    useResizeObserver
-} from '@vueuse/core';
+import { useDebounceFn, useMutationObserver, useResizeObserver } from '@vueuse/core';
 
 interface GridLayout {
     width: number;
@@ -67,8 +63,7 @@ function calculateLayout(
 
 const recalculateLayout = useDebounceFn(() => {
     if (container.value) {
-        const { offsetHeight: containerHeight, offsetWidth: containerWidth } =
-            container.value;
+        const { offsetHeight: containerHeight, offsetWidth: containerWidth } = container.value;
 
         const { width, height } = calculateLayout(
             containerWidth,
@@ -77,14 +72,8 @@ const recalculateLayout = useDebounceFn(() => {
             props.itemAspectRatio
         );
 
-        container.value.style.setProperty(
-            '--autogrid-cell-width',
-            `${width}px`
-        );
-        container.value.style.setProperty(
-            '--autogrid-cell-height',
-            `${height}px`
-        );
+        container.value.style.setProperty('--autogrid-cell-width', `${width}px`);
+        container.value.style.setProperty('--autogrid-cell-height', `${height}px`);
     }
 });
 
@@ -97,10 +86,7 @@ useMutationObserver(container, recalculateLayout, {
 
 <template>
     <div class="relative overflow-hidden">
-        <ul
-            ref="container"
-            class="absolute inset-0 flex flex-wrap justify-center items-center"
-        >
+        <ul ref="container" class="absolute inset-0 flex flex-wrap justify-center items-center">
             <li
                 v-for="item in items"
                 :key="item[itemKey] as string"

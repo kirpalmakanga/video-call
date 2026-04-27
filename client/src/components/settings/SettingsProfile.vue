@@ -3,10 +3,7 @@ import { computed, reactive } from 'vue';
 import { useAuthStore } from '../../composables/store/use-auth-store';
 import { storeToRefs } from 'pinia';
 import { isEqual } from '../../utils/helpers';
-import {
-    updateProfileSchema,
-    type UpdateProfileFormData
-} from '../../utils/validation';
+import { updateProfileSchema, type UpdateProfileFormData } from '../../utils/validation';
 import type { FormSubmitEvent } from '@nuxt/ui';
 import TextField from '../form/TextField.vue';
 
@@ -38,8 +35,7 @@ async function onSubmit({ data }: FormSubmitEvent<UpdateProfileFormData>) {
     } catch (error: any) {
         toast.add({
             title: 'Failed signing in',
-            description:
-                error?.response?.data.error || `Couldn't save profile.`,
+            description: error?.response?.data.error || `Couldn't save profile.`,
             color: 'error'
         });
     }
@@ -55,19 +51,11 @@ async function onSubmit({ data }: FormSubmitEvent<UpdateProfileFormData>) {
         :state="state"
         @submit="onSubmit"
     >
-        <TextField
-            label="First name"
-            name="firstName"
-            v-model="state.firstName"
-        />
+        <TextField label="First name" name="firstName" v-model="state.firstName" />
 
         <TextField label="Last name" name="lastName" v-model="state.lastName" />
 
-        <UButton
-            class="self-end"
-            icon="i-mdi-content-save-outline"
-            type="submit"
-        >
+        <UButton class="self-end" icon="i-mdi-content-save-outline" type="submit">
             Save modifications
         </UButton>
     </UForm>

@@ -11,10 +11,9 @@ const mediaSettingsStore = useMediaSettingsStore();
 const { audioDeviceId, videoDeviceId, isAudioEnabled, isVideoEnabled } =
     storeToRefs(mediaSettingsStore);
 
-const { permissionGranted, videoInputs, audioInputs, ensurePermissions } =
-    useDevicesList({
-        requestPermissions: true
-    });
+const { permissionGranted, videoInputs, audioInputs, ensurePermissions } = useDevicesList({
+    requestPermissions: true
+});
 
 const isAwaitingPermissions = ref<boolean>(true);
 
@@ -27,21 +26,13 @@ const audioDeviceSelectItems = computed(() =>
 );
 
 function handleAudioDevicesListChange() {
-    if (
-        !audioInputs.value.some(
-            ({ deviceId }) => deviceId === audioDeviceId.value
-        )
-    ) {
+    if (!audioInputs.value.some(({ deviceId }) => deviceId === audioDeviceId.value)) {
         audioDeviceId.value = audioInputs.value[0]?.deviceId || '';
     }
 }
 
 function handleVideoDevicesListChange() {
-    if (
-        !videoInputs.value.some(
-            ({ deviceId }) => deviceId === videoDeviceId.value
-        )
-    ) {
+    if (!videoInputs.value.some(({ deviceId }) => deviceId === videoDeviceId.value)) {
         videoDeviceId.value = videoInputs.value[0]?.deviceId || '';
     }
 }
@@ -59,28 +50,15 @@ onMounted(async () => {
 <template>
     <SettingsSkeleton v-if="isAwaitingPermissions" />
 
-    <div
-        v-else-if="permissionGranted"
-        class="relative flex flex-col gap-4 text-gray-100"
-    >
+    <div v-else-if="permissionGranted" class="relative flex flex-col gap-4 text-gray-100">
         <UFormField label="Camera" :ui="{ label: 'font-bold' }">
-            <VideoPreview
-                class="rounded"
-                :is-enabled="isVideoEnabled"
-                :device-id="videoDeviceId"
-            />
+            <VideoPreview class="rounded" :is-enabled="isVideoEnabled" :device-id="videoDeviceId" />
             <div class="flex gap-2 items-center mt-2">
-                <UTooltip
-                    :text="
-                        isVideoEnabled ? 'Turn camera off' : 'Toggle camera on'
-                    "
-                >
+                <UTooltip :text="isVideoEnabled ? 'Turn camera off' : 'Toggle camera on'">
                     <UButton
                         variant="soft"
                         color="neutral"
-                        :icon="
-                            isVideoEnabled ? 'i-mdi-video' : 'i-mdi-video-off'
-                        "
+                        :icon="isVideoEnabled ? 'i-mdi-video' : 'i-mdi-video-off'"
                         @click="isVideoEnabled = !isVideoEnabled"
                     />
                 </UTooltip>
@@ -96,27 +74,14 @@ onMounted(async () => {
         </UFormField>
 
         <UFormField label="Microphone" :ui="{ label: 'font-bold' }">
-            <AudioPreview
-                :is-enabled="isAudioEnabled"
-                :device-id="audioDeviceId"
-            />
+            <AudioPreview :is-enabled="isAudioEnabled" :device-id="audioDeviceId" />
 
             <div class="flex gap-2 items-center mt-2">
-                <UTooltip
-                    :text="
-                        isAudioEnabled
-                            ? 'Disable microphone'
-                            : 'Enable microphone'
-                    "
-                >
+                <UTooltip :text="isAudioEnabled ? 'Disable microphone' : 'Enable microphone'">
                     <UButton
                         variant="soft"
                         color="neutral"
-                        :icon="
-                            isAudioEnabled
-                                ? 'i-mdi-microphone'
-                                : 'i-mdi-microphone-off'
-                        "
+                        :icon="isAudioEnabled ? 'i-mdi-microphone' : 'i-mdi-microphone-off'"
                         @click="isAudioEnabled = !isAudioEnabled"
                     />
                 </UTooltip>

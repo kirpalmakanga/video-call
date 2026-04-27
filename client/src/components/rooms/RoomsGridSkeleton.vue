@@ -1,7 +1,5 @@
 <template>
-    <div
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-    >
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <div class="rounded overflow-hidden shadow">
             <div class="aspect-video bg-gray-900"></div>
 

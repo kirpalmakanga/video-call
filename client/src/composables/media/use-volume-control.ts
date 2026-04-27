@@ -6,10 +6,7 @@ interface UseGainControlOptions {
 }
 
 function getAudioContext() {
-    if (
-        !window.currentAudioContext ||
-        window.currentAudioContext.state === 'closed'
-    ) {
+    if (!window.currentAudioContext || window.currentAudioContext.state === 'closed') {
         window.currentAudioContext = new AudioContext();
     }
 
@@ -32,9 +29,7 @@ export function useVolumeControl({ stream, volume }: UseGainControlOptions) {
         if (volume.value >= 0 && volume.value <= 100) {
             gainFilter.gain.value = volume.value / 100;
         } else {
-            console.error(
-                'useMediaStream error: volume value must be between 0 and 100'
-            );
+            console.error('useMediaStream error: volume value must be between 0 and 100');
         }
     }
 
@@ -52,8 +47,7 @@ export function useVolumeControl({ stream, volume }: UseGainControlOptions) {
         setGain();
 
         sourceAudioTrack = stream.getAudioTracks().at(0) || null;
-        controlledAudioTrack =
-            destination.stream.getAudioTracks().at(0) || null;
+        controlledAudioTrack = destination.stream.getAudioTracks().at(0) || null;
 
         if (sourceAudioTrack && controlledAudioTrack) {
             stream.removeTrack(sourceAudioTrack);

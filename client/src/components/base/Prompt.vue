@@ -32,17 +32,9 @@ function handleConfirm() {
 
         <template #footer>
             <div class="flex grow gap-2 justify-end">
-                <UButton
-                    color="neutral"
-                    :label="cancelText"
-                    @click="isOpen = false"
-                />
+                <UButton color="neutral" :label="cancelText" @click="isOpen = false" />
 
-                <UButton
-                    color="error"
-                    :label="confirmText"
-                    @click="handleConfirm"
-                />
+                <UButton color="error" :label="confirmText" @click="handleConfirm" />
             </div>
         </template>
     </UModal>

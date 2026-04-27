@@ -3,10 +3,9 @@ import { computed, onBeforeUnmount, useTemplateRef, watch } from 'vue';
 import Loader from './Loader.vue';
 import { useUserMedia } from '@vueuse/core';
 
-const props = withDefaults(
-    defineProps<{ isEnabled: boolean; deviceId: string | null }>(),
-    { isEnabled: true }
-);
+const props = withDefaults(defineProps<{ isEnabled: boolean; deviceId: string | null }>(), {
+    isEnabled: true
+});
 
 const video = useTemplateRef<HTMLVideoElement>('video');
 

@@ -5,10 +5,7 @@ import { getUrlParams } from './utils/helpers.utils';
 import { authenticate } from './utils/jwt.utils';
 
 type EventHandlers = {
-    [K in keyof ClientToServerEvents]: (
-        payload: ClientToServerEventPayload<K>,
-        peer: Peer
-    ) => void;
+    [K in keyof ClientToServerEvents]: (payload: ClientToServerEventPayload<K>, peer: Peer) => void;
 };
 
 const handlers: EventHandlers = {
@@ -56,10 +53,7 @@ const handlers: EventHandlers = {
             }
         });
     },
-    iceCandidate(
-        { roomId, participantId, targetParticipantId, ...payload },
-        peer
-    ) {
+    iceCandidate({ roomId, participantId, targetParticipantId, ...payload }, peer) {
         peer.publish(`participant:${targetParticipantId}:room:${roomId}`, {
             event: 'incomingIceCandidate',
             payload: {

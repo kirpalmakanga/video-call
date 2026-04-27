@@ -5,10 +5,7 @@ import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
 import PasswordField from '../form/PasswordField.vue';
 import { useAuthStore } from '../../composables/store/use-auth-store';
 import { resetPassword } from '../../services/api';
-import {
-    resetPasswordSchema,
-    type ResetPasswordFormData
-} from '../../utils/validation';
+import { resetPasswordSchema, type ResetPasswordFormData } from '../../utils/validation';
 
 const {
     query: { email, resetToken }
@@ -34,8 +31,7 @@ async function onSubmit({ data }: FormSubmitEvent<ResetPasswordFormData>) {
         toast.add({
             title: 'Error',
             description:
-                error?.response?.data.error ||
-                `Couldn't log in, verify your email and password.`,
+                error?.response?.data.error || `Couldn't log in, verify your email and password.`,
             color: 'error'
         });
     }
@@ -52,11 +48,7 @@ async function onSubmit({ data }: FormSubmitEvent<ResetPasswordFormData>) {
         <template #default="{ loading }">
             <input type="hidden" name="email" :value="email" />
 
-            <PasswordField
-                label="Password"
-                name="password"
-                v-model="state.password"
-            />
+            <PasswordField label="Password" name="password" v-model="state.password" />
 
             <PasswordField
                 label="Confirm password"

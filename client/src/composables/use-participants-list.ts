@@ -18,14 +18,10 @@ export function useParticipantsList() {
             }
         },
         removeParticipant(participantId: string) {
-            participants.value = participants.value.filter(
-                ({ id }) => id !== participantId
-            );
+            participants.value = participants.value.filter(({ id }) => id !== participantId);
         },
         toggleMuteParticipant(participantId: string) {
-            const participant = participants.value.find(
-                ({ id }) => id === participantId
-            );
+            const participant = participants.value.find(({ id }) => id === participantId);
 
             if (participant) {
                 participant.isLocallyMuted = !participant.isLocallyMuted;

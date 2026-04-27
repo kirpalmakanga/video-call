@@ -6,12 +6,6 @@ const model = defineModel<string>();
 
 <template>
     <UFormField :label="label" :name="name" :ui="{ label: 'font-bold' }">
-        <UInput
-            class="w-full"
-            icon="i-mdi-mail-ru"
-            variant="soft"
-            v-model="model"
-            type="email"
-        />
+        <UInput class="w-full" icon="i-mdi-mail-ru" variant="soft" v-model="model" type="email" />
     </UFormField>
 </template>

@@ -23,8 +23,7 @@ async function onSubmit({ data }: FormSubmitEvent<LoginFormData>) {
         toast.add({
             title: 'Failed signing in.',
             description:
-                error?.response?.data.error ||
-                `Couldn't log in, verify your email and password.`,
+                error?.response?.data.error || `Couldn't log in, verify your email and password.`,
             color: 'error'
         });
     }
@@ -32,27 +31,13 @@ async function onSubmit({ data }: FormSubmitEvent<LoginFormData>) {
 </script>
 
 <template>
-    <UForm
-        @submit="onSubmit"
-        :schema="loginSchema"
-        :state="state"
-        class="flex flex-col gap-4"
-    >
+    <UForm @submit="onSubmit" :schema="loginSchema" :state="state" class="flex flex-col gap-4">
         <template #default="{ loading }">
             <EmailField label="Email" name="email" v-model="state.email" />
 
-            <PasswordField
-                label="Password"
-                name="password"
-                v-model="state.password"
-            />
+            <PasswordField label="Password" name="password" v-model="state.password" />
 
-            <UButton
-                class="self-end"
-                type="submit"
-                icon="i-mdi-login"
-                :loading="loading"
-            >
+            <UButton class="self-end" type="submit" icon="i-mdi-login" :loading="loading">
                 {{ loading ? 'Signing in...' : 'Sign in' }}
             </UButton>
         </template>

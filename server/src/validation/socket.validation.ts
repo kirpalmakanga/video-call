@@ -25,35 +25,23 @@ const RTCSessionDescriptionInitSchema = object({
 
 export const offerSchema = object({
     roomId: string().uuid().required('Room ID is required'),
-    senderParticipantId: string()
-        .uuid()
-        .required('Sender participant ID is Required'),
-    targetParticipantId: string()
-        .uuid()
-        .required('Target participant ID is Required'),
+    senderParticipantId: string().uuid().required('Sender participant ID is Required'),
+    targetParticipantId: string().uuid().required('Target participant ID is Required'),
     offer: RTCSessionDescriptionInitSchema
 }).exact();
 
 export const answerSchema = object({
     roomId: string().uuid().required('Room ID is required'),
 
-    senderParticipantId: string()
-        .uuid()
-        .required('Sender participant ID is Required'),
-    targetParticipantId: string()
-        .uuid()
-        .required('Target participant ID is Required'),
+    senderParticipantId: string().uuid().required('Sender participant ID is Required'),
+    targetParticipantId: string().uuid().required('Target participant ID is Required'),
     answer: RTCSessionDescriptionInitSchema
 }).exact();
 
 export const iceCandidateSchema = object({
     roomId: string().uuid().required('Room ID is required'),
-    senderParticipantId: string()
-        .uuid()
-        .required('Sender participant ID is Required'),
-    targetParticipantId: string()
-        .uuid()
-        .required('Target participant ID is Required'),
+    senderParticipantId: string().uuid().required('Sender participant ID is Required'),
+    targetParticipantId: string().uuid().required('Target participant ID is Required'),
     sdpMLineIndex: number().required(),
     candidate: string().required()
 }).exact();

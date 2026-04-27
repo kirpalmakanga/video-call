@@ -2,9 +2,7 @@ import { object, ref, string, type InferType } from 'yup';
 
 export const loginSchema = object({
     email: string().email('Invalid email').required('Required'),
-    password: string()
-        .min(8, 'Must be at least 8 characters')
-        .required('Required')
+    password: string().min(8, 'Must be at least 8 characters').required('Required')
 }).exact();
 
 export type LoginFormData = InferType<typeof loginSchema>;
@@ -13,9 +11,7 @@ export const registerSchema = object({
     firstName: string().required('Required'),
     lastName: string().required('Required'),
     email: string().email('Invalid email').required('Required'),
-    password: string()
-        .min(8, 'Must be at least 8 characters')
-        .required('Required'),
+    password: string().min(8, 'Must be at least 8 characters').required('Required'),
     confirmPassword: string()
         .required('Required')
         .oneOf([ref('password')], 'Must match password')
@@ -50,9 +46,7 @@ export const forgotPasswordSchema = object({
 export type ForgotPasswordFormData = InferType<typeof forgotPasswordSchema>;
 
 export const resetPasswordSchema = object({
-    password: string()
-        .required('Required')
-        .min(8, 'Must be at least 8 characters'),
+    password: string().required('Required').min(8, 'Must be at least 8 characters'),
     confirmPassword: string()
         .required('Required')
         .oneOf([ref('password')], 'Must match new password')

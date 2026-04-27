@@ -6,11 +6,6 @@ const model = defineModel<string>();
 
 <template>
     <UFormField :label="label">
-        <UInput
-            class="w-full"
-            variant="soft"
-            placeholder="Room name"
-            v-model="model"
-        />
+        <UInput class="w-full" variant="soft" placeholder="Room name" v-model="model" />
     </UFormField>
 </template>

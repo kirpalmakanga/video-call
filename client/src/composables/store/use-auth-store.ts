@@ -6,10 +6,7 @@ import {
     refreshAccessToken,
     updateCurrentUserProfile
 } from '../../services/api';
-import type {
-    LoginFormData,
-    UpdateProfileFormData
-} from '../../utils/validation';
+import type { LoginFormData, UpdateProfileFormData } from '../../utils/validation';
 
 interface State {
     id: string;

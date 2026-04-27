@@ -13,12 +13,7 @@ const {
     params: { roomId }
 } = useRoute();
 
-const {
-    data: room,
-    isLoading,
-    error,
-    refetch
-} = useRoomQuery(roomId as string);
+const { data: room, isLoading, error, refetch } = useRoomQuery(roomId as string);
 
 const isOnline = useOnline();
 </script>

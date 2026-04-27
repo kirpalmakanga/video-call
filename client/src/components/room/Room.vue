@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {
-    computed,
-    onBeforeUnmount,
-    onMounted,
-    reactive,
-    ref,
-    useTemplateRef,
-    watch
-} from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from 'vue';
 import { useFullscreen } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 
@@ -44,13 +36,8 @@ const authStore = useAuthStore();
 const { fullName } = storeToRefs(authStore);
 
 const mediaSettingsStore = useMediaSettingsStore();
-const {
-    audioDeviceId,
-    videoDeviceId,
-    isAudioEnabled,
-    isVideoEnabled,
-    microphoneVolume
-} = storeToRefs(mediaSettingsStore);
+const { audioDeviceId, videoDeviceId, isAudioEnabled, isVideoEnabled, microphoneVolume } =
+    storeToRefs(mediaSettingsStore);
 
 const state = reactive<State>({
     viewMode: 'sidebar',
@@ -82,18 +69,15 @@ const {
     stop: stopSharingScreen
 } = useScreenCapture(localStream);
 
-const {
-    isConnecting,
-    participants,
-    toggleMuteParticipant,
-    syncLocalStream,
-    connect
-} = useRoom(props.id, {
-    localStream,
-    displayName: fullName.value,
-    isVideoEnabled,
-    isAudioEnabled
-});
+const { isConnecting, participants, toggleMuteParticipant, syncLocalStream, connect } = useRoom(
+    props.id,
+    {
+        localStream,
+        displayName: fullName.value,
+        isVideoEnabled,
+        isAudioEnabled
+    }
+);
 
 const roomContainer = useTemplateRef<HTMLDivElement>('roomContainer');
 
@@ -106,9 +90,7 @@ const {
 const isSharingScreenModalVisible = ref<boolean>(false);
 
 const activeParticipant = computed(() => {
-    return participants.value.find(
-        ({ id }) => id === state.activeParticipantId
-    );
+    return participants.value.find(({ id }) => id === state.activeParticipantId);
 });
 
 function toggleSettings() {
@@ -146,10 +128,7 @@ function leaveRoom() {
 async function handleWheelVolume({ deltaY }: WheelEvent) {
     await nextFrame();
 
-    microphoneVolume.value = keepInRange(
-        microphoneVolume.value + (deltaY < 0 ? 5 : -5),
-        [0, 100]
-    );
+    microphoneVolume.value = keepInRange(microphoneVolume.value + (deltaY < 0 ? 5 : -5), [0, 100]);
 }
 
 async function toggleScreenSharing() {
@@ -195,10 +174,7 @@ onBeforeUnmount(exitFullscreen);
 </script>
 
 <template>
-    <div
-        class="flex flex-col grow gap-4"
-        :class="{ 'bg-gray-900 p-4': isFullscreen }"
-    >
+    <div class="flex flex-col grow gap-4" :class="{ 'bg-gray-900 p-4': isFullscreen }">
         <div class="relative flex grow gap-4">
             <div
                 v-if="isViewMode('sidebar')"
@@ -231,29 +207,20 @@ onBeforeUnmount(exitFullscreen);
                 class="w-64 relative h-full overflow-y-auto bg-neutral-800 p-4 rounded"
             >
                 <ul class="flex flex-col gap-4">
-                    <template
-                        v-for="{ id, ...participant } of participants"
-                        :key="id"
-                    >
+                    <template v-for="{ id, ...participant } of participants" :key="id">
                         <li :class="{ hidden: isActiveParticipant(id) }">
                             <Participant
                                 v-bind="participant"
                                 :use-content-ratio="true"
                                 @toggle-mute="toggleMuteParticipant(id)"
-                                @click="
-                                    participants.length > 1 &&
-                                        setActiveParticipant(id)
-                                "
+                                @click="participants.length > 1 && setActiveParticipant(id)"
                             />
                         </li>
                     </template>
                 </ul>
             </div>
 
-            <div
-                v-else-if="isViewMode('grid')"
-                class="flex grow bg-neutral-800 p-4 rounded"
-            >
+            <div v-else-if="isViewMode('grid')" class="flex grow bg-neutral-800 p-4 rounded">
                 <AutoGrid
                     class="grow"
                     :items="participants"
@@ -272,34 +239,17 @@ onBeforeUnmount(exitFullscreen);
 
         <div class="flex justify-between items-end gap-4">
             <UButtonGroup>
-                <UTooltip
-                    :text="
-                        isVideoEnabled ? 'Turn camera off' : 'Toggle camera on'
-                    "
-                >
-                    <UButton
-                        color="neutral"
-                        @click="isVideoEnabled = !isVideoEnabled"
-                    >
+                <UTooltip :text="isVideoEnabled ? 'Turn camera off' : 'Toggle camera on'">
+                    <UButton color="neutral" @click="isVideoEnabled = !isVideoEnabled">
                         <UIcon
                             class="size-5"
-                            :name="
-                                isVideoEnabled
-                                    ? 'i-mdi-video'
-                                    : 'i-mdi-video-off'
-                            "
+                            :name="isVideoEnabled ? 'i-mdi-video' : 'i-mdi-video-off'"
                         />
                     </UButton>
                 </UTooltip>
 
                 <div class="relative group">
-                    <UTooltip
-                        :text="
-                            isAudioEnabled
-                                ? 'Disable microphone'
-                                : 'Enable microphone'
-                        "
-                    >
+                    <UTooltip :text="isAudioEnabled ? 'Disable microphone' : 'Enable microphone'">
                         <UButton
                             class="rounded-none"
                             color="neutral"
@@ -307,11 +257,7 @@ onBeforeUnmount(exitFullscreen);
                         >
                             <UIcon
                                 class="size-5"
-                                :name="
-                                    isAudioEnabled
-                                        ? 'i-mdi-microphone'
-                                        : 'i-mdi-microphone-off'
-                                "
+                                :name="isAudioEnabled ? 'i-mdi-microphone' : 'i-mdi-microphone-off'"
                             />
                         </UButton>
                     </UTooltip>
@@ -336,19 +282,13 @@ onBeforeUnmount(exitFullscreen);
                     "
                 >
                     <UButton color="neutral" @click="toggleViewMode">
-                        <UIcon
-                            class="size-5"
-                            :name="viewModeIcons[state.viewMode]"
-                        />
+                        <UIcon class="size-5" :name="viewModeIcons[state.viewMode]" />
                     </UButton>
                 </UTooltip>
 
                 <UTooltip text="Start sharing screen">
                     <UButton color="neutral" @click="toggleScreenSharing">
-                        <UIcon
-                            class="size-5"
-                            name="i-ic-outline-screen-share"
-                        />
+                        <UIcon class="size-5" name="i-ic-outline-screen-share" />
                     </UButton>
                 </UTooltip>
             </UButtonGroup>
@@ -358,11 +298,7 @@ onBeforeUnmount(exitFullscreen);
                     <UButton color="neutral" @click="toggleFullscreen">
                         <UIcon
                             class="size-5"
-                            :name="
-                                isFullscreen
-                                    ? 'i-mdi-fullscreen'
-                                    : 'i-mdi-fullscreen-exit'
-                            "
+                            :name="isFullscreen ? 'i-mdi-fullscreen' : 'i-mdi-fullscreen-exit'"
                         />
                     </UButton>
                 </UTooltip>

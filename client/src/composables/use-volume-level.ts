@@ -18,10 +18,7 @@ export function useVolumeLevel(stream: Ref<MediaStream | undefined>) {
                 sumSquares += amplitude * amplitude;
             }
 
-            const v = Math.min(
-                200 * Math.sqrt(sumSquares / pcmData.length),
-                100
-            );
+            const v = Math.min(200 * Math.sqrt(sumSquares / pcmData.length), 100);
 
             volume.value = v > 100 ? 100 : v;
 

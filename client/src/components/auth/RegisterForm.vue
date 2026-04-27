@@ -35,9 +35,7 @@ async function onSubmit({ data }: FormSubmitEvent<RegisterFormData>) {
     } catch (error: any) {
         toast.add({
             title: 'Registering failed',
-            description:
-                error?.response?.data.error ||
-                `Couldn't register, please try later.`,
+            description: error?.response?.data.error || `Couldn't register, please try later.`,
             color: 'error'
         });
     }
@@ -45,32 +43,15 @@ async function onSubmit({ data }: FormSubmitEvent<RegisterFormData>) {
 </script>
 
 <template>
-    <UForm
-        class="flex flex-col gap-4"
-        :schema="registerSchema"
-        :state="state"
-        @submit="onSubmit"
-    >
+    <UForm class="flex flex-col gap-4" :schema="registerSchema" :state="state" @submit="onSubmit">
         <template #default="{ loading }">
-            <TextField
-                label="First name"
-                name="firstName"
-                v-model="state.firstName"
-            />
+            <TextField label="First name" name="firstName" v-model="state.firstName" />
 
-            <TextField
-                label="Last name"
-                name="lastName"
-                v-model="state.lastName"
-            />
+            <TextField label="Last name" name="lastName" v-model="state.lastName" />
 
             <EmailField label="Email" name="email" v-model="state.email" />
 
-            <PasswordField
-                label="Password"
-                name="password"
-                v-model="state.password"
-            />
+            <PasswordField label="Password" name="password" v-model="state.password" />
 
             <PasswordField
                 label="Confirm password"

@@ -13,12 +13,7 @@ const {
 } = useRoute();
 const router = useRouter();
 
-const {
-    data: room,
-    isLoading,
-    error,
-    refetch
-} = useRoomQuery(roomId as string);
+const { data: room, isLoading, error, refetch } = useRoomQuery(roomId as string);
 
 const mediaSettingsStore = useMediaSettingsStore();
 const { audioDeviceId, videoDeviceId } = storeToRefs(mediaSettingsStore);
@@ -26,10 +21,7 @@ const { audioDeviceId, videoDeviceId } = storeToRefs(mediaSettingsStore);
 
 <template>
     <div class="flex flex-col md:justify-center md:items-center grow p-4">
-        <div
-            v-if="isLoading"
-            class="w-full md:w-md bg-gray-900 rounded p-4 shadow"
-        >
+        <div v-if="isLoading" class="w-full md:w-md bg-gray-900 rounded p-4 shadow">
             <USkeleton class="h-8 w-full mb-4" />
 
             <USkeleton class="h-5 w-full mb-4" />
@@ -45,10 +37,7 @@ const { audioDeviceId, videoDeviceId } = storeToRefs(mediaSettingsStore);
 
         <PageError v-else-if="error" @reload="refetch" />
 
-        <div
-            v-else-if="room"
-            class="w-full md:w-md bg-gray-900 rounded p-4 shadow"
-        >
+        <div v-else-if="room" class="w-full md:w-md bg-gray-900 rounded p-4 shadow">
             <h1 class="text-xl font-bold mb-4">{{ room.name }}</h1>
 
             <p class="mb-4 text-sm">
@@ -66,11 +55,7 @@ const { audioDeviceId, videoDeviceId } = storeToRefs(mediaSettingsStore);
                     Start
                 </UButton>
 
-                <UButton
-                    color="error"
-                    icon="i-mdi-phone-off"
-                    @click="router.replace('/')"
-                >
+                <UButton color="error" icon="i-mdi-phone-off" @click="router.replace('/')">
                     Leave
                 </UButton>
             </div>

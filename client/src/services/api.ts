@@ -16,9 +16,7 @@ export const authInstance = axios.create({
 });
 
 /** Auth */
-export async function register(
-    credentials: Omit<RegisterFormData, 'confirmPassword'>
-) {
+export async function register(credentials: Omit<RegisterFormData, 'confirmPassword'>) {
     await authInstance.post('/register', credentials);
 }
 
@@ -42,10 +40,7 @@ export async function requestPasswordReset(email: string) {
     await authInstance.post('/forgot-password', { email });
 }
 
-export async function resetPassword(
-    resetToken: string,
-    data: ResetPasswordFormData
-) {
+export async function resetPassword(resetToken: string, data: ResetPasswordFormData) {
     await authInstance.post(`/reset-password/${resetToken}`, data);
 }
 
