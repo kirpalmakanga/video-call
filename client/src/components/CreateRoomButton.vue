@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui/runtime/types/form.js';
-import { reactive, ref, watch } from 'vue';
+import { reactive, ref } from 'vue';
 import { object, string, type InferType } from 'yup';
 import { useCreateRoomMutation } from '../services/queries';
 import { useDebounceFn } from '@vueuse/core';
-
-const toast = useToast();
 
 const isModalOpen = ref<boolean>(false);
 
@@ -19,36 +17,17 @@ const formState = reactive<FormSchema>({
     name: ''
 });
 
-const { mutate: createRoom, status, asyncStatus, error } = useCreateRoomMutation();
+const { mutateAsync: createRoom, asyncStatus } = useCreateRoomMutation();
 
-const onSubmit = useDebounceFn(({ data }: FormSubmitEvent<FormSchema>) => {
-    createRoom(data);
-}, 400);
+async function onSubmit({ data }: FormSubmitEvent<FormSchema>) {
+    if (asyncStatus.value === 'loading') return;
 
-watch(status, (value) => {
-    switch (value) {
-        case 'success':
-            toast.add({
-                title: 'Success',
-                description: `Created room: ${formState.name}.`,
-                color: 'success'
-            });
+    isModalOpen.value = false;
 
-            isModalOpen.value = false;
+    await createRoom(data);
 
-            formState.name = '';
-            break;
-
-        case 'error':
-            toast.add({
-                title: 'Failed to create room',
-                description:
-                    error.value?.response?.data.error || `Couldn't create room, please try later.`,
-                color: 'error'
-            });
-            break;
-    }
-});
+    formState.name = '';
+}
 </script>
 
 <template>

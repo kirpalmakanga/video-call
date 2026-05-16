@@ -7,6 +7,7 @@ import {
     getRoomById,
     toggleFavoriteRoom
 } from './api';
+import { AxiosError } from 'axios';
 
 const queryCache = useQueryCache();
 
@@ -41,8 +42,27 @@ export function useFavoriteRoomsQuery() {
 }
 
 export function useCreateRoomMutation() {
+    const toast = useToast();
+
     return useMutation({
         mutation: (body: RoomFormData) => createRoom(body),
+        onSuccess({ name }) {
+            toast.add({
+                title: 'Success',
+                description: `Created room: ${name}.`,
+                color: 'success'
+            });
+        },
+        onError(error) {
+            toast.add({
+                title: 'Failed to create room',
+                description:
+                    error instanceof AxiosError
+                        ? error.response?.data.error
+                        : `Couldn't create room, please try later.`,
+                color: 'error'
+            });
+        },
         onSettled: async () => {
             await queryCache.invalidateQueries({ key: ['rooms'], exact: true });
         }
