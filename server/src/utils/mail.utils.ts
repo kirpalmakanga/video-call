@@ -5,6 +5,7 @@ const { API_URI, CLIENT_URI, SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_
     process.env;
 
 const transporter = createTransport({
+    //@ts-ignore
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: SMTP_SECURE === 'true',
