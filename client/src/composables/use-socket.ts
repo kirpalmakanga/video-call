@@ -80,7 +80,7 @@ export const useSocketStore = defineStore('socket', () => {
                 listeners.delete(event);
             }
         },
-        send(event: string, payload: Record<string, unknown>) {
+        send(event: string, payload: unknown) {
             send(JSON.stringify({ event, payload }));
         },
         increaseInstancesCount() {
