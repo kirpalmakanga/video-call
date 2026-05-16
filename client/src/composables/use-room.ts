@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, reactive, ref, watch, type Ref } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref, watch, type ComputedRef, type Ref } from 'vue';
 import { useOnline } from '@vueuse/core';
 import { useSocket } from './use-socket';
 import { useWebRTC } from './use-web-rtc';
@@ -13,16 +13,18 @@ interface RoomConfig {
 }
 
 export function useRoom(roomId: string, { localStream, displayName, isAudioEnabled }: RoomConfig) {
+    const localParticipantId = crypto.randomUUID();
     const isOnline = useOnline();
 
     const { emit, subscribe } = useSocket();
 
-    const localParticipant = reactive<ClientParticipant>({
-        id: crypto.randomUUID(),
+    const localParticipant = computed<ClientParticipant>(() => ({
+        id: localParticipantId,
         name: displayName,
-        isMuted: false,
-        isLocalParticipant: true
-    });
+        isMuted: isAudioEnabled.value,
+        isLocalParticipant: true,
+        stream: localStream.value
+    }));
 
     const {
         participants,
@@ -46,7 +48,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
         onIceCandidate(peerId, iceCandidate) {
             emit('iceCandidate', {
                 roomId,
-                participantId: localParticipant.id,
+                participantId: localParticipant.value.id,
                 targetParticipantId: peerId,
                 iceCandidate
             });
@@ -62,7 +64,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
     function syncLocalParticipant() {
         emit('syncParticipant', {
             roomId,
-            participant: pick(localParticipant, 'id', 'name', 'isMuted')
+            participant: pick(localParticipant.value, 'id', 'name', 'isMuted')
         });
     }
 
@@ -71,7 +73,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
 
         emit('requestConnection', {
             roomId,
-            participantId: localParticipant.id
+            participantId: localParticipant.value.id
         });
     }
 
@@ -82,7 +84,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
 
         emit('disconnectParticipant', {
             roomId,
-            participantId: localParticipant.id
+            participantId: localParticipant.value.id
         });
     }
 
@@ -102,7 +104,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
 
         emit('connectParticipant', {
             roomId,
-            participantId: localParticipant.id
+            participantId: localParticipant.value.id
         });
     });
 
@@ -113,7 +115,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
 
         emit('offer', {
             roomId,
-            participantId: localParticipant.id,
+            participantId: localParticipant.value.id,
             targetParticipantId: participantId,
             offer: await createOffer(participantId)
         });
@@ -126,7 +128,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
 
         emit('answer', {
             roomId,
-            participantId: localParticipant.id,
+            participantId: localParticipant.value.id,
             targetParticipantId: senderParticipantId,
             answer: await createAnswer(senderParticipantId, offer)
         });
@@ -156,22 +158,14 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
         }
     });
 
-    watch(localStream, (stream) => {
-        localParticipant.stream = stream;
-    });
-
-    watch(isAudioEnabled, () => {
-        localParticipant.isMuted = !isAudioEnabled.value;
-
-        syncLocalParticipant();
-    });
+    watch(isAudioEnabled, syncLocalParticipant);
 
     onBeforeUnmount(disconnect);
 
     return {
         isConnecting,
         participants: computed(() => [
-            localParticipant,
+            localParticipant.value,
             ...participants.value.map((item) => ({
                 ...item,
                 stream: peerStreams.value[item.id]
