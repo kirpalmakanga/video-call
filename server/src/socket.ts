@@ -119,8 +119,17 @@ export function useSocketHandler(app: H3) {
                         await authenticatePeer(peer);
 
                         const { event, payload } = parseMessage(message);
+                        const { [event]: handler } = handlers;
 
-                        handlers[event]?.(payload as any, peer);
+                        if (handler) {
+                            handler(payload as any, peer);
+                        } else {
+                            peer.send({
+                                event: 'error',
+                                payload: { message: `Unsupported event: ${event}` }
+                            });
+                        }
+
                         break;
                 }
             },
@@ -150,10 +159,7 @@ export function useSocketHandler(app: H3) {
 
 export function useSocketPlugin(app: H3) {
     return ws({
-        async resolve(req) {
-            const { crossws } = await app.fetch(req);
-
-            return crossws;
-        }
+        //@ts-ignore
+        resolve: async (req) => (await app.fetch(req)).crossws
     });
 }
