@@ -121,7 +121,7 @@ export async function verifyEmail(event: H3Event) {
             verificationTokenExpiry: null
         });
 
-        redirect(event, `${CLIENT_URI}/register/verified`);
+        return redirect(`${CLIENT_URI}/register/verified`);
     } else {
         badRequest('Invalid verification token');
     }
