@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T extends Record<string, unknown>">
+<script setup lang="ts" generic="T extends Record<string, any>">
 import { useTemplateRef } from 'vue';
 import { useDebounceFn, useMutationObserver, useResizeObserver } from '@vueuse/core';
 

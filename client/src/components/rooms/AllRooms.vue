@@ -11,6 +11,6 @@ const { data, isLoading, isPending, error, refetch } = useAllRoomsQuery();
         :is-pending="isPending"
         :is-loading="isLoading"
         :has-error="!!error"
-        @reload="refetch"
+        @reload="refetch()"
     />
 </template>
