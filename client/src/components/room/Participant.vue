@@ -69,7 +69,7 @@ onBeforeUnmount(() => setVideoSource(null));
             <div class="absolute left-2 right-2 bottom-2 flex gap-2">
                 <div class="flex grow overflow-hidden">
                     <span
-                        class="inline-block text-gray-100 text-sm px-2 py-1 whitespace-nowrap overflow-hidden overflow-ellipsis bg-gray-800/60 rounded"
+                        class="inline-block text-gray-100 text-sm px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis bg-gray-800/60 rounded"
                     >
                         {{ name }}
                     </span>
