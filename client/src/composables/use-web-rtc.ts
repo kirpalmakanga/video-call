@@ -41,14 +41,14 @@ function usePeerConnections() {
     }
 
     return {
-        createPeer(
+        createPeer: (
             peerId: string,
             events: {
                 onIceStateChange: (state: RTCIceConnectionState) => void;
                 onIceCandidate: (candidate: RTCIceCandidate) => void;
                 onTrack: (event: RTCTrackEvent) => void;
             }
-        ) {
+        ) => {
             const connection = new RTCPeerConnection(connectionConfiguration);
 
             peerConnections.set(peerId, connection);
@@ -65,7 +65,7 @@ function usePeerConnections() {
 
             return connection;
         },
-        removePeer(peerId: string) {
+        removePeer: (peerId: string) => {
             const connection = getPeer(peerId);
 
             connection.onicecandidate = null;
@@ -76,15 +76,15 @@ function usePeerConnections() {
 
             peerConnections.delete(peerId);
         },
-        getAllPeerIds() {
+        getAllPeerIds: () => {
             return [...peerConnections.keys()];
         },
         getPeer,
-        hasPeers() {
+        hasPeers: () => {
             return peerConnections.size > 0;
         },
         hasPeer,
-        hasActivePeer(peerId: string) {
+        hasActivePeer: (peerId: string) => {
             const connection = getPeer(peerId);
 
             return connection.iceConnectionState === 'connected';
@@ -133,7 +133,7 @@ export function useWebRTC(
         removePeer(peerId);
     }
 
-    function setPeerConnectionTrack(peerId: string, newTrack: MediaStreamTrack) {
+    async function setPeerConnectionTrack(peerId: string, newTrack: MediaStreamTrack) {
         assertIsDefined(localStream.value, 'Local stream unavailable.');
 
         const connection = getPeer(peerId);
@@ -141,24 +141,24 @@ export function useWebRTC(
         const sender = senders.find(({ track }) => track?.kind === newTrack.kind);
 
         if (sender && sender.track?.id !== newTrack.id) {
-            sender.replaceTrack(newTrack);
+            await sender.replaceTrack(newTrack);
         } else if (!sender) {
             connection.addTrack(newTrack, localStream.value);
         }
     }
 
-    function bindLocalStreamToPeer(peerId: string) {
+    async function bindLocalStreamToPeer(peerId: string) {
         assertIsDefined(localStream.value, 'Local stream unavailable.');
 
         const [videoTrack] = localStream.value.getVideoTracks();
         const [audioTrack] = localStream.value.getAudioTracks();
 
         if (videoTrack) {
-            setPeerConnectionTrack(peerId, videoTrack);
+            await setPeerConnectionTrack(peerId, videoTrack);
         }
 
         if (audioTrack) {
-            setPeerConnectionTrack(peerId, audioTrack);
+            await setPeerConnectionTrack(peerId, audioTrack);
         }
     }
 
@@ -173,10 +173,10 @@ export function useWebRTC(
         }
     }
 
-    function syncLocalStreamWithPeers() {
+    async function syncLocalStreamWithPeers() {
         if (hasPeers()) {
             for (const peerId of getAllPeerIds()) {
-                bindLocalStreamToPeer(peerId);
+                await bindLocalStreamToPeer(peerId);
             }
         }
     }
@@ -197,7 +197,7 @@ export function useWebRTC(
         }
     }
 
-    watch(localStream, (stream, previousStream) => {
+    watch(localStream, async (stream, previousStream) => {
         if (previousStream) {
             previousStream.onaddtrack = null;
             previousStream.onremovetrack = null;
@@ -207,7 +207,7 @@ export function useWebRTC(
             stream.onaddtrack = syncLocalStreamWithPeers;
             stream.onremovetrack = syncLocalStreamWithPeers;
 
-            syncLocalStreamWithPeers();
+            await syncLocalStreamWithPeers();
         } else {
             unbindLocalStreamFromAllPeers();
         }
@@ -217,7 +217,7 @@ export function useWebRTC(
 
     return {
         peerStreams,
-        connectToPeer(peerId: string) {
+        connectToPeer: async (peerId: string) => {
             if (hasPeer(peerId)) {
                 disconnectFromPeer(peerId);
             }
@@ -241,11 +241,11 @@ export function useWebRTC(
             });
 
             if (localStream.value) {
-                bindLocalStreamToPeer(peerId);
+                await bindLocalStreamToPeer(peerId);
             }
         },
         syncLocalStreamWithPeers,
-        async createOffer(peerId: string) {
+        createOffer: async (peerId: string) => {
             const connection = getPeer(peerId);
 
             const offer = await connection.createOffer();
@@ -254,7 +254,7 @@ export function useWebRTC(
 
             return offer;
         },
-        async createAnswer(peerId: string, offer: RTCSessionDescriptionInit) {
+        createAnswer: async (peerId: string, offer: RTCSessionDescriptionInit) => {
             const connection = getPeer(peerId);
 
             await connection.setRemoteDescription(new RTCSessionDescription(offer));
@@ -265,12 +265,12 @@ export function useWebRTC(
 
             return answer;
         },
-        async processAnswer(peerId: string, answer: RTCSessionDescriptionInit) {
+        processAnswer: async (peerId: string, answer: RTCSessionDescriptionInit) => {
             const connection = getPeer(peerId);
 
             await connection.setRemoteDescription(new RTCSessionDescription(answer));
         },
-        async addIceCandidate(peerId: string, candidate: RTCIceCandidate) {
+        addIceCandidate: async (peerId: string, candidate: RTCIceCandidate) => {
             const connection = getPeer(peerId);
 
             await connection.addIceCandidate(new RTCIceCandidate(candidate));

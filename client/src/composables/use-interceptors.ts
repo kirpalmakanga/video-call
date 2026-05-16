@@ -35,7 +35,7 @@ export default function useInterceptors() {
                 } catch (refreshError) {
                     await logOut();
 
-                    router.push('/login');
+                    await router.push('/login');
 
                     return Promise.reject(refreshError);
                 }

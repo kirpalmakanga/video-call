@@ -231,7 +231,7 @@ interface ResetPasswordRequest {
 }
 
 export async function updatePasswordWithResetToken(event: H3Event<ResetPasswordRequest>) {
-    const { resetToken } = await getRouterParams(event);
+    const { resetToken } = getRouterParams(event);
     const { password } = await readValidatedBody(event, resetPasswordSchema);
 
     if (!resetToken) {

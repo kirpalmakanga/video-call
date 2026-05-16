@@ -6,7 +6,7 @@ export function useParticipantsList() {
 
     return {
         participants,
-        setParticipant(participant: ClientParticipant) {
+        setParticipant: (participant: ClientParticipant) => {
             if (participants.value.some(({ id }) => id === participant.id)) {
                 participants.value = update(
                     participants.value,
@@ -17,17 +17,17 @@ export function useParticipantsList() {
                 participants.value.push(participant);
             }
         },
-        removeParticipant(participantId: string) {
+        removeParticipant: (participantId: string) => {
             participants.value = participants.value.filter(({ id }) => id !== participantId);
         },
-        toggleMuteParticipant(participantId: string) {
+        toggleMuteParticipant: (participantId: string) => {
             const participant = participants.value.find(({ id }) => id === participantId);
 
             if (participant) {
                 participant.isLocallyMuted = !participant.isLocallyMuted;
             }
         },
-        clearParticipants() {
+        clearParticipants: () => {
             participants.value = [];
         }
     };

@@ -141,10 +141,16 @@ export function useSocket() {
     onUnmounted(decreaseInstancesCount);
 
     return {
-        emit<E extends ClientToServerEventId>(event: E, payload: ClientToServerEventPayload<E>) {
+        emit: <E extends ClientToServerEventId>(
+            event: E,
+            payload: ClientToServerEventPayload<E>
+        ) => {
             send(event, payload);
         },
-        subscribe<E extends ServerToClientEventId>(event: E, callback: ServerToClientEvents[E]) {
+        subscribe: <E extends ServerToClientEventId>(
+            event: E,
+            callback: ServerToClientEvents[E]
+        ) => {
             if (subscriptions.has(event)) {
                 throw new Error(`Subscription for event "${event}" already exists`);
             } else {
@@ -153,7 +159,7 @@ export function useSocket() {
                 subscriptions.set(event, () => off(event, callback));
             }
         },
-        unsubscribe(event?: ServerToClientEventId) {
+        unsubscribe: (event?: ServerToClientEventId) => {
             if (event) {
                 removeSubscription(event);
             } else {

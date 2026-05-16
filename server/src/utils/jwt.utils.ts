@@ -9,9 +9,9 @@ function getSecretKey(secret: string) {
 }
 
 export async function generateAccessToken(user: User) {
-    assertIsDefined(JWT_ACCESS_SECRET);
-    assertIsDefined(JWT_ISSUER);
-    assertIsDefined(JWT_AUDIENCE);
+    assertIsDefined(JWT_ACCESS_SECRET, 'JWT_ACCESS_SECRET is not defined');
+    assertIsDefined(JWT_ISSUER, 'JWT_ISSUER is not defined');
+    assertIsDefined(JWT_AUDIENCE, 'JWT_AUDIENCE is not defined');
 
     return await new SignJWT({ id: user.id })
         .setProtectedHeader({ alg: 'HS256' })
@@ -37,9 +37,9 @@ export async function generateTokens(user: User): Promise<{
 }
 
 export async function authenticate(accessToken: string) {
-    assertIsDefined(JWT_ACCESS_SECRET);
-    assertIsDefined(JWT_ISSUER);
-    assertIsDefined(JWT_AUDIENCE);
+    assertIsDefined(JWT_ACCESS_SECRET, 'JWT_ACCESS_SECRET is not defined');
+    assertIsDefined(JWT_ISSUER, 'JWT_ISSUER is not defined');
+    assertIsDefined(JWT_AUDIENCE, 'JWT_AUDIENCE is not defined');
 
     return await jwtVerify(accessToken, getSecretKey(JWT_ACCESS_SECRET), {
         issuer: JWT_ISSUER,

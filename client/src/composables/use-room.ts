@@ -66,7 +66,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
         });
     }
 
-    async function connect() {
+    function connect() {
         isConnecting.value = true;
 
         emit('requestConnection', {
@@ -109,7 +109,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
     subscribe('participantConnected', async ({ participantId }) => {
         syncLocalParticipant();
 
-        connectToPeer(participantId);
+        await connectToPeer(participantId);
 
         emit('offer', {
             roomId,
@@ -122,7 +122,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
     subscribe('incomingOffer', async ({ senderParticipantId, offer }) => {
         syncLocalParticipant();
 
-        connectToPeer(senderParticipantId);
+        await connectToPeer(senderParticipantId);
 
         emit('answer', {
             roomId,
@@ -132,12 +132,12 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
         });
     });
 
-    subscribe('incomingAnswer', ({ senderParticipantId, answer }) => {
-        processAnswer(senderParticipantId, answer);
+    subscribe('incomingAnswer', async ({ senderParticipantId, answer }) => {
+        await processAnswer(senderParticipantId, answer);
     });
 
-    subscribe('incomingIceCandidate', ({ senderParticipantId, iceCandidate }) => {
-        addIceCandidate(senderParticipantId, iceCandidate);
+    subscribe('incomingIceCandidate', async ({ senderParticipantId, iceCandidate }) => {
+        await addIceCandidate(senderParticipantId, iceCandidate);
     });
 
     subscribe('participantSynced', setParticipant);
@@ -148,7 +148,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
         removeParticipant(participantId);
     });
 
-    watch(isOnline, (value) => {
+    watch(isOnline, async (value) => {
         if (value) {
             connect();
         } else {

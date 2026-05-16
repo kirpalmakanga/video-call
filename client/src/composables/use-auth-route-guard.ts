@@ -19,11 +19,11 @@ export function useAuthRouteGuard() {
         }
     });
 
-    watch(isLoggedIn, () => {
+    watch(isLoggedIn, async () => {
         if (isLoggedIn.value) {
-            router.replace('/');
+            await router.replace('/');
         } else {
-            router.replace('/login');
+            await router.replace('/login');
 
             removeSocket();
         }

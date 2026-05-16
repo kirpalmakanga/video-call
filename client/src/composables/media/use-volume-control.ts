@@ -55,7 +55,7 @@ export function useVolumeControl({ stream, volume }: UseGainControlOptions) {
         }
     }
 
-    async function removeControlledStream() {
+    function removeControlledStream() {
         if (sourceAudioTrack) {
             sourceAudioTrack.stop();
             sourceAudioTrack = null;
@@ -82,7 +82,7 @@ export function useVolumeControl({ stream, volume }: UseGainControlOptions) {
         }
     }
 
-    function handleSourceStreamChange(stream?: MediaStream) {
+    async function handleSourceStreamChange(stream?: MediaStream) {
         removeControlledStream();
 
         if (stream) {
