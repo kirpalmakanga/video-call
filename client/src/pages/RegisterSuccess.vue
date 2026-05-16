@@ -2,6 +2,7 @@
 import { useRoute } from 'vue-router';
 import { requestVerificationEmail } from '../services/api';
 import { ref } from 'vue';
+import { AxiosError } from 'axios';
 const {
     query: { email }
 } = useRoute();
@@ -25,8 +26,9 @@ async function requestEmail() {
             toast.add({
                 title: 'Error',
                 description:
-                    error?.response?.data.error ||
-                    `Couldn't send verification email, please try later.`,
+                    error instanceof AxiosError
+                        ? error?.response?.data.error
+                        : `Couldn't send verification email, please try later.`,
                 color: 'error'
             });
         } finally {
