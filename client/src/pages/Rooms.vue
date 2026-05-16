@@ -1,16 +1,9 @@
 <script setup lang="ts">
 import type { TabsItem } from '@nuxt/ui';
-import Placeholder from '../components/base/Placeholder.vue';
-import RoomsGrid from '../components/rooms/RoomsGrid.vue';
-import RoomsGridSkeleton from '../components/rooms/RoomsGridSkeleton.vue';
 import CreateRoomButton from '../components/CreateRoomButton.vue';
-import PageError from '../components/page/PageError.vue';
-import { useAllRoomsQuery } from '../services/queries';
 import AllRooms from '../components/rooms/AllRooms.vue';
 import FavoriteRooms from '../components/rooms/FavoriteRooms.vue';
 import CreatedRooms from '../components/rooms/CreatedRooms.vue';
-
-const { data: rooms, isLoading, error, refetch } = useAllRoomsQuery();
 
 const tabs: TabsItem[] = [
     {
