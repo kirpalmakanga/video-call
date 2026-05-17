@@ -43,12 +43,16 @@ export function mergeByKey<T extends Record<string, unknown>, K extends keyof T>
 export function update<T extends object>(
     arr: T[],
     predicate: (item: T, index: number, array: T[]) => boolean,
-    payload: Partial<T>
+    payloadOrUpdater: Partial<T> | ((item: T) => Partial<T>)
 ) {
     const targetIndex = arr.findIndex(predicate);
+    const item = arr[targetIndex];
 
-    if (targetIndex > -1) {
-        return arr.with(targetIndex, { ...arr[targetIndex], ...payload } as T);
+    if (targetIndex > -1 && item) {
+        return arr.with(targetIndex, {
+            ...item,
+            ...(typeof payloadOrUpdater === 'function' ? payloadOrUpdater(item) : payloadOrUpdater)
+        } as T);
     }
 
     return arr;

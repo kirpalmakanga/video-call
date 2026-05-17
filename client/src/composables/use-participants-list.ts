@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import { update } from '../utils/helpers';
+import { captureError } from '../../../utils/error';
 
 export function useParticipantsList() {
     const participants = ref<ClientParticipant[]>([]);
@@ -8,10 +9,18 @@ export function useParticipantsList() {
         return ({ id }: ClientParticipant) => id === targetParticipantId;
     }
 
+    function hasParticipant(targetParticipantId: string) {
+        return participants.value.some(matchParticipant(targetParticipantId));
+    }
+
+    function participantNotFound() {
+        captureError(`Participant doesn't exist or has already been removed.`);
+    }
+
     return {
         participants,
         setParticipant: (participant: ClientParticipant) => {
-            if (participants.value.some(matchParticipant(participant.id))) {
+            if (hasParticipant(participant.id)) {
                 participants.value = update(
                     participants.value,
                     matchParticipant(participant.id),
@@ -22,15 +31,23 @@ export function useParticipantsList() {
             }
         },
         removeParticipant: (targetParticipantId: string) => {
-            participants.value = participants.value.filter(
-                (participant) => !matchParticipant(targetParticipantId)(participant)
-            );
+            if (hasParticipant(targetParticipantId)) {
+                participants.value = participants.value.filter(
+                    (participant) => !matchParticipant(targetParticipantId)(participant)
+                );
+            } else {
+                participantNotFound();
+            }
         },
         toggleMuteParticipant: (targetParticipantId: string) => {
-            const participant = participants.value.find(matchParticipant(targetParticipantId));
-
-            if (participant) {
-                participant.isLocallyMuted = !participant.isLocallyMuted;
+            if (hasParticipant(targetParticipantId)) {
+                participants.value = update(
+                    participants.value,
+                    matchParticipant(targetParticipantId),
+                    ({ isLocallyMuted }) => ({ isLocallyMuted: !isLocallyMuted })
+                );
+            } else {
+                participantNotFound();
             }
         },
         clearParticipants: () => {
