@@ -21,7 +21,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
     const localParticipant = computed<ClientParticipant>(() => ({
         id: localParticipantId,
         name: displayName,
-        isMuted: isAudioEnabled.value,
+        isMuted: !isAudioEnabled.value,
         isLocalParticipant: true,
         stream: localStream.value
     }));
