@@ -11,11 +11,9 @@ export function useAuthRouteGuard() {
 
     const router = useRouter();
 
-    router.beforeEach((to, _, next) => {
+    router.beforeEach((to) => {
         if (!isLoggedIn.value && !!to.meta.authenticated) {
-            next({ name: 'auth-login' });
-        } else {
-            next();
+            return { name: 'auth-login' };
         }
     });
 
