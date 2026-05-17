@@ -176,49 +176,45 @@ onBeforeUnmount(exitFullscreen);
 <template>
     <div class="flex flex-col grow gap-4" :class="{ 'bg-gray-900 p-4': isFullscreen }">
         <div class="relative flex grow gap-4">
-            <div
-                v-if="isViewMode('sidebar')"
-                class="flex flex-col grow gap-4 bg-neutral-800 bg p-4 rounded"
-            >
-                <Placeholder
-                    v-if="isConnecting"
-                    class="grow text-gray-100 rounded"
-                    icon="svg-spinners:90-ring-with-bg"
-                    text="Joining room..."
-                />
+            <template v-if="isViewMode('sidebar')">
+                <div class="flex flex-col grow gap-4 bg-neutral-800 bg p-4 rounded">
+                    <Placeholder
+                        v-if="isConnecting"
+                        class="grow text-gray-100 rounded"
+                        icon="svg-spinners:90-ring-with-bg"
+                        text="Joining room..."
+                    />
 
-                <Participant
-                    v-else-if="activeParticipant"
-                    v-bind="activeParticipant"
-                    :is-active-participant="true"
-                    @toggle-mute="toggleMuteParticipant(activeParticipant.id)"
-                />
+                    <Participant
+                        v-else-if="activeParticipant"
+                        v-bind="activeParticipant"
+                        :is-active-participant="true"
+                        @toggle-mute="toggleMuteParticipant(activeParticipant.id)"
+                    />
 
-                <Placeholder
-                    v-else
-                    class="grow text-gray-100 rounded"
-                    icon="i-mdi-video"
-                    text="Awaiting participants..."
-                />
-            </div>
+                    <Placeholder
+                        v-else
+                        class="grow text-gray-100 rounded"
+                        icon="i-mdi-video"
+                        text="Awaiting participants..."
+                    />
+                </div>
 
-            <div
-                v-if="isViewMode('sidebar')"
-                class="w-64 relative h-full overflow-y-auto bg-neutral-800 p-4 rounded"
-            >
-                <ul class="flex flex-col gap-4">
-                    <template v-for="{ id, ...participant } of participants" :key="id">
-                        <li :class="{ hidden: isActiveParticipant(id) }">
-                            <Participant
-                                v-bind="participant"
-                                :use-content-ratio="true"
-                                @toggle-mute="toggleMuteParticipant(id)"
-                                @click="participants.length > 1 && setActiveParticipant(id)"
-                            />
-                        </li>
-                    </template>
-                </ul>
-            </div>
+                <div class="w-64 relative h-full overflow-y-auto bg-neutral-800 p-4 rounded">
+                    <ul class="flex flex-col gap-4">
+                        <template v-for="{ id, ...participant } of participants" :key="id">
+                            <li :class="{ hidden: isActiveParticipant(id) }">
+                                <Participant
+                                    v-bind="participant"
+                                    :use-content-ratio="true"
+                                    @toggle-mute="toggleMuteParticipant(id)"
+                                    @click="participants.length > 1 && setActiveParticipant(id)"
+                                />
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </template>
 
             <div v-else-if="isViewMode('grid')" class="flex grow bg-neutral-800 p-4 rounded">
                 <AutoGrid
@@ -238,7 +234,7 @@ onBeforeUnmount(exitFullscreen);
         </div>
 
         <div class="flex justify-between items-end gap-4">
-            <UButtonGroup>
+            <div class="flex gap-2">
                 <UTooltip :text="isVideoEnabled ? 'Turn camera off' : 'Toggle camera on'">
                     <UButton color="neutral" @click="isVideoEnabled = !isVideoEnabled">
                         <UIcon
@@ -250,11 +246,7 @@ onBeforeUnmount(exitFullscreen);
 
                 <div class="relative group">
                     <UTooltip :text="isAudioEnabled ? 'Disable microphone' : 'Enable microphone'">
-                        <UButton
-                            class="rounded-none"
-                            color="neutral"
-                            @click="isAudioEnabled = !isAudioEnabled"
-                        >
+                        <UButton color="neutral" @click="isAudioEnabled = !isAudioEnabled">
                             <UIcon
                                 class="size-5"
                                 :name="isAudioEnabled ? 'i-mdi-microphone' : 'i-mdi-microphone-off'"
@@ -291,7 +283,7 @@ onBeforeUnmount(exitFullscreen);
                         <UIcon class="size-5" name="i-ic-outline-screen-share" />
                     </UButton>
                 </UTooltip>
-            </UButtonGroup>
+            </div>
 
             <div class="flex gap-2">
                 <UTooltip text="Settings">
