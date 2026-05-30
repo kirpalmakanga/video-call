@@ -12,7 +12,10 @@ interface RoomConfig {
     isAudioEnabled: Ref<boolean>;
 }
 
-export function useRoom(roomId: string, { localStream, displayName, isAudioEnabled }: RoomConfig) {
+export function useRoom(
+    roomId: string,
+    { localStream, displayName, isVideoEnabled, isAudioEnabled }: RoomConfig
+) {
     const localParticipantId = crypto.randomUUID();
     const isOnline = useOnline();
 
@@ -21,6 +24,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
     const localParticipant = computed<ClientParticipant>(() => ({
         id: localParticipantId,
         name: displayName,
+        isCameraDisabled: !isVideoEnabled.value,
         isMuted: !isAudioEnabled.value,
         isLocalParticipant: true,
         stream: localStream.value
@@ -64,7 +68,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
     function syncLocalParticipant() {
         emit('syncParticipant', {
             roomId,
-            participant: pick(localParticipant.value, 'id', 'name', 'isMuted')
+            participant: pick(localParticipant.value, 'id', 'name', 'isCameraDisabled', 'isMuted')
         });
     }
 
@@ -158,7 +162,7 @@ export function useRoom(roomId: string, { localStream, displayName, isAudioEnabl
         }
     });
 
-    watch(isAudioEnabled, syncLocalParticipant);
+    watch([isVideoEnabled, isAudioEnabled], syncLocalParticipant);
 
     onBeforeUnmount(disconnect);
 

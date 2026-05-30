@@ -19,6 +19,7 @@ declare global {
     interface Participant {
         id: string;
         name: string;
+        isCameraDisabled: boolean;
         isMuted: boolean;
     }
 

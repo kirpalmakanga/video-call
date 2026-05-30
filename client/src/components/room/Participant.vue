@@ -8,6 +8,7 @@ const props = defineProps<{
     isLocalParticipant?: boolean;
     isActiveParticipant?: boolean;
     stream?: MediaStream;
+    isCameraDisabled: boolean;
     isMuted: boolean;
     isLocallyMuted?: boolean;
     useContentRatio?: boolean;
@@ -61,6 +62,10 @@ onBeforeUnmount(() => setVideoSource(null));
             />
 
             <div class="absolute right-2 top-2 flex gap-2">
+                <span v-if="isCameraDisabled" class="p-1 bg-warning-800/60 rounded">
+                    <UIcon class="size-5" name="i-mdi-video-off" />
+                </span>
+
                 <span v-if="isMuted" class="p-1 bg-warning-800/60 rounded">
                     <UIcon class="size-5" name="i-mdi-microphone-off" />
                 </span>
