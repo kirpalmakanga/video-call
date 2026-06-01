@@ -1,4 +1,4 @@
-import { computed, onBeforeMount, onBeforeUnmount, onUnmounted, watch } from 'vue';
+import { computed, onBeforeUnmount, watch } from 'vue';
 import { defineStore, storeToRefs } from 'pinia';
 import { useWebSocket } from '@vueuse/core';
 import { useAuthStore } from './store/use-auth-store';
@@ -25,14 +25,6 @@ export const useSocketStore = defineStore('socket', () => {
 
     const listeners: Map<string, Set<Function>> = new Map();
 
-    let instancesCount: number = 0;
-
-    function removeSocket() {
-        close();
-
-        instancesCount = 0;
-    }
-
     async function handleMessage({ data }: MessageEvent) {
         if (data === HEARTBEAT_MESSAGE) return;
 
@@ -48,12 +40,44 @@ export const useSocketStore = defineStore('socket', () => {
             return;
         }
 
+        triggerHanglers(event, payload);
+    }
+
+    function closeSocket() {
+        ws.value?.removeEventListener('message', handleMessage);
+
+        close();
+    }
+
+    function removeHandler(event: string, handler: Function) {
+        listeners.get(event)?.delete(handler);
+
+        if (listeners.get(event)?.size === 0) {
+            listeners.delete(event);
+        } else {
+            console.warn(
+                `Handler for event "${event}" does not exist or has already been removed.`
+            );
+        }
+    }
+
+    function removeAllHandlers(event: string) {
+        if (listeners.has(event)) {
+            listeners.delete(event);
+        } else {
+            console.warn(`No handlers found for event "${event}" or already removed.`);
+        }
+    }
+
+    function triggerHanglers(event: string, payload: unknown) {
         const handlers = listeners.get(event);
 
-        if (handlers) {
+        if (handlers && handlers.size > 0) {
             for (const handler of handlers) {
                 handler(payload);
             }
+        } else {
+            console.warn(`No handlers found for event "${event}"`);
         }
     }
 
@@ -68,43 +92,35 @@ export const useSocketStore = defineStore('socket', () => {
     watch(isOnline, () => isOnline.value && open());
 
     return {
+        closeSocket,
         on(event: string, handler: Function) {
+            if (listeners.size === 0 && !ws.value) {
+                open();
+            }
+
             if (!listeners.has(event)) listeners.set(event, new Set());
 
             listeners.get(event)?.add(handler);
         },
         off(event: string, handler?: Function) {
             if (handler) {
-                listeners.get(event)?.delete(handler);
-            } else if (event) {
-                listeners.delete(event);
+                removeHandler(event, handler);
+            } else {
+                removeAllHandlers(event);
+            }
+
+            if (listeners.size === 0 && ws.value) {
+                closeSocket();
             }
         },
         send(event: string, payload: unknown) {
             send(JSON.stringify({ event, payload }));
-        },
-        increaseInstancesCount() {
-            if (instancesCount === 0) {
-                open();
-            }
-
-            instancesCount++;
-        },
-        decreaseInstancesCount() {
-            if (instancesCount > 0) {
-                instancesCount--;
-            }
-
-            if (ws.value && instancesCount === 0) {
-                removeSocket();
-            }
-        },
-        removeSocket
+        }
     };
 });
 
 export function useSocket() {
-    const { on, off, send, increaseInstancesCount, decreaseInstancesCount } = useSocketStore();
+    const { on, off, send } = useSocketStore();
 
     const subscriptions = new Map<ServerToClientEventId, Function>();
 
@@ -116,7 +132,7 @@ export function useSocket() {
 
             subscriptions.delete(event);
         } else {
-            console.error(
+            console.warn(
                 `Subscription for event "${event}" does not exist or has already been removed.`
             );
         }
@@ -130,15 +146,11 @@ export function useSocket() {
 
             subscriptions.clear();
         } else {
-            console.error('No current subscriptions.');
+            console.warn('No current subscriptions.');
         }
     }
 
-    onBeforeMount(increaseInstancesCount);
-
     onBeforeUnmount(clearSubscriptions);
-
-    onUnmounted(decreaseInstancesCount);
 
     return {
         emit: <E extends ClientToServerEventId>(
@@ -152,7 +164,7 @@ export function useSocket() {
             callback: ServerToClientEvents[E]
         ) => {
             if (subscriptions.has(event)) {
-                throw new Error(`Subscription for event "${event}" already exists`);
+                console.warn(`Subscription for event "${event}" already exists`);
             } else {
                 on(event, callback);
 
