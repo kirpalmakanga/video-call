@@ -2,12 +2,10 @@ import { watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from './store/use-auth-store';
-import { useSocketStore } from './use-socket';
 
 export function useAuthRouteGuard() {
     const authStore = useAuthStore();
     const { isLoggedIn } = storeToRefs(authStore);
-    const { removeSocket } = useSocketStore();
 
     const router = useRouter();
 
@@ -22,8 +20,6 @@ export function useAuthRouteGuard() {
             await router.replace('/');
         } else {
             await router.replace('/login');
-
-            removeSocket();
         }
     });
 }
