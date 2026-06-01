@@ -29,10 +29,19 @@ async function setVideoSource(stream?: MediaStream | null) {
 }
 
 function calculateAspectRatio() {
-    if (video.value) {
+    if (video.value && !props.isCameraDisabled) {
         aspectRatio.value = video.value.videoWidth / video.value.videoHeight;
     }
 }
+
+watch(
+    () => props.isCameraDisabled,
+    () => {
+        if (!props.isCameraDisabled) {
+            calculateAspectRatio();
+        }
+    }
+);
 
 watch(() => props.stream, setVideoSource);
 
@@ -45,7 +54,7 @@ onBeforeUnmount(() => setVideoSource(null));
     <Contain
         class="grow"
         :aspect-ratio="aspectRatio"
-        :style="useContentRatio ? { aspectRatio: aspectRatio } : null"
+        :style="useContentRatio ? { aspectRatio } : null"
     >
         <div class="relative flex w-full h-full rounded overflow-hidden bg-gray-700 group">
             <video
