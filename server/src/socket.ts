@@ -156,10 +156,3 @@ export function useSocketHandler(app: H3) {
         })
     );
 }
-
-export function useSocketPlugin(app: H3) {
-    return ws({
-        //@ts-ignore
-        resolve: async (req) => (await app.fetch(req)).crossws
-    });
-}

@@ -1,11 +1,12 @@
 import { H3, serve } from 'h3';
 import { cors } from './plugins/cors.plugin';
 import { logger } from './plugins/logger.plugin';
+import { socket } from './plugins/socket.server.plugin';
 import { useAuthentication } from './middlewares/auth.middleware';
 import useAuthRoutes from './routes/auth.routes';
 import useRoomsRoutes from './routes/rooms.routes';
 import useUsersRoutes from './routes/users.routes';
-import { useSocketPlugin, useSocketHandler } from './socket';
+import { useSocketHandler } from './socket';
 
 const { PORT, CLIENT_URI } = process.env;
 
@@ -34,5 +35,5 @@ useSocketHandler(app);
 
 serve(app, {
     port: PORT,
-    plugins: [useSocketPlugin(app)]
+    plugins: [socket(app)]
 });
