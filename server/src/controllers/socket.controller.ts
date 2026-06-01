@@ -1,7 +1,6 @@
-import { defineWebSocketHandler, type H3 } from 'h3';
-import type { Message, Peer } from 'crossws';
-import { getUrlParams } from './utils/helpers.utils';
-import { authenticate } from './utils/jwt.utils';
+import type { Hooks, Message, Peer } from 'crossws';
+import { getUrlParams } from '../utils/helpers.utils';
+import { authenticate } from '../utils/jwt.utils';
 
 type EventHandlers = {
     [K in keyof ClientToServerEvents]: (payload: ClientToServerEventPayload<K>, peer: Peer) => void;
@@ -100,58 +99,53 @@ function parseMessage<E extends ClientToServerEventId>(
     return message.json();
 }
 
-export function useSocketHandler(app: H3) {
-    app.get(
-        '/_ws',
-        defineWebSocketHandler({
-            async open(peer) {
+export const hooks: Partial<Hooks> = {
+    async open(peer) {
+        await authenticatePeer(peer);
+    },
+
+    async message(peer, message) {
+        switch (message.text()) {
+            case '':
+                peer.send('');
+                break;
+
+            default:
                 await authenticatePeer(peer);
-            },
 
-            async message(peer, message) {
-                switch (message.text()) {
-                    case '':
-                        peer.send('');
-                        break;
+                const { event, payload } = parseMessage(message);
+                const { [event]: handler } = handlers;
 
-                    default:
-                        await authenticatePeer(peer);
-
-                        const { event, payload } = parseMessage(message);
-                        const { [event]: handler } = handlers;
-
-                        if (handler) {
-                            handler(payload as any, peer);
-                        } else {
-                            peer.send({
-                                event: 'error',
-                                payload: { message: `Unsupported event: ${event}` }
-                            });
-                        }
-
-                        break;
+                if (handler) {
+                    handler(payload as any, peer);
+                } else {
+                    peer.send({
+                        event: 'error',
+                        payload: { message: `Unsupported event: ${event}` }
+                    });
                 }
-            },
 
-            close(peer) {
-                for (const channel of peer.topics) {
-                    if (channel.startsWith('room')) {
-                        peer.publish(channel, {
-                            event: 'participantDisconnected',
-                            payload: {
-                                participantId: peer.context.participantId
-                            }
-                        });
+                break;
+        }
+    },
+
+    close(peer) {
+        for (const channel of peer.topics) {
+            if (channel.startsWith('room')) {
+                peer.publish(channel, {
+                    event: 'participantDisconnected',
+                    payload: {
+                        participantId: peer.context.participantId
                     }
-
-                    peer.unsubscribe(channel);
-                }
-            },
-
-            error(peer, error) {
-                console.log('[ws] error', peer, error);
-                console.error(error);
+                });
             }
-        })
-    );
-}
+
+            peer.unsubscribe(channel);
+        }
+    },
+
+    error(peer, error) {
+        console.log('[ws] error', peer, error);
+        console.error(error);
+    }
+};
