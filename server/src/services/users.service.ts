@@ -1,4 +1,4 @@
-import db from '../db';
+import db from '../../prisma/client';
 import { hashPassword } from '../utils/auth.utils';
 import { type User } from '../../generated/prisma';
 import { addHours } from '../utils/helpers.utils';

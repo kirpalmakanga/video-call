@@ -1,4 +1,4 @@
-import db from '../db';
+import db from '../../prisma/client';
 import { hashToken } from '../utils/auth.utils';
 
 export function addRefreshTokenToWhitelist({

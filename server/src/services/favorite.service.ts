@@ -1,4 +1,4 @@
-import db from '../db';
+import db from '../../prisma/client';
 
 export async function getUserFavorites(userId: string) {
     const items = await db.favorite.findMany({

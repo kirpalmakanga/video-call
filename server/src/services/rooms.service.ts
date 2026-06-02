@@ -1,4 +1,4 @@
-import db from '../db';
+import db from '../../prisma/client';
 
 export function createRoom(data: { name: string; creatorId: string }) {
     return db.room.create({ data });
