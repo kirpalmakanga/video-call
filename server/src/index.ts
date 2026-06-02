@@ -6,7 +6,7 @@ import { useAuthentication } from './middlewares/auth.middleware';
 import useAuthRoutes from './routes/auth.routes';
 import useRoomsRoutes from './routes/rooms.routes';
 import useUsersRoutes from './routes/users.routes';
-import { useSocketHandler } from './socket';
+import useSocketRoute from './routes/socket.routes';
 
 const { PORT, CLIENT_URI } = process.env;
 
@@ -31,7 +31,7 @@ app.use(useAuthentication());
 useAuthRoutes(app);
 useUsersRoutes(app);
 useRoomsRoutes(app);
-useSocketHandler(app);
+useSocketRoute(app);
 
 serve(app, {
     port: PORT,

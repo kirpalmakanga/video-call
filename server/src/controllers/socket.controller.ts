@@ -1,6 +1,5 @@
-import type { Hooks, Message, Peer } from 'crossws';
-import { getUrlParams } from '../utils/helpers.utils';
-import { authenticate } from '../utils/jwt.utils';
+import type { Hooks, Peer } from 'crossws';
+import { authenticatePeer, parseMessage } from '../services/socket.service';
 
 type EventHandlers = {
     [K in keyof ClientToServerEvents]: (payload: ClientToServerEventPayload<K>, peer: Peer) => void;
@@ -67,37 +66,6 @@ const handlers: EventHandlers = {
         });
     }
 };
-
-async function authenticateRequest(req: Request) {
-    const { token } = getUrlParams(req.url);
-
-    if (token) {
-        await authenticate(token);
-    } else {
-        throw new Error('Invalid token');
-    }
-}
-
-async function authenticatePeer(peer: Peer) {
-    try {
-        await authenticateRequest(peer.request);
-    } catch (error) {
-        peer.send({
-            event: 'connectError',
-            payload: { message: 'unauthorized' }
-        });
-
-        peer.terminate();
-
-        throw error;
-    }
-}
-
-function parseMessage<E extends ClientToServerEventId>(
-    message: Message
-): { event: E; payload: ClientToServerEventPayload<E> } {
-    return message.json();
-}
 
 export const hooks: Partial<Hooks> = {
     async open(peer) {
