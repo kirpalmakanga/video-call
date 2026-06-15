@@ -40,7 +40,7 @@ export const useSocketStore = defineStore('socket', () => {
             return;
         }
 
-        triggerHanglers(event, payload);
+        triggerHandlers(event, payload);
     }
 
     function closeSocket() {
@@ -69,7 +69,7 @@ export const useSocketStore = defineStore('socket', () => {
         }
     }
 
-    function triggerHanglers(event: string, payload: unknown) {
+    function triggerHandlers(event: string, payload: unknown) {
         const handlers = listeners.get(event);
 
         if (handlers && handlers.size > 0) {
