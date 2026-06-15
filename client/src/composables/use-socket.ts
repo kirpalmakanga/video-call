@@ -13,40 +13,41 @@ export const useSocketStore = defineStore('socket', () => {
     const { refreshAccessToken } = authStore;
     const { accessToken } = storeToRefs(authStore);
 
+    const isOnline = useOnline();
+
+    const listeners: Map<string, Set<Function>> = new Map();
+
     const socketUrl = computed(() => `${VITE_SOCKET_URI}?token=${accessToken.value}`);
 
     const { ws, send, open, close } = useWebSocket(socketUrl, {
         immediate: false,
         autoConnect: false,
-        heartbeat: { message: HEARTBEAT_MESSAGE, interval: 20000 }
+        heartbeat: { message: HEARTBEAT_MESSAGE, interval: 20000 },
+        onMessage: async (_, { data }: MessageEvent) => {
+            if (data === HEARTBEAT_MESSAGE) return;
+
+            let message = null;
+
+            try {
+                message = JSON.parse(data);
+            } catch (error) {
+                console.error('Failed to parse message:', data, error);
+            }
+
+            if (message) await handleMessage(message);
+        }
     });
 
-    const isOnline = useOnline();
-
-    const listeners: Map<string, Set<Function>> = new Map();
-
-    async function handleMessage({ data }: MessageEvent) {
-        if (data === HEARTBEAT_MESSAGE) return;
-
-        const { event, payload } = JSON.parse(data);
-
-        if (event === 'connectError' && payload.message === 'unauthorized') {
+    async function handleMessage({ event, payload }: { event: string; payload: unknown }) {
+        if (event === 'unauthorized') {
             close();
 
             await refreshAccessToken();
 
             open();
-
-            return;
+        } else {
+            triggerHandlers(event, payload);
         }
-
-        triggerHandlers(event, payload);
-    }
-
-    function closeSocket() {
-        ws.value?.removeEventListener('message', handleMessage);
-
-        close();
     }
 
     function removeHandler(event: string, handler: Function) {
@@ -76,23 +77,12 @@ export const useSocketStore = defineStore('socket', () => {
             for (const handler of handlers) {
                 handler(payload);
             }
-        } else {
-            console.warn(`No handlers found for event "${event}"`);
         }
     }
-
-    function handleSocketChange() {
-        if (ws.value) {
-            ws.value.addEventListener('message', handleMessage);
-        }
-    }
-
-    watch(ws, handleSocketChange, { immediate: true });
 
     watch(isOnline, () => isOnline.value && open());
 
     return {
-        closeSocket,
         on(event: string, handler: Function) {
             if (listeners.size === 0 && !ws.value) {
                 open();
@@ -110,7 +100,7 @@ export const useSocketStore = defineStore('socket', () => {
             }
 
             if (listeners.size === 0 && ws.value) {
-                closeSocket();
+                close();
             }
         },
         send(event: string, payload: unknown) {
