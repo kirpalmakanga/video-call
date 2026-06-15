@@ -13,8 +13,7 @@ export async function authenticatePeer(peer: Peer) {
         }
     } catch (error) {
         peer.send({
-            event: 'connectError',
-            payload: { message: 'unauthorized' }
+            event: 'unauthorized',
         });
 
         peer.terminate();
