@@ -2,7 +2,10 @@ import type { Hooks, Peer } from 'crossws';
 import { authenticatePeer, parseMessage } from '../services/socket.service';
 
 type EventHandlers = {
-    [K in keyof ClientToServerEvents]: (payload: ClientToServerEventPayload<K>, peer: Peer) => void;
+    [K in keyof ServerWebsocketEvents]: (
+        payload: ClientToServerEventPayload<K>,
+        peer: Peer
+    ) => void;
 };
 
 const handlers: EventHandlers = {

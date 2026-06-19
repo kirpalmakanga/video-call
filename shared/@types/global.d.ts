@@ -51,7 +51,7 @@ declare global {
         participantId: string;
     }
 
-    interface ClientToServerEvents {
+    interface ServerWebsocketEvents {
         requestConnection: (payload: BaseEventPayload) => void;
         connectParticipant: (payload: BaseEventPayload) => void;
         disconnectParticipant: (payload: BaseEventPayload) => void;
@@ -76,15 +76,15 @@ declare global {
         syncParticipant: (payload: { roomId: string; participant: Participant }) => void;
     }
 
-    type ClientToServerEventId = keyof ClientToServerEvents;
+    type ClientToServerEventId = keyof ServerWebsocketEvents;
 
     type ClientToServerEventPayload<K extends ClientToServerEventId> = Parameters<
-        ClientToServerEvents[K]
+        ServerWebsocketEvents[K]
     >[0];
 
-    interface ServerToClientEvents {
-        connect: () => void;
-        disconnect: () => void;
+    interface ClientWebsocketEvents {
+        connected: () => void;
+        disconnected: () => void;
         participantSynced: (payload: ClientParticipant) => void;
         connectionConfirmed: (payload: { participantId: string }) => void;
         participantConnected: (payload: { participantId: string }) => void;
@@ -103,9 +103,9 @@ declare global {
         }) => void;
     }
 
-    type ServerToClientEventId = keyof ServerToClientEvents;
+    type ServerToClientEventId = keyof ClientWebsocketEvents;
 
     type ServerToClientEventPayload<K extends ServerToClientEventId> = Parameters<
-        ServerToClientEvents[K]
+        ClientWebsocketEvents[K]
     >[0];
 }

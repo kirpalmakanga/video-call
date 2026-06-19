@@ -22,7 +22,10 @@ export const useSocketStore = defineStore('socket', () => {
     const { ws, send, open, close } = useWebSocket(socketUrl, {
         immediate: false,
         autoConnect: false,
+        autoReconnect: { retries: 5 },
         heartbeat: { message: HEARTBEAT_MESSAGE, interval: 20000 },
+        onConnected: () => triggerHandlers('connected'),
+        onDisconnected: () => triggerHandlers('disconnected'),
         onMessage: async (_, { data }: MessageEvent) => {
             if (data === HEARTBEAT_MESSAGE) return;
 
@@ -43,8 +46,6 @@ export const useSocketStore = defineStore('socket', () => {
             close();
 
             await refreshAccessToken();
-
-            open();
         } else {
             triggerHandlers(event, payload);
         }
@@ -70,7 +71,7 @@ export const useSocketStore = defineStore('socket', () => {
         }
     }
 
-    function triggerHandlers(event: string, payload: unknown) {
+    function triggerHandlers(event: string, payload?: unknown) {
         const handlers = listeners.get(event);
 
         if (handlers && handlers.size > 0) {
@@ -80,7 +81,7 @@ export const useSocketStore = defineStore('socket', () => {
         }
     }
 
-    watch(isOnline, () => isOnline.value && open());
+    watch([isOnline, socketUrl], () => isOnline.value && open());
 
     return {
         on(event: string, handler: Function) {
@@ -151,7 +152,7 @@ export function useSocket() {
         },
         subscribe: <E extends ServerToClientEventId>(
             event: E,
-            callback: ServerToClientEvents[E]
+            callback: ClientWebsocketEvents[E]
         ) => {
             if (subscriptions.has(event)) {
                 console.warn(`Subscription for event "${event}" already exists`);

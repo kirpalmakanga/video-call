@@ -92,13 +92,13 @@ export function useRoom(
         });
     }
 
-    subscribe('connect', () => {
+    subscribe('connected', () => {
         if (!isConnecting.value) {
             connect();
         }
     });
 
-    subscribe('disconnect', () => {
+    subscribe('disconnected', () => {
         isConnected.value = false;
     });
 
