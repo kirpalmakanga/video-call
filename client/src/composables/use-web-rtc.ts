@@ -105,11 +105,11 @@ export function useWebRTC(
         return peerStreams.value[peerId] || null;
     }
 
-    function setPeerStream(peerId: string, peerStream: MediaStream | null) {
+    function setPeerStream(peerId: string, stream: MediaStream | null) {
         const currentStream = getPeerStream(peerId);
 
-        if (peerStream && peerStream.id !== currentStream?.id) {
-            peerStreams.value = { ...peerStreams.value, [peerId]: peerStream };
+        if (stream && stream.id !== currentStream?.id) {
+            peerStreams.value = { ...peerStreams.value, [peerId]: stream };
         }
     }
 
