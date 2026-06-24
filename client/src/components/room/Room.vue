@@ -10,7 +10,7 @@ import MediaSettings from './MediaSettings.vue';
 import { useRoom } from '../../composables/use-room';
 import { useMediaSettingsStore } from '../../composables/store/use-media-settings-store';
 import { useAuthStore } from '../../composables/store/use-auth-store';
-import { keepInRange, nextFrame } from '../../utils/helpers';
+import { keepNumberInRange, nextFrame } from '../../utils/helpers';
 import { useMediaStream } from '../../composables/media/use-media-stream';
 import { useScreenCapture } from '../../composables/media/use-screen-capture';
 import { useVolumeControl } from '../../composables/media/use-volume-control';
@@ -128,7 +128,10 @@ function leaveRoom() {
 async function handleWheelVolume({ deltaY }: WheelEvent) {
     await nextFrame();
 
-    microphoneVolume.value = keepInRange(microphoneVolume.value + (deltaY < 0 ? 5 : -5), [0, 100]);
+    microphoneVolume.value = keepNumberInRange(
+        microphoneVolume.value + (deltaY < 0 ? 5 : -5),
+        [0, 100]
+    );
 }
 
 async function toggleScreenSharing() {
