@@ -157,9 +157,11 @@ export function useSocket() {
             if (subscriptions.has(event)) {
                 console.warn(`Subscription for event "${event}" already exists`);
             } else {
-                on(event, callback);
+                const handler = (payload: any) => callback(payload);
 
-                subscriptions.set(event, () => off(event, callback));
+                on(event, handler);
+
+                subscriptions.set(event, () => off(event, handler));
             }
         },
         unsubscribe: (event?: ServerToClientEventId) => {
