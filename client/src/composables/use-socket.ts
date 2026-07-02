@@ -83,6 +83,8 @@ export const useSocketStore = defineStore('socket', () => {
 
     watch([isOnline, socketUrl], () => isOnline.value && open());
 
+    watch(accessToken, () => !accessToken.value && close());
+
     return {
         on(event: string, handler: Function) {
             if (listeners.size === 0 && !ws.value) {
