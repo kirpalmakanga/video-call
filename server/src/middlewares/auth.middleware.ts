@@ -16,7 +16,7 @@ export function useAuthentication() {
             try {
                 event.context.userId = await getUserIdFromToken(accessToken);
             } catch (error) {
-                captureError(error);
+                captureError(error as Error);
 
                 unauthorized();
             }
