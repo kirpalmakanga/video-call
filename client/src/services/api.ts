@@ -6,6 +6,7 @@ import type {
     UpdatePasswordFormData,
     UpdateProfileFormData
 } from '../utils/validation';
+import { sanitizeObject } from '../utils/sanitize';
 
 export const apiInstance = axios.create({
     baseURL: import.meta.env.VITE_API_URI
@@ -56,7 +57,7 @@ export async function getCurrentUserProfile() {
 }
 
 export async function updateCurrentUserProfile(data: UpdateProfileFormData) {
-    await apiInstance.put('/users/profile', data);
+    await apiInstance.put('/users/profile', sanitizeObject(data));
 }
 
 export async function getAllRooms() {
@@ -84,13 +85,13 @@ export async function getRoomById(roomId: string) {
 }
 
 export async function createRoom(body: RoomFormData) {
-    const { data } = await apiInstance.post('/rooms', body);
+    const { data } = await apiInstance.post('/rooms', sanitizeObject(body));
 
     return data as Room;
 }
 
 export async function updateRoom(roomId: string, body: RoomFormData) {
-    const { data } = await apiInstance.put(`/rooms/${roomId}`, body);
+    const { data } = await apiInstance.put(`/rooms/${roomId}`, sanitizeObject(body));
 
     return data as Room;
 }

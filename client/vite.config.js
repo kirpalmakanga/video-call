@@ -4,5 +4,19 @@ import ui from '@nuxt/ui/vite';
 
 export default defineConfig({
     plugins: [vue(), ui()],
-    server: { allowedHosts: true }
+    server: { allowedHosts: true },
+    build: {
+        rolldownOptions: {
+            output: {
+                codeSplitting: {
+                    groups: [
+                        {
+                            test: /node_modules\/isomorphic-dompurify/,
+                            name: 'dompurify'
+                        }
+                    ]
+                }
+            }
+        }
+    }
 });
