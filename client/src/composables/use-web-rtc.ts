@@ -1,5 +1,5 @@
 import { onBeforeUnmount, ref, watch, type Ref } from 'vue';
-import { assertIsDefined } from '../../../utils/assert';
+import { assertIsDefined } from '../../../shared/utils/assert';
 import { omit } from '../utils/helpers';
 
 const { VITE_STUN_SERVERS } = import.meta.env;

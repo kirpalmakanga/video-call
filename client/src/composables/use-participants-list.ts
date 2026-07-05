@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { update } from '../utils/helpers';
-import { captureError } from '../../../utils/error';
+import { captureError } from '../../../shared/utils/error';
 
 export function useParticipantsList() {
     const participants = ref<ClientParticipant[]>([]);

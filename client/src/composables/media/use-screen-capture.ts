@@ -1,6 +1,6 @@
 import { onBeforeUnmount, ref, watch, type Ref } from 'vue';
 import { useDisplayMedia } from '@vueuse/core';
-import { assertIsDefined } from '../../../../utils/assert';
+import { assertIsDefined } from '../../../../shared/utils/assert';
 
 export function useScreenCapture(stream: Ref<MediaStream | undefined>) {
     const { stream: displayMediaStream, start: startDisplayMedia } = useDisplayMedia();
