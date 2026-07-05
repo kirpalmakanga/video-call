@@ -44,7 +44,12 @@ async function onSubmit({ data }: FormSubmitEvent<FormSchema>) {
                 @submit="onSubmit"
             >
                 <UFormField label="Name" :disabled="asyncStatus === 'loading'" name="name">
-                    <UInput class="w-full" variant="soft" v-model="formState.name" />
+                    <UInput
+                        class="w-full"
+                        variant="soft"
+                        v-model="formState.name"
+                        :autofocus="true"
+                    />
                 </UFormField>
 
                 <UButton class="self-end" icon="i-mdi-plus-circle-outline" type="submit">

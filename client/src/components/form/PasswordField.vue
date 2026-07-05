@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-defineProps<{ label: string; name: string }>();
+defineProps<{ label: string; name: string; autofocus?: boolean }>();
 
 const model = defineModel<string>();
 
 const isPasswordVisible = ref<boolean>(false);
+
+function togglePasswordVisibility() {
+    isPasswordVisible.value = !isPasswordVisible.value;
+}
 </script>
 
 <template>
@@ -16,6 +20,7 @@ const isPasswordVisible = ref<boolean>(false);
             variant="soft"
             v-model="model"
             :type="isPasswordVisible ? 'text' : 'password'"
+            :autofocus="autofocus"
         >
             <template #trailing>
                 <UButton
@@ -26,7 +31,7 @@ const isPasswordVisible = ref<boolean>(false);
                     :aria-label="isPasswordVisible ? 'Hide password' : 'Show password'"
                     :aria-pressed="isPasswordVisible"
                     aria-controls="password"
-                    @click="isPasswordVisible = !isPasswordVisible"
+                    @click="togglePasswordVisibility"
                 />
             </template>
         </UInput>

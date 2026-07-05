@@ -33,7 +33,7 @@ async function onSubmit({ data }: FormSubmitEvent<LoginFormData>) {
 <template>
     <UForm @submit="onSubmit" :schema="loginSchema" :state="state" class="flex flex-col gap-4">
         <template #default="{ loading }">
-            <EmailField label="Email" name="email" v-model="state.email" />
+            <EmailField label="Email" name="email" v-model="state.email" :autofocus="true" />
 
             <PasswordField label="Password" name="password" v-model="state.password" />
 

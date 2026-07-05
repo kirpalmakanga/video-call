@@ -38,7 +38,7 @@ async function onSubmit({ data: { email } }: FormSubmitEvent<ForgotPasswordFormD
         @submit="onSubmit"
     >
         <template #default="{ loading }">
-            <EmailField label="Email" name="email" v-model="state.email" />
+            <EmailField label="Email" name="email" v-model="state.email" :autofocus="true" />
 
             <UButton
                 class="self-end"

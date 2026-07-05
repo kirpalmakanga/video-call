@@ -48,7 +48,12 @@ async function onSubmit({ data }: FormSubmitEvent<ResetPasswordFormData>) {
         <template #default="{ loading }">
             <input type="hidden" name="email" :value="email" />
 
-            <PasswordField label="Password" name="password" v-model="state.password" />
+            <PasswordField
+                label="Password"
+                name="password"
+                v-model="state.password"
+                :autofocus="true"
+            />
 
             <PasswordField
                 label="Confirm password"

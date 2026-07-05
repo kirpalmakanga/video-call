@@ -45,7 +45,12 @@ async function onSubmit({ data }: FormSubmitEvent<RegisterFormData>) {
 <template>
     <UForm class="flex flex-col gap-4" :schema="registerSchema" :state="state" @submit="onSubmit">
         <template #default="{ loading }">
-            <TextField label="First name" name="firstName" v-model="state.firstName" />
+            <TextField
+                label="First name"
+                name="firstName"
+                v-model="state.firstName"
+                :autofocus="true"
+            />
 
             <TextField label="Last name" name="lastName" v-model="state.lastName" />
 
