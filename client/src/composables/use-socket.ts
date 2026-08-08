@@ -85,7 +85,20 @@ export const useSocketStore = defineStore('socket', () => {
 
     watch(accessToken, () => !accessToken.value && close());
 
+    function off(event: string, handler?: Function) {
+        if (handler) {
+            removeHandler(event, handler);
+        } else {
+            removeAllHandlers(event);
+        }
+
+        if (listeners.size === 0 && ws.value) {
+            close();
+        }
+    }
+
     return {
+        off,
         on(event: string, handler: Function) {
             if (listeners.size === 0 && !ws.value) {
                 open();
@@ -94,17 +107,8 @@ export const useSocketStore = defineStore('socket', () => {
             if (!listeners.has(event)) listeners.set(event, new Set());
 
             listeners.get(event)?.add(handler);
-        },
-        off(event: string, handler?: Function) {
-            if (handler) {
-                removeHandler(event, handler);
-            } else {
-                removeAllHandlers(event);
-            }
 
-            if (listeners.size === 0 && ws.value) {
-                close();
-            }
+            return () => off(event, handler);
         },
         send(event: string, payload: unknown) {
             send(JSON.stringify({ event, payload }));
@@ -113,7 +117,7 @@ export const useSocketStore = defineStore('socket', () => {
 });
 
 export function useSocket() {
-    const { on, off, send } = useSocketStore();
+    const { on, send } = useSocketStore();
 
     const subscriptions = new Map<ServerToClientEventId, Function>();
 
@@ -159,11 +163,10 @@ export function useSocket() {
             if (subscriptions.has(event)) {
                 console.warn(`Subscription for event "${event}" already exists`);
             } else {
-                const handler = (payload: any) => callback(payload);
-
-                on(event, handler);
-
-                subscriptions.set(event, () => off(event, handler));
+                subscriptions.set(
+                    event,
+                    on(event, (payload: any) => callback(payload))
+                );
             }
         },
         unsubscribe: (event?: ServerToClientEventId) => {
